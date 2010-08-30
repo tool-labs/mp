@@ -9,7 +9,7 @@
  */
 
 # Datenbank-Einstellungen
-require_once(__DIR__ . "/../db_settings.php");
+# __DIR__ . "/../../db_settings.ini"
 
 class Database
 {
@@ -18,12 +18,23 @@ class Database
 
   # void __construct()
   # Konstruktor
-  function __construct($db)
+  function __construct($db=null)
   {
+    $ts_pw = posix_getpwuid(posix_getuid());
+    $ts_mycnf = array();
+    if(file_exists($ts_pw['dir'] . "/.my.cnf"))
+    {
+      $ts_mycnf = parse_ini_file($ts_pw['dir'] . "/.my.cnf");
+    }
+    if(file_exists(__DIR__ . "/../../db_settings.ini"))
+    {
+      $ts_mycnf = array_merge($ts_mycnf, parse_ini_file(__DIR__ . "/../../db_settings.ini"));
+    }
+    if(isset($db)) $ts_mycnf['dbname'] = $db;
     try
     {
-      $this->db = new PDO("mysql:host=" . DBC::$host . ";dbname=" . $db,
-                          DBC::$user, DBC::$pass, array(
+      $this->db = new PDO("mysql:host=" . $ts_mycnf['host']. ";dbname=" . $ts_mycnf['dbname'],
+                          $ts_mycnf['user'], $ts_mycnf['password'], array(
                             PDO::ATTR_PERSISTENT         => true
                           ));
     }
@@ -155,7 +166,7 @@ class Database
       $sql = 'SELECT * FROM mentor WHERE mentor_user_name = :name';
       if ($actives && !$inactives)
       {
-	$sql .= ' AND mentor_out IS NULL';
+        $sql .= ' AND mentor_out IS NULL';
       }
       elseif (!$actives && $inactives)
       {
@@ -208,11 +219,11 @@ class Database
       $sql = 'SELECT * FROM mentor WHERE mentor_user_name REGEXP :nameregexp';
       if ($actives && !$inactives)
       {
-	$sql .= ' AND mentor_out IS NULL';
+        $sql .= ' AND mentor_out IS NULL';
       }
       elseif (!$actives && $inactives)
       {
-	$sql .= ' AND mentor_out IS NOT NULL';
+        $sql .= ' AND mentor_out IS NOT NULL';
       }
       $sql .= ' ORDER BY mentor_user_name';
       $stmt = $this->db->prepare($sql);
@@ -278,7 +289,7 @@ class Database
       $sql = 'SELECT * FROM mentee WHERE mentee_user_name = :name';
       if ($actives && !$inactives)
       {
-	$sql .= ' AND mentee_out IS NULL';
+        $sql .= ' AND mentee_out IS NULL';
       }
       elseif (!$actives && $inactives)
       {
@@ -328,11 +339,11 @@ class Database
       $sql = 'SELECT * FROM mentee WHERE mentee_user_name REGEXP :nameregexp';
       if ($actives && !$inactives)
       {
-	$sql .= ' AND mentee_out IS NULL';
+        $sql .= ' AND mentee_out IS NULL';
       }
       elseif (!$actives && $inactives)
       {
-	$sql .= ' AND mentee_out IS NOT NULL';
+        $sql .= ' AND mentee_out IS NOT NULL';
       }
       $sql .= ' ORDER BY mentee_user_name';
       $stmt = $this->db->prepare($sql);

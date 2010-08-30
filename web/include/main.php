@@ -63,7 +63,7 @@ class Main
   public function __construct()
   {
     # initialisiere Datenbank
-    $this->db_mp = new Database('p_dewpmp');
+    $this->db_mp = new Database();
     $this->db_wp = new Database('dewiki_p');
 
     $this->access = new Access($this->db_mp);
