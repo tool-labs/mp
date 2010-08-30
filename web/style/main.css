@@ -1,0 +1,157 @@
+body
+{
+  background-color: #E8E8E8;
+}
+
+#naviList
+{
+  background-color: #8B8682;
+  padding-bottom: 5px;
+  padding-top: 5px;
+  margin-top: 5px;
+}
+
+#naviList li
+{
+  display: inline;
+  padding: 2px 5px 2px 5px;
+  margin-right: 20px;
+  font-weight: 130;
+}
+
+#status-overview, #footer
+{
+  font-size:  0.8em;
+  text-align: center;
+}
+
+#footer p
+{
+  color: gray;
+  width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#footer
+{
+  border-top: 1px dotted black;
+  margin-top: 5px;
+}
+
+a
+{
+  color: #8B0000;
+  text-decoration: none;
+}
+
+body
+{
+  font-family: serif;
+}
+
+h1, h2, h3, h4, h5, h6, h7
+{
+  font-family: sans;
+}
+
+#content
+{
+  padding-left: 40px;
+  padding-right: 50px;
+}
+
+#status-overview
+{
+  display:none;
+  width: 200px;
+  float: right;
+  background: #E8E8E8;
+  border-left: 1px dotted gray;
+  border-bottom: 1px dotted gray;
+  margin-left: 20px;
+}
+
+.lm-navi, #h-logged-in, #h-login
+{
+  font-size: 0.8em;
+}
+
+#h-logged-in, #h-login
+{
+  margin-top: 0px;
+  margin-right: 5px;
+  float: right;
+  color: gray;
+}
+
+#view-barnstar
+{
+  font-weight: bold;
+}
+
+#view-updated
+{
+  font-size: 0.9em;
+  color: gray;
+  margin-top: 0.5em;
+}
+
+h1
+{
+  margin-bottom: 0.05em;
+}
+
+#view-userpage, #em-back
+{
+  margin-top: 0px;
+  font-size: 0.8em;
+}
+
+th
+{
+  background-color: #C0C0C0;
+  text-align: left;
+}
+
+td, th
+{
+  padding: 5px 10px 5px 10px;
+}
+
+table
+{
+  border-collapse: collapse;
+}
+
+td, th, table
+{
+  border: 1px solid black;
+}
+
+.javascript-only
+{
+  display: none;
+}
+
+.warning-image
+{
+  vertical-align: center;
+}
+
+.ui-widget
+{
+  font-family: serif !important;
+  font-size: 1em !important;
+}
+
+.ui-button-text,
+input.ui-button
+{
+  padding: 0.2em 0.5em !important;
+}
+
+.tac
+{
+  text-align: center;
+}

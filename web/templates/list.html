@@ -1,0 +1,74 @@
+<h1>Liste der Mentoren</h1>
+
+<p class="lm-navi">
+<?php
+if ($this->data["prev_offset"] != -1)
+{
+?>
+<span id="lm-prev"><a href="index.php?action=list&offset=<?= $this->data["prev_offset"] ?>&count=<?= $this->data["count"] ?>">Zurück</a></span>
+<?php
+}
+if ($this->data["prev_offset"] != -1 && $this->data["next_offset"] != -1)
+{
+?>
+ | 
+<?php
+}
+if ($this->data["next_offset"] != -1)
+{
+?>
+<span id="lm-next"><a href="index.php?action=list&offset=<?= $this->data["next_offset"] ?>&count=<?= $this->data["count"] ?>">Weiter</a></span>
+<?php
+}
+?>
+
+<form id="lm-count" action="index.php" method="GET">
+  <label for="count">Mentoren pro Seite</label> <select name="count">
+    <option<?php if ($this->data["count"] == 10) { ?> selected="selected"<?php } ?>>10</option>
+    <option<?php if ($this->data["count"] == 20) { ?> selected="selected"<?php } ?>>20</option>
+    <option<?php if ($this->data["count"] == 50) { ?> selected="selected"<?php } ?>>50</option></select>
+  <input type="submit" value="Ändern" />
+  <input type="hidden" name="offset" value="<?= $this->data['offset'] ?>" />
+  <input type="hidden" name="action" value="list" />
+</form>
+
+<?php
+if (!empty($this->data["mentors"]))
+{
+?>
+<ul id="lm-list">
+<?php
+foreach ($this->data["mentors"] as $mentor)
+  {
+?>
+<li><a href="index.php?action=view&id=<?= $mentor["mentor_id"] ?>"><?= $mentor["mentor_user_name"] ?></a></li>
+<?php
+  }
+ ?>
+</ul>
+<?php
+}
+?>
+
+<p class="lm-navi">
+<?php
+if ($this->data["prev_offset"] != -1)
+{
+?>
+<span id="lm-prev"><a href="index.php?action=list&offset=<?= $this->data["prev_offset"] ?>&count=<?= $this->data["count"] ?>">Zurück</a></span>
+<?php
+}
+if ($this->data["prev_offset"] != -1 && $this->data["next_offset"] != -1)
+{
+?>
+ | 
+<?php
+}
+if ($this->data["next_offset"] != -1)
+{
+?>
+<span id="lm-next"><a href="index.php?action=list&offset=<?= $this->data["next_offset"] ?>&count=<?= $this->data["count"] ?>">Weiter</a></span>
+<?php
+}
+?>
+</p>

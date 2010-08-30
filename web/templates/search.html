@@ -1,0 +1,207 @@
+<script type="text/javascript">
+var mentorProposals = [ <?php
+$count = count($this->data['mentor_proposals']);
+for ($i = 0; $i < $count; $i++)
+{
+  echo "\"{$this->data['mentor_proposals'][$i]['mentor_user_name']}\"";
+  if ($i < $count - 1)
+  {
+    echo ', ';
+  }
+}
+?> ];
+
+var menteeProposals = [ <?php
+$count = count($this->data['mentee_proposals']);
+for ($i = 0; $i < $count; $i++)
+{
+  echo "\"{$this->data['mentee_proposals'][$i]['mentee_user_name']}\"";
+  if ($i < $count - 1)
+  {
+    echo ', ';
+  }
+}
+?> ];
+
+var menteeAndMentorProposals = mentorProposals.concat(menteeProposals);
+menteeAndMentorProposals = menteeAndMentorProposals.unique();
+menteeAndMentorProposals.sort();
+
+function onSelect(event, ui)
+{
+  var con = $('#search-content')[0];
+  var sub = $('#search-submit')[0];
+  if (ui.item.value != '')
+  {
+    con.value = ui.item.value;
+    sub.click();
+  }
+  return false;
+}
+
+function populateSearch()
+{
+  var value = $('#search-where')[0].value;
+  if (value == 'mentor')
+  {
+    $('#search-content').autocomplete( { source: mentorProposals,
+                                         select: onSelect } );
+  }
+  else if (value == 'mentee')
+  {
+    $('#search-content').autocomplete( { source: menteeProposals,
+                                         select: onSelect } );
+  }
+  else
+  {
+    $('#search-content').autocomplete( { source: menteeAndMentorProposals,
+                                         select: onSelect } );
+  }
+}
+
+$(populateSearch);
+</script>
+
+<h1>Suche</h1>
+
+<p id="search-explaination">Wenn in der Datenbank ein Benutzer direkt auf den angegebenen Namen passt, wird dieser angezeigt. Andernfalls wird der Suchbegriff als regulärer Ausdruck interpretiert.<span class="javascript-only"> Außerdem wird dir eine Vorschlagsliste präsentiert.</span></p>
+
+<form method="GET" action="index.php">
+ <input type="hidden" value="search" name="action" />
+ <label for="search-content">Suchen nach</label>
+ <input type="text" name="search-content" id="search-content" value="<?= $this->data['content'] ?>" />
+ als
+ <span id="search-activity">
+  <input type="checkbox" id="search-active" name="search-active" <?php if ($this->data['active']) { ?>checked="1" <?php } ?>/>
+  <label for="search-active">aktiver</label>
+  <input type="checkbox" id="search-inactive" name="search-inactive" <?php if ($this->data['inactive']) { ?>checked="1" <?php } ?>/>
+  <label for="search-inactive">inaktiver</label>
+ </span>
+ <select name="search-where" id="search-where" onchange="populateSearch()">
+  <option value="all"<?php if ($this->data['where'] == 'all') { ?> selected="selected"<?php } ?>>Mentor oder Neuling</option>
+  <option value="mentor"<?php if ($this->data['where'] == 'mentor') { ?> selected="selected"<?php } ?>>Mentor</option>
+  <option value="mentee"<?php if ($this->data['where'] == 'mentee') { ?> selected="selected"<?php } ?>>Neuling</option>
+ </select>
+ <input type="submit" value="Suchen" id="search-submit" />
+</form>
+<?php
+if ($this->data['w'] == 'results')
+{
+  if ($this->data['sr'] == 'two_direct')
+  {
+?>
+   
+  <ul id="search-result">
+   <li class="sr-mentor"><a href="index.php?action=view&id=<?= $this->data['mr']['mentor_id'] ?>">
+       Mentor <?= $this->data['mr']['mentor_user_name'] ?></a></li>
+   <li class="sr-mentee"><a href="index.php?action=viewmentee&id=<?= $this->data['me']['mentee_id'] ?>">
+       Mentee <?= $this->data['me']['mentee_user_name'] ?></a></li>
+  </ul>
+
+<?php
+  }
+  elseif ($this->data['sr'] == 'mentors')
+  {
+    if (empty($this->data['result']))
+    {
+?>
+  <p id="search-result">Keine Treffer.</p>
+<?php
+    }
+    else
+    {
+?>
+  <ul id="search-result">
+<?php
+      foreach ($this->data['result'] as $mentor)
+      {
+?>
+    <li class="sr-mentor"><a href="index.php?action=view&id=<?= $mentor['mentor_id'] ?>">Mentor <?= $mentor['mentor_user_name'] ?></a></li>
+<?php
+      }
+?>
+  </ul>
+<?php
+    }
+  }
+  elseif ($this->data['sr'] == 'mentees')
+  {
+    if (empty($this->data['result']))
+    {
+?>
+  <p id="search-result">Keine Treffer.</p>
+<?php
+    }
+    else
+    {
+?>
+  <ul id="search-result">
+<?php
+      foreach ($this->data['result'] as $mentee)
+      {
+?>
+    <li class="sr-mentee"><a href="index.php?action=viewmentee&id=<?= $mentee['mentee_id'] ?>">Mentee <?= $mentee['mentee_user_name'] ?></a></li>
+<?php
+      }
+?>
+  </ul>
+<?php
+    }
+  }
+  else
+  {
+?>
+    <ul id="search-result">
+      <li>Mentoren</li>
+<?php
+    if (empty($this->data['result']['mrs']))
+    {
+?>
+      <p id="search-result-mentors">Keine Treffer.</p>
+<?php
+    }
+    else
+    {
+?>
+      <ul id="search-result-mentors">
+<?php
+      foreach ($this->data['result']['mrs'] as $mentor)
+      {
+?>
+        <li class="sr-mentor"><a href="index.php?action=view&id=<?= $mentor['mentor_id'] ?>">Mentor <?= $mentor['mentor_user_name'] ?></a></li>
+<?php
+      }
+?>
+  </ul>
+<?php
+    }
+?>
+      <li>Mentees</li>
+<?php
+    if (empty($this->data['result']['mes']))
+    {
+?>
+      <p id="search-result-mentees">Keine Treffer.</p>
+<?php
+    }
+    else
+    {
+?>
+      <ul id="search-result-mentees">
+<?php
+      foreach ($this->data['result']['mes'] as $mentee)
+      {
+?>
+        <li class="sr-mentee"><a href="index.php?action=viewmentee&id=<?= $mentee['mentee_id'] ?>">Mentee <?= $mentee['mentee_user_name'] ?></a></li>
+<?php
+      }
+?>
+      </ul>
+<?php
+    }
+?>
+    </ul>
+<?php
+  }
+}
+?>

@@ -1,0 +1,28 @@
+<h1>Statistik</h1>
+
+<p>Im Mentorenprogramm wurden bisher <?= $this->data['mentee_count_all_db'] ?> Benutzer
+von insgesamt <?= $this->data['mentor_count_all_db'] ?> Mentoren betreut. Momentan
+sind <?= $this->data['newbie_count_db'] ?> Mentees in Betreuung und 
+<?= $this->data['mentor_count_db'] ?> Mentoren aktiv.</p>
+
+<h2>Datenbankstatus</h2>
+
+<?php
+$mo_db = (int) $this->data['mentor_count_db'];
+$mo_wp = (int) $this->data['mentor_count_wp'];
+$me_db = (int) $this->data['newbie_count_db'];
+$me_wp = (int) $this->data['newbie_count_wp'];
+
+if ($mo_db == $mo_wp && $me_db == $me_wp)
+{
+?>
+<p id="stat-ok">Die Datenbank ist aktuell!</p>
+<?php
+}
+else
+{
+?>
+<p id="stat-lag">Die Datenbank ist nicht aktuell.</p>
+<?php
+}
+?>
