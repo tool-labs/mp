@@ -13,11 +13,9 @@ echo '<?xml version="1.0" encoding="UTF-8" ?>';
     <script type="text/javascript" src="style/jquery.js"></script>
     <script type="text/javascript" src="style/jquery-ui.js"></script>
     <link type="text/css" rel="stylesheet" media="handheld, screen" href="style/jquery-ui.css" />
-    <!-- default design -->
-    <link type="text/css" rel="<?php if (isset($_GET['useskin']) && $_GET['useskin'] == 'python'){ print "alternate ";} ?>stylesheet" href="style/main.css" title="Grau-Rot" />
-    <!-- python design -->
-    <link type="text/css" rel="<?php if (!isset($_GET['useskin']) || $_GET['useskin'] != 'python'){ print "alternate";} ?>stylesheet" href="style/python.css" title="Python" />
-    <script type="text/javascript">
+    <!-- modern design -->
+    <link type="text/css" rel="stylesheet" href="style/modern.css" />
+    <script type="text/javascript">/*<![CDATA[*/
       Array.prototype.unique = function() {
         var o = {};
         var tmp = [];
@@ -39,6 +37,32 @@ echo '<?xml version="1.0" encoding="UTF-8" ?>';
         }
         return true;
       }
+      function validate_datetimestamp(datetimestamp) {
+        var m = datetimestamp.match(/^\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d$/);
+        if (!m || m[0] < 2000 || m[1] < 1 || m[1] > 12 || m[2] < 1 ||
+            m[2] > 31 || m[3] < 0 || m[3] > 23 || m[4] < 0 || m[4] > 59 ||
+            m[5] < 0 || m[5] > 60) {
+          return false;
+        }
+        return true;
+      }
+      function get_datetime_now()
+      {
+        now = new Date();
+        day = now.getDate();
+        if (day < 10) day = "0" + day;
+        month = now.getMonth();
+        if (month < 10) month = "0" + month
+        year = now.getFullYear();
+        hours = now.getHours();
+        if (hours < 10) hours = "0" + hours
+        mins = now.getMinutes();
+        if (mins < 10) mins = "0" + mins;
+        secs = now.getSeconds();
+        if (secs < 10) secs = "0" + secs;
+
+        return year + "-" + month + "-" + day + " " + hours + ":" + mins + ":" + secs;
+      }
       // show an error icon
       function show_error(node_id) {
         $(node_id).parent().append(' <img src="style/warning.png" class="warning-image" />');
@@ -47,39 +71,13 @@ echo '<?xml version="1.0" encoding="UTF-8" ?>';
       function remove_errors() {
         $('.warning-image').remove();
       }
+    /*]]>*/
     </script>
   </head>
-  <body>
-    <table id="status-overview">
-      <tr id="so-headers"><th></th><th>Datenbank</th><th>Wikipedia</th></tr>
-      <tr id="so-newbies"><td>Neulinge</td><td><?= $this->data['newbie_count_db'] ?></td><td><?= $this->data['newbie_count_wp'] ?></td></tr>
-      <tr id="so-mentors"><td>Mentoren</td><td><?= $this->data['mentor_count_db'] ?></td><td><?= $this->data['mentor_count_wp'] ?></td></tr>
-    </table>
+  <body class="mediawiki skin-modern">
 
-    <div id="navi">
-    <ul id="naviList">
-      <li><a href="index.php">Startseite</a></li>
-      <li><a href="index.php?action=list">Mentorenübersicht</a></li>
-      <li><a href="index.php?action=search">Suche</a></li>
-      <li><a href="index.php?action=stat">Statistik</a></li>
-      <li><a href="index.php?action=about">Weitere Informationen</a></li>
-    </ul>
-    </div>
+  <div id="mw_header"><h1><?= $this->heading ?></h1></div>
+  <div id="mw_main">
+  <div id="mw_contentwrapper">
 
-<?php
-if ($this->access->logged_in())
-{
-?>
-    <p id="h-logged-in">Angemeldet als <?= $this->access->user() ?>. <a href="index.php?action=changepw">Passwort ändern.</a> <a href="index.php?action=logout">Abmelden.</a></p>
-<?php
-}
-else
-{
-?>
-    <p id="h-login"><a href="index.php?action=login">Anmelden</a></p>
-<?php
-}
-?>
-
-    <div id="main">
-    <div id="content">
+  <div id="mw_content">

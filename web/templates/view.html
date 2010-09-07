@@ -1,7 +1,7 @@
 <?php
 $m = $this->data["mentor"];
 ?>
-<h1>Mentor <em><?= $m["mentor_user_name"] ?></em></h1>
+<h2>Informationen<?php if ($this->access->is_editor()) { ?><a href="index.php?action=edit&amp;what=mentor&amp;id=<?= $m['mentor_id'] ?>" class="mentor-edit-link"> [bearbeiten]</a><?php } ?></h2>
 <p id="view-userpage"><a href="http://de.wikipedia.org/wiki/Benutzer:<?= $m["mentor_user_name"] ?>">Wikipedia-Benutzerseite</a></p>
 <?php
 if ($m['mentor_has_barnstar'] == 1)
@@ -39,13 +39,7 @@ if (!empty($m["mentor_remark"]))
 }
 ?>
 
-<p id="view-updated">Letzte Aktualisierung: <?= fdt($m["mentor_lastupdate"]) ?>
-<?php
-  if ($this->access->logged_in())
-  {
-    ?> || <a href="index.php?action=edit&what=mentor&id=<?= $m['mentor_id'] ?>">bearbeiten</a></p><?php
-  }
-?>
+<p id="view-updated">Letzte Aktualisierung: <?= fdt($m["mentor_lastupdate"]) ?></p>
 
 <h2 id="view-mentees-all"><a id="mentees"></a>Betreute Neulinge</h2>
 
@@ -60,14 +54,22 @@ else
 {
 ?>
 <table id="listmentees-table">
-  <tr id="listmentees-headers"><th>Benutzername</th><th>Eintritt</th><th>Austritt</th></tr>
+  <tr id="listmentees-headers">
+    <th>Benutzername</th>
+    <th>Eintritt</th>
+    <th>Austritt</th>
+    <?php if ($this->access->is_editor()) { ?><th></th><?php } ?>
+  </tr>
   <?php
   foreach ($this->data['mentees'] as $mentee)
   {
   ?>
-  <tr><td class="listmentees-mentee"><a href="index.php?action=viewmentee&id=<?= $mentee['mentee_id'] ?>"><?= $mentee['mentee_user_name'] ?></a></td>
-      <td class="listmentees-in"><?= fd($mentee['mentee_in']) ?></td>
-      <td class="listmentees-out"><?= fd($mentee['mentee_out']) ?></td><tr>
+  <tr><td class="listmentees-mentee"><a href="index.php?action=viewmentee&amp;id=<?= $mentee['mentee_id'] ?>"><?= $mentee['mentee_user_name'] ?></a></td>
+      <td class="listmentees-in"><?= fd($mentee['mm_start']) ?></td>
+      <td class="listmentees-out"><?= fd($mentee['mm_stop']) ?></td>
+      <?php if ($this->access->is_editor()) { ?>
+        <td class ="listmentees-edit"><a href="index.php?action=editmm&amp;mentee_id=<?= $mentee['mentee_id'] ?>&amp;mentor_id=<?= $m['mentor_id'] ?>" title="bearbeiten">∓</a></td>
+      <?php } ?></tr>
   <?php
   }
   ?>

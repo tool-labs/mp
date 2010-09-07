@@ -1,0 +1,75 @@
+<?php
+  $p = $this->data['pos'];
+  if (count($p) === 1)
+  {
+?>
+<script type="text/javascript">
+  /*<![CDATA[*/
+  function start_now()
+  {
+    $('#start')[0].value = get_datetime_now();
+  }
+
+  function stop_now()
+  {
+    $('#end')[0].value = get_datetime_now();
+  }
+
+ function validate() {
+   remove_errors();
+   var everythings_fine = true;
+
+   var stonode  = document.getElementById("end");
+   var stanode  = document.getElementById("start");
+   var stop  = stonode.value;
+   var start = stanode.value;
+
+   if (!validate_datetimestamp(start)) {
+     everythings_fine = false;
+     show_error("#start");
+   }
+
+   if (!stop.empty() && !validate_datetimestamp(stop)) {
+     everythings_fine = false;
+     show_error("#end");
+   }
+
+   return everythings_fine;
+ }
+  /*]]>*/
+</script>
+<form action="index.php?action=editmm&amp;mentor_id=<?= $p[0]['mm_mentor_id']
+  ?>&amp;mentee_id=<?= $p[0]['mm_mentee_id'] ?>&amp;start=<?= $p[0]['mm_start']
+  ?>&amp;end=<?= $p[0]['mm_stop'] ?>" method="post" onsubmit="return validate();">
+  <table>
+    <tr><th>Mentor</th><td><a href="index.php?action=view&amp;id=<?= $p[0]['mm_mentor_id'] ?>"><?= $p[0]['mentor_user_name'] ?></a></td></tr>
+    <tr><th>Mentee</th><td><a href="index.php?action=viewmentee&amp;id=<?= $p[0]['mm_mentee_id'] ?>"><?= $p[0]['mentee_user_name'] ?></a></td></tr>
+    <tr><th><label for="start">Beginn</label></th>
+        <td><input type="text" name="start" value="<?= $p[0]['mm_start'] ?>" id="start" />
+            <span class="javascript-only"><a onclick="start_now()">(jetzt)<a></span></td></tr>
+    <tr><th><label for="end">Ende</label></th>
+        <td><input type="text" name="end"   value="<?= $p[0]['mm_stop']  ?>" id="end"   />
+            <span class="javascript-only"><a onclick="stop_now()">(jetzt)<a></span></td></tr>
+    <tr><td colspan="2" class="tac"><input type="submit" value="Ändern" /></td></tr>
+  </table>
+</form>
+<?php
+  }
+  else
+  {
+?>
+<p>Es gibt mehrere Beziehungen, auf die diese Angaben zutreffen:</p>
+<ul>
+<?php
+    foreach ($p as $mm)
+    {
+?>
+  <li><a href="index.php?action=editmm&amp;mentor_id=<?= $mm['mm_mentor_id'] ?>&amp;mentee_id=<?= $mm['mm_mentee_id']
+      ?>&amp;start=<?= $mm['mm_start'] ?>&amp;end=<?= $mm['mm_stop'] ?>">Mentor <?= $mm['mentor_user_name'] ?>, Mentee <?= $mm['mentee_user_name'] ?> (<?= fd($mm['mm_start']) ?> bis <?= fd($mm['mm_stop']) ?>)</a></li>
+<?php
+    }
+?>
+</ul>
+<?php
+  }
+?>

@@ -13,6 +13,7 @@
 $m = $this->data['mentor'];
 ?>
 <script type="text/javascript">
+ /* <![CDATA[ */
  // validate user input
  function validate() {
    remove_errors();
@@ -42,10 +43,10 @@ $m = $this->data['mentor'];
    
    return everythings_fine;
  }
+ /* ]]> */
 </script>
-<h1>Mentor <em><?= $m['mentor_user_name'] ?></em> bearbeiten</h1>
-<p id="em-back"><a href="index.php?action=view&id=<?= $m['mentor_id'] ?>">Zur Normalansicht</a></p>
-<form id="em-form" action="index.php?action=edit&id=<?= $m['mentor_id'] ?>&what=mentor" method="POST" onsubmit="return validate();">
+<p id="em-back"><a href="index.php?action=view&amp;id=<?= $m['mentor_id'] ?>">Zur Normalansicht</a></p>
+<form id="em-form" action="index.php?action=edit&amp;id=<?= $m['mentor_id'] ?>&amp;what=mentor" method="post" onsubmit="return validate();">
   <table>
     <tr>
       <th><label for="mentor_user_name">Benutzername</label></th>
@@ -91,7 +92,7 @@ $m = $this->data['mentor'];
     </tr>
     <tr>
       <th><label for="mentor_remark">Anmerkung</label></th>
-      <td><textarea name="mentor_remark" id="mentor_remark" rows="5"><?= $m['mentor_remark'] ?></textarea></td>
+      <td><textarea name="mentor_remark" id="mentor_remark" rows="5" cols="20"><?= $m['mentor_remark'] ?></textarea></td>
     </tr>
     <tr>
       <td colspan="2" class="tac"><input type="submit" value="Aktualisieren" /></td>

@@ -14,9 +14,10 @@ class LogoutPage implements Page
     $this->access->logout();
 
     $rv = array();
-    $rv['title'] = "Erfolgreich abgemeldet";
-    $rv['page']  = "logout";
-    $rv['data']  = array();
+    $rv['heading'] = 'Erfolgreich abgemeldet';
+    $rv['title']   = "Erfolgreich abgemeldet";
+    $rv['page']    = "logout";
+    $rv['data']    = array();
     return $rv;
   }
 }

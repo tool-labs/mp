@@ -1,7 +1,7 @@
 <?php
 $m = $this->data["mentee"];
 ?>
-<h1>Neuling <em><?= $m["mentee_user_name"] ?></em></h1>
+<h2>Informationen <?php if ($this->access->is_editor()) { ?><a href="index.php?action=edit&amp;what=mentee&amp;id=<?= $m['mentee_id'] ?>" class="mentee-edit-link">[bearbeiten]</a><?php } ?></h2>
 <p id="view-userpage"><a href="http://de.wikipedia.org/wiki/Benutzer:<?= $m["mentee_user_name"] ?>">Wikipedia-Benutzerseite</a></p>
   <table id="view-table">
     <tr id="view-in"><th>Eintritt</th><td><?= fd($m["mentee_in"]) ?></td></tr>
@@ -12,13 +12,16 @@ $m = $this->data["mentee"];
  for ($i = 0; $i < $count; $i++)
  {
    $mentor = $this->data['mentors'][$i];
- ?><a href="index.php?action=view&id=<?= $mentor['mentor_id'] ?>"><?= $mentor['mentor_user_name'] ?></a><?php
+ ?><a href="index.php?action=view&amp;id=<?= $mentor['mentor_id'] ?>"><?= $mentor['mentor_user_name'] ?></a><?php
+   if ($this->access->is_editor()) {
+     ?> (<a href="index.php?action=editmm&amp;mentee_id=<?= $m['mentee_id'] ?>&amp;mentor_id=<?= $mentor['mentor_id'] ?>" title="bearbeiten">∓</a>)<?php
+   }
    if ($i < $count - 1)
    {
     ?>, <?php
    }
  }
-?>
+ ?></td></tr>
   </table>
 
 <?php
@@ -30,14 +33,7 @@ if (!empty($m["mentee_remark"]))
 }
 ?>
 
-<p id="view-updated">Letzte Aktualisierung: <?= fdt($m["mentee_lastupdate"]) ?>
-<?php
-  if ($this->access->logged_in())
-  {
-    ?> || <a href="index.php?action=edit&what=mentee&id=<?= $m['mentee_id'] ?>">bearbeiten</a></p><?php
-  }
-?>
-</p>
+<p id="view-updated">Letzte Aktualisierung: <?= fdt($m["mentee_lastupdate"]) ?></p>
 
 <h2 id="view-articles-all"><a id="articles"></a>Artikel</h2>
 <?php
@@ -56,7 +52,7 @@ else
   foreach ($this->data['articles'] as $article)
   {
   ?>
-  <tr><td class="listarticles-article"><a href="http://de.wikipedia.org/w/index.php?action=diff&oldid=<?= $article['ma_rev_id'] ?>">...</a></td>
+  <tr><td class="listarticles-article"><a href="http://de.wikipedia.org/w/index.php?action=diff&amp;oldid=<?= $article['ma_rev_id'] ?>">...</a></td>
       <td class="listarticles-creation"><?= fd($article['ma_creation_date']) ?></td>
   <?php
   }

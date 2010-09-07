@@ -13,6 +13,7 @@
 $m = $this->data['mentee'];
 ?>
 <script type="text/javascript">
+ /* <![CDATA[ */
  // validate user input
  function validate() {
    remove_errors();
@@ -42,10 +43,10 @@ $m = $this->data['mentee'];
    
    return everythings_fine;
  }
-</script>
-<h1>Mentee <em><?= $m['mentee_user_name'] ?></em> bearbeiten</h1>
-<p id="em-back"><a href="index.php?action=viewmentee&id=<?= $m['mentee_id'] ?>">Zur Normalansicht</a></p>
-<form id="em-form" action="index.php?action=edit&id=<?= $m['mentee_id'] ?>&what=mentee" method="POST" onsubmit="return validate();">
+ /* ]> */
+ </script>
+<p id="em-back"><a href="index.php?action=viewmentee&amp;id=<?= $m['mentee_id'] ?>">Zur Normalansicht</a></p>
+<form id="em-form" action="index.php?action=edit&amp;id=<?= $m['mentee_id'] ?>&amp;what=mentee" method="post" onsubmit="return validate();">
   <table>
     <tr>
       <th><label for="mentee_user_name">Benutzername</label></th>

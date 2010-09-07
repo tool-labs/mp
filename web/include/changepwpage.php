@@ -19,10 +19,11 @@ class ChangePWPage implements Page
     }
 
     $rv = array();
-    $rv['page']  = 'changepw';
-    $rv['data']  = array();
+    $rv['page']    = 'changepw';
+    $rv['data']    = array();
     $rv['data']['what']  = 'form';
-    $rv['title'] = 'Passwort ändern';
+    $rv['title']   = 'Passwort ändern';
+    $rv['heading'] = 'Passwort ändern';
     if (isset($_POST['new_password']))
     {
       $rv['data']['what'] = 'success';

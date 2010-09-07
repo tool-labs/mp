@@ -27,7 +27,8 @@ class ViewPage implements Page
     $rv['data'] = $this->db->getMenteeCountByMentor($id);
     $rv['data']['mentor']  = $mentor;
     $rv['data']['mentees'] = $this->db->getMenteesByMentor($id);
-    $rv['title'] = "Mentor {$rv['data']['mentor']['mentor_user_name']}";
+    $rv['title']   = "Mentor {$rv['data']['mentor']['mentor_user_name']}";
+    $rv['heading'] = "Mentor <em>{$rv['data']['mentor']['mentor_user_name']}</em>";
     return $rv;
   }
 }

@@ -15,8 +15,9 @@ class SearchPage implements Page
   public function display()
   {
     $rv = array();
-    $rv['title'] = "Suche";
-    $rv['page']  = "search";
+    $rv['heading'] = 'Suche';
+    $rv['title']   = "Suche";
+    $rv['page']    = "search";
     $rv['data']['active']   = true;
     $rv['data']['inactive'] = true;
     $rv['data']['where']    = 'all';

@@ -379,7 +379,7 @@ class Database
   {
     try
     {
-      $stmt = $this->db->prepare("SELECT mentee_id, mentee_user_name, mentee_in, mentee_out FROM mentee_mentor INNER JOIN mentee ON mm_mentee_id=mentee_id WHERE mm_mentor_id = :id ORDER BY mentee_user_name");
+      $stmt = $this->db->prepare("SELECT mentee_id, mentee_user_name, mentee_in, mentee_out, mm_start, mm_stop FROM mentee_mentor INNER JOIN mentee ON mm_mentee_id=mentee_id WHERE mm_mentor_id = :id ORDER BY mentee_user_name");
       $stmt->execute(array(":id" => $id));
       return $stmt->fetchAll();
     }
@@ -554,6 +554,93 @@ class Database
     {
       $stmt = $this->db->prepare('UPDATE mentor SET mentor_login_password = :np WHERE mentor_user_name = :user');
       $stmt->execute(array(':np' => $hash, ':user' => $user));
+    }
+    catch (PDOException $ex)
+    {
+      $this->handleError($ex);
+    }
+  }
+
+  public function get_mm_items($mentor_id, $mentee_id, $start, $stop)
+  {
+    try
+    {
+      $sql = 'SELECT * FROM mentee_mentor WHERE ';
+      $args = array();
+      $first = true;
+      if (!($mentor_id === ''))
+      {
+        if ($first)
+          $first = false;
+        else
+          $sql .= 'AND ';
+        $sql .= 'mm_mentor_id = :mentor_id ';
+        $args[':mentor_id'] = $mentor_id;
+      }
+      if (!($mentee_id === ''))
+      {
+        if ($first)
+          $first = false;
+        else
+          $sql .= 'AND ';
+        $sql .= 'mm_mentee_id = :mentee_id ';
+        $args[':mentee_id'] = $mentee_id;
+      }
+      if (!($start === ''))
+      {
+        if ($first)
+          $first = false;
+        else
+          $sql .= 'AND ';
+        $sql .= 'mm_start = :start ';
+        $args[':start'] = $start;
+      }
+      if (!($stop === ''))
+      {
+        if ($first)
+          $first = false;
+        else
+          $sql .= 'AND ';
+        $sql .= 'mm_stop = :stop ';
+        $args[':stop'] = $stop;
+      }
+      $sql .= 'ORDER BY mm_start;';
+      $stmt = $this->db->prepare($sql);
+      $stmt->execute($args);
+      return $stmt->fetchAll();
+    }
+    catch (PDOException $ex)
+    {
+      $this->handleError($ex);
+    }
+  }
+
+  public function update_mm_item($mentor_id, $mentee_id, $ostart, $ostop, $start, $stop)
+  {
+    try
+    {
+      $args = array(':mentor_id' => $mentor_id,
+                    ':mentee_id' => $mentee_id,
+                    ':ostart'    => $ostart,
+                    ':start'     => $start,);
+      $sql = "UPDATE mentee_mentor SET mm_start = :start, mm_stop = ";
+      if ($stop === '')
+        $sql .= "NULL";
+      else
+      {
+        $sql .= ":stop";
+        $args[':stop'] = $stop;
+      }
+      $sql .= " WHERE mm_mentor_id = :mentor_id AND mm_mentee_id = :mentee_id AND mm_start = :ostart AND ";
+      if ($ostop === '')
+        $sql .= "mm_stop IS NULL";
+      else
+      {
+        $sql .= "mm_stop = :ostop";
+        $args[':ostop'] = $ostop;
+      }
+      $stmt = $this->db->prepare($sql);
+      $stmt->execute($args);
     }
     catch (PDOException $ex)
     {

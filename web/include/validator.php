@@ -12,8 +12,8 @@
 
 /**
  * Validate a time string. Format should be: YYYY-MM-DD. 
- * @param string timestamp the timestamp to validate
- * @return boolean true, if the timestamp is valid
+ * @param string $timestamp the timestamp to validate
+ * @returns bool ‘true’ if the timestamp is valid
  */
 function validate_timestamp($timestamp)
 {

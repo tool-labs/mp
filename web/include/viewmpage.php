@@ -32,7 +32,8 @@ class ViewMPage implements Page
     $rv['data']['articles']      = $this->db->getArticlesByMenteeId($id);
     $rv['data']['article_count'] = count($rv['data']['articles']);
     $rv['data']['mentors'] = $this->db->getMentorsByMentee($id);
-    $rv['title'] = "Neuling {$rv['data']['mentee']['mentee_user_name']}";
+    $rv['title']   = "Neuling {$rv['data']['mentee']['mentee_user_name']}";
+    $rv['heading'] = "Neuling <em>{$rv['data']['mentee']['mentee_user_name']}</em>";
 
     return $rv;
   }

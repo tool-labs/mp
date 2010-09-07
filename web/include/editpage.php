@@ -45,8 +45,8 @@ class EditPage implements Page
 	 */
   public function display() 
   {
-		if (!$this->access->logged_in())
-			return "Du musst angemeldet sein, um Einträge ändern zu können.";
+		if (!$this->access->is_editor())
+			return "Du musst angemeldet sein und die Erlaubnis dazu haben, um Einträge ändern zu können.";
 		
 		$what = '';
 		if (isset($_GET['what']))
@@ -103,7 +103,8 @@ class EditPage implements Page
 					
 				$rv['data']['mentor_user_name'] = $mentor_user_name;
 				$rv['data']['mentor_id']        = $id;
-				$rv['title'] = "Mentor $mentor_user_name erfolgreich bearbeitet";
+				$rv['title']   = "Mentor $mentor_user_name erfolgreich bearbeitet";
+				$rv['heading'] =  "<em>$mentor_user_name</em> erfolgreich bearbeitet";
 			}
 			else
 			{
@@ -114,6 +115,7 @@ class EditPage implements Page
 					return "Es existiert kein Mentor mit der ID <tt>$id</tt>.";
 				$rv['data']['mentor'] = $mentor;
 				$rv['title']          = "Mentor {$mentor['mentor_user_name']} bearbeiten";
+				$rv['heading']        = "Mentor <em>{$mentor['mentor_user_name']}</em> bearbeiten";
 			}
 		}
 		else if ($what == 'mentee')
@@ -146,7 +148,8 @@ class EditPage implements Page
 				                        $mentee_remark);
 				$rv['data']['mentee_user_name'] = $mentee_user_name;
 				$rv['data']['mentee_id']        = $id;
-				$rv['title'] = "Neuling $mentee_user_name erfolgreich bearbeitet.";
+				$rv['title']   = "Neuling $mentee_user_name erfolgreich bearbeitet.";
+        $rv['heading'] = "<em>$mentee_user_name</em> erfolgreich bearbeitet";
 			}
 			else
 			{
@@ -157,6 +160,7 @@ class EditPage implements Page
 					return "Es existiert kein Mentee mit der ID <tt>$id</tt>.";
 				$rv['data']['mentee'] = $mentee;
 				$rv['title']          = "Neuling {$mentee['mentee_user_name']} bearbeiten";
+				$rv['heading']        = "Mentee <em>{$mentee['mentee_user_name']}</em> bearbeiten";
 			}
 		}
 		else

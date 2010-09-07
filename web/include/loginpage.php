@@ -34,11 +34,13 @@ class LoginPage implements Page
           return "Du konntest nicht angemeldet werden.";
         }
         $rv['data']['user'] = $this->access->user();
+        $rv['heading'] = 'Erfolgreich angemeldet';
       }
     }
     else
     {
       $rv['data']['m'] = "get";
+      $rv['heading'] = 'Anmelden';
     }
 
     return $rv;

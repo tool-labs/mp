@@ -1,9 +1,13 @@
 <?php
 /*
  * lmpage.php
- * 
- * Klasse LMPage
- * List-Mentore-Page
+ * Copyright (C) 2010 by Robin Krahl, Merlissimo and others
+ *
+ * This file is published under the terms of the MIT license
+ * (http://www.opensource.org/licenses/mit-license.php) and the
+ * LGPL (http://www.gnu.org/licenses/lgpl.html).
+ *
+ * For more information, see http://toolserver.org/~dewpmp.
  */
 
 class LMPage implements Page
@@ -32,7 +36,15 @@ class LMPage implements Page
       $count = (int) $_GET["count"];
     }
 
-    $num  = $this->db->getMentorCount();
+    $num = $this->db->getMentorCount();
+
+    $all = false;
+    if (isset($_GET['all']) && $_GET['all'])
+    {
+      $offset = 0;
+      $count  = $num;
+      $all    = true;
+    }
 
     # überprüfe gegebene Parameter
     if ($offset < 0 || ($offset >= $num && $offset != 0))
@@ -63,14 +75,16 @@ class LMPage implements Page
     }
 
     $rv = array();
-    $rv['title'] = "Mentorenliste";
-    $rv['page']  = "list";
-    $rv['data']  = array();
+    $rv['title']   = "Mentorenliste";
+    $rv['heading'] = 'Liste der Mentoren';
+    $rv['page']    = "list";
+    $rv['data']    = array();
     $rv['data']['count']       = $count;
     $rv['data']['mentors']     = $this->db->getMentors($offset, $count);
     $rv['data']['prev_offset'] = $prev_offset;
     $rv['data']['next_offset'] = $next_offset;
     $rv['data']['offset']      = $offset;
+    $rv['data']['all']         = $all;
 
     return $rv;
   }
