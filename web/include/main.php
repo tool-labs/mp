@@ -34,7 +34,7 @@ require_once('viewmpage.php');
  * Format a date stamp.
  * @param int $d the date to format
  * @param string $def the default value if $d = 0
- * @returns string the formatted date $d in ‘j.n.Y’ or $def if $d = 0
+ * @returns string the formatted date $d in ‘d.m.Y’ or $def if $d = 0
  */
 function fd($d, $def = '-')
 {
@@ -43,14 +43,14 @@ function fd($d, $def = '-')
     return $def;
   }
   $date = new DateTime($d);
-  return $date->format('j.n.Y');
+  return $date->format('d.m.Y');
 }
 
 /**
  * Format a date-and-time stamp.
  * @param int $dt the date and time to format
  * @param string $def the default value if $dt = 0
- * @returns string the formatted date-time $dt in ‘j.n.Y, G:s’ form or $def if
+ * @returns string the formatted date-time $dt in ‘d.m.Y, G:s’ form or $def if
  *                 $d = 0
  */
 function fdt($dt, $def = '-')
@@ -60,7 +60,7 @@ function fdt($dt, $def = '-')
     return $def;
   }
   $date = new DateTime($dt);
-  return $date->format('j.n.Y, G:s');
+  return $date->format('d.m.Y, G:s');
 }
 
 /**
