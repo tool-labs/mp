@@ -1435,13 +1435,18 @@ margin:0;
 padding:0;
 }
 table {
-  margin: 1em 1em 1em 0;
+  margin: 0 1em 1em 0;
   background: #f9f9f9;
   border: 1px #aaa solid;
   border-collapse: collapse;
 }
 /* own */
 .tac { text-align: center; }
-.warning-image { vertical-align: center; }
 .javascript-only { display: none; }
 .mentee-edit-link, .mentor-edit-link { font-size: small; }
+div.box { background-color: #F2F2F2; border: 1px solid #AAAAAA; padding: 0.2em; margin-top: 10px; margin-bottom: 10px; }
+p.lm-navi { text-align: center; margin: 0px; padding: 0px; }
+table#view-table { float: left; margin-bottom: 0px; }
+table#view-top-table { background-color: transparent; border: 0px; }
+table#view-top-table td.vtttd { border: 0px; vertical-align: top; }
+h2#view-mentees-all { clear: both; }

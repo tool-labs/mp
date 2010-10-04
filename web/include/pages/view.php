@@ -25,8 +25,9 @@ class ViewPage implements Page
     # note: getMenteeCountByMentor returns an array → everything’s fine
     #       though it looks strange ;)
     $rv['data'] = $this->db->getMenteeCountByMentor($id);
-    $rv['data']['mentor']  = $mentor;
-    $rv['data']['mentees'] = $this->db->getMenteesByMentor($id);
+    $rv['data']['mentor']    = $mentor;
+    $rv['data']['mentees']   = $this->db->getMenteesByMentor($id);
+    $rv['data']['comentors'] = $this->db->get_comentors_by_mentor_id($id);
     $rv['title']   = "Mentor {$rv['data']['mentor']['mentor_user_name']}";
     $rv['heading'] = "Mentor <em>{$rv['data']['mentor']['mentor_user_name']}</em>";
     return $rv;

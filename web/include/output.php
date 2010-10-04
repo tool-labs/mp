@@ -82,14 +82,10 @@ class Output
     if(file_exists(__DIR__ . "/../templates/" . $this->page . ".header")){
     	$this->header = file_get_contents(__DIR__ . "/../templates/" . $this->page . ".header");
     }
-    ob_start();
+    ob_start("ob_gzhandler");
     include(__DIR__ . "/../templates/header.html");
     include(__DIR__ . "/../templates/" . $this->page . ".html");
     include(__DIR__ . "/../templates/footer.html");
-    $out = ob_get_clean();
-    $out = $out;
-    #ob_start("ob_gzhandler");
-    echo $out;
     ob_end_flush();
     exit;
   }

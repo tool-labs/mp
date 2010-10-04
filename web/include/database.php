@@ -1,36 +1,46 @@
 <?php
 /*
- * database.php
+ * Copyright (C) 2010 by Robin Krahl, Merlissimo and others
+ * 
+ * This file is published under the terms of the MIT license
+ * (http://www.opensource.org/licenses/mit-license.php) and the
+ * LGPL (http://www.gnu.org/licenses/lgpl.html).
  *
- * Klasse Database
- * Die Database-Klasse stellt die Verbindung zur Datenbank her und kümmert sich
- * die Abfrage der notwendigen Daten. Zur Kommunikation mit der MySQL-Datenbank
- * verwendet sie eine persistente PDO-Verbindung.
+ * For more information, see http://toolserver.org/~dewpmp.
  */
 
-# Datenbank-Einstellungen
-# __DIR__ . "/../../db_settings.ini"
-
+/**
+ * This class provides access on MySQL databases. It’s primarily used for the 
+ * Wikipedia and the MP databases. It tries to access the configuration file
+ * __DIR__ . "/../../db_settings.ini". An example config file can be found at
+ * __DIR__ . "/ ../../db_settings_default.ini".
+ */
 class Database
 {
-  # Datenbank-Handle
-  private $db;
+  /**
+   * Database handle.
+   */
+  protected $db;
 
-  # void __construct()
-  # Konstruktor
-  function __construct($db=null)
+  /**
+   * Constructor. Connects with a database using the information in the
+   * default_settings.ini and .my.cnf files.
+   * @param $db the database to access or null to access the database specified
+   *            in db_settings.ini
+   */
+  function __construct($db = null)
   {
     $ts_pw = posix_getpwuid(posix_getuid());
     $ts_mycnf = array();
-    if(file_exists($ts_pw['dir'] . "/.my.cnf"))
+    if (file_exists($ts_pw['dir'] . "/.my.cnf"))
     {
       $ts_mycnf = parse_ini_file($ts_pw['dir'] . "/.my.cnf");
     }
-    if(file_exists(__DIR__ . "/../../db_settings.ini"))
+    if (file_exists(__DIR__ . "/../../db_settings.ini"))
     {
       $ts_mycnf = array_merge($ts_mycnf, parse_ini_file(__DIR__ . "/../../db_settings.ini"));
     }
-    if(isset($db)) $ts_mycnf['dbname'] = $db;
+    if (isset($db)) $ts_mycnf['dbname'] = $db;
     try
     {
       $this->db = new PDO("mysql:host=" . $ts_mycnf['host']. ";dbname=" . $ts_mycnf['dbname'],
@@ -43,9 +53,11 @@ class Database
       $this->handleError($ex->getMessage());
     }
   }
-
-  # int getMentorCount()
-  # gibt die Anzahl Mentoren zurück
+  
+  /**
+   * Returns the count of mentor datasets in the MP database.
+   * @returns mentor count
+   */
   public function getMentorCount()
   {
     try
@@ -58,11 +70,13 @@ class Database
     {
       $this->handleError($ex->getMessage());
     }
-    return 0;
   }
 
-  # array getMentors(offset, count)
-  # gibt die ersten <count> Mentoren ab <offset> zurück
+  /**
+   * Returns a list of mentors in lexical order.
+   * @param $offset the list’s offset
+   * @param $count the list’s length
+   */
   public function getMentors($offset, $count)
   {
     try
@@ -77,12 +91,12 @@ class Database
     {
       $this->handleError($ex->getMessage());
     }
-    return array();
   }
 
-  # array getMentorNames()
-  # gibt die Namen aller Mentoren zurück.
-  # *Achtung* Rückgabe als array(array('mentor_user_name' => $user_name))
+  /**
+   * Returns a list of all mentor user names.
+   * @returns all mentor user names
+   */
   public function getMentorNames()
   {
     try
@@ -95,12 +109,12 @@ class Database
     {
       $this->handleError($ex);
     }
-    return '';
   }
 
-  # array getMenteeNames()
-  # gibt die Namen aller Neulinge zurück
-  # *Achtung* Rückgabe als array(array('mentee_user_name' => $user_name))
+  /**
+   * Returns a list of all mentee user names.
+   * @returns all mentee user names
+   */
   public function getMenteeNames()
   {
     try
@@ -113,11 +127,14 @@ class Database
     {
       $this->handleError($ex);
     }
-    return '';
   }
 
-  # array getMentorById(id)
-  # gibt den Mentor mit der Mentorenid <id> in Arrayform zurück
+  /**
+   * Returns information about a mentor in array form (or an empty array if the
+   * user doesn’t exist).
+   * @param $id the mentor’s id
+   * @returns information about the mentor
+   */
   public function getMentorById($id)
   {
     try
@@ -130,11 +147,14 @@ class Database
     {
       $this->handleError($ex->getMessage());
     }
-    return array();
   }
 
-  # array getMentorByName(name)
-  # gibt den Mentor mit den Benutzernamen <name> in Arrayform zurück
+  /**
+   * Returns information about a mentor in array form (or an empty array if the
+   * user doesn’t exist).
+   * @param $name the mentor’s name
+   * @returns information about the mentor
+   */
   public function getMentorByName($name)
   {
     try
@@ -147,13 +167,15 @@ class Database
     {
       $this->handleError($ex->getMessage());
     }
-    return array();
   }
 
-  # array getMentorByNameAndActivity(string name, bool actives, bool inactives)
-  # gibt den Mentor mit den Benutzernamen <name> in Arrayform zurück.
-  # Hierbei geben <actives> und <inactives> an, ob in den aktiven und/oder den
-  # inaktiven Mentoren gesucht wird.
+  /**
+   * Returns information about a mentor specified by his name.
+   * @param $name the mentor’s name
+   * @param $actives search for an active mentor
+   * @param $inactives search for an inactive mentor
+   * @returns information about the mentor
+   */
   public function getMentorByNameAndActivity($name, $actives, $inactives)
   {
     if (!$actives && !$inactives)
@@ -181,12 +203,13 @@ class Database
     {
       $this->handleError($ex->getMessage());
     }
-    return array();
   }
 
-  # array getMentorsByNameRegExp(name_regexp)
-  # Gibt einen Array mit allen Mentoren, deren Name auf den
-  # regulären Ausdruck <name_regexp> passt, zurück.
+  /**
+   * Searches mentors whose names match the regular expression $name_regexp.
+   * @param $name_regexp a regular expression
+   * @returns an array of matching mentors
+   */
   public function getMentorsByNameRegExp($name_regexp)
   {
     try
@@ -199,14 +222,14 @@ class Database
     {
       $this->handleError($ex->getMessage());
     }
-    return array();
   }
 
-  # array getMentorsByNameRegExpAA(regexp name_regexp, bool actives, bool inactives)
-  # Gibt einen Array mit allen Mentoren, deren Name auf den
-  # regulären Ausdruck <name_regexp> passt, zurück. Hierbei geben
-  # <actives> und <inactives> an, ob dabei die aktiven und/oder
-  # die inaktiven Mentoren durchsucht werden.
+  /**
+   * Searches for mentors using a name regexp and regarding the activity.
+   * @param $name_regexp a regular expression
+   * @param $actives search active mentors
+   * @param $inactives search inactive mentors
+   */
   public function getMentorsByNameRegExpAA($name_regexp, $actives, $inactives)
   {
     if (!$actives && !$inactives)
@@ -234,12 +257,13 @@ class Database
     {
       $this->handleError($ex->getMessage());
     }
-    return array();
   }
 
-  # array getMenteeById(int id)
-  # Gibt den Neuling mit der Menteeid <id> in Arraydarstellung
-  # zurück.
+  /**
+   * Searches a mentee by its ID.
+   * @param $id the mentee id
+   * @returns information about the mentee
+   */
   public function getMenteeById($id)
   {
     try
@@ -252,12 +276,13 @@ class Database
     {
       $this->handleError($ex->getMessage());
     }
-    return array();
   }
 
-  # array getMenteeByName(string name)
-  # Gibt den Neuling mit Benutzername <name> in Arraydarstellung
-  # zurück.
+  /**
+   * Searches a mentee by its name.
+   * @param $name name to search
+   * @returns information in an array
+   */
   public function getMenteeByName($name)
   {
     try
@@ -270,13 +295,15 @@ class Database
     {
       $this->handleError($ex->getMessage());
     }
-    return array();
   }
 
-  # array getMenteeByNameAndActivity(string name, bool actives, bool inactives)
-  # gibt den Neuling mit den Benutzernamen <name> in Arrayform zurück.
-  # Hierbei geben <actives> und <inactives> an, ob in den aktiven und/oder den
-  # inaktiven Neulingen gesucht wird.
+  /**
+   * Searches mentors with certain conditions:
+   *   - the user name ($name)
+   *   - whether to search an active ($actives) and/or inactive ($inactives)
+   *     mentor
+   * @returns a matching mentor dataset or an empty array
+   */
   public function getMenteeByNameAndActivity($name, $actives, $inactives)
   {
     if (!$actives && !$inactives)
@@ -304,9 +331,13 @@ class Database
     {
       $this->handleError($ex->getMessage());
     }
-    return array();
   }
 
+  /**
+   * Searches mentees whose names match a certain regular expression 
+   * ($name_regexp).
+   * @returns a list of mentee datasets
+   */
   public function getMenteesByNameRegExp($name_regexp)
   {
     try
@@ -319,14 +350,15 @@ class Database
     {
       $this->handleError($ex->getMessage());
     }
-    return array();
   }
 
-  # array getMenteesByNameRegExpAA(regexp name_regexp, bool actives, bool inactives)
-  # Gibt einen Array mit allen Neulingen, deren Name auf den
-  # regulären Ausdruck <name_regexp> passt, zurück. Hierbei geben
-  # <actives> und <inactives> an, ob dabei die aktiven und/oder
-  # die inaktiven Neulinge durchsucht werden.
+  /**
+   * Searches mentees with certain conditions:
+   *   - a regular expression applied on the user name ($name_regexp)
+   *   - whether to search an active ($actives) and/or inactive ($inactives)
+   *     mentee
+   * @returns a list of matching mentees
+   */
   public function getMenteesByNameRegExpAA($name_regexp, $actives, $inactives)
   {
     if (!$actives && !$inactives)
@@ -354,11 +386,14 @@ class Database
     {
       $this->handleError($ex->getMessage());
     }
-    return array();
   }
 
 
-  # array getMentorsByMentee(id)
+  /**
+   * Returns a list of all mentors who took care of a certain mentee.
+   * @param $id the mentee’s id
+   * @return a list of mentor datasets
+   */
   public function getMentorsByMentee($id)
   {
     try
@@ -371,10 +406,13 @@ class Database
     {
       $this->handleErorr($ex->getMessage());
     }
-    return array();
   }
 
-  # array getMenteesByMentor(id)
+  /**
+   * Returns all mentees a mentor ever took care of.
+   * @param $id the mentor’s id
+   * @returns an array with mentee datasets
+   */
   public function getMenteesByMentor($id)
   {
     try
@@ -387,9 +425,13 @@ class Database
     {
       $this->handleError($ex->getMessage());
     }
-    return array();
   }
 
+  /**
+   * Returns the count of mentees a mentor ever took care of.
+   * @param $id the mentor’s id
+   * @returns the mentee count
+   */
   public function getMenteeCountByMentor($id)
   {
     try
@@ -402,9 +444,88 @@ class Database
     {
       $this->handleError($ex->getMessage());
     }
-    return array();
   }
+  
+  /**
+   * Returns a list of mentors that are co-mentors of a certain mentor.
+   * @param $id the mentor’s id
+   * @returns a list of mentor datasets
+   */
+  public function get_comentors_by_mentor_id($id)
+  {
+    try
+    {
+      $stmt = $this->db->prepare("SELECT * FROM comentors INNER JOIN mentor ON co_comentor_id = mentor_id WHERE co_mentor_id = :id ORDER BY mentor_user_name");
+      $stmt->execute(array(":id" => $id));
+      return $stmt->fetchAll();
+    }
+    catch (PDOException $ex)
+    {
+      $this->handleError($ex->getMessage());
+    }
+  }
+  
+  /**
+   * Checks whether there is a comentor dataset for two certain mentors.
+   * @param $mid the mentor’s id
+   * @param $cmid the comentor’s id
+   * @returns true if there is a dataset for these mentors.
+   */
+   public function exists_comentor_connection($mid, $cmid)
+   {
+     try
+     {
+       $stmt = $this->db->prepare("SELECT * FROM comentors WHERE co_mentor_id = :mid AND co_comentor_id = :cmid");
+       $stmt->execute(array(":mid" => $mid, ":cmid" => $cmid));
+       return ($stmt->rowCount() > 0);
+     }
+     catch (PDOException $ex)
+     {
+       $this->handleError($ex->getMessage());
+     }
+   }
+   
+   /**
+    * Delete all matching comentor datasets.
+    * @param $mid the mentor’s id
+    * @param $cmid the comentor’s id
+    */
+   public function delete_comentor($mid, $cmid)
+   {
+     try
+     {
+       $stmt = $this->db->prepare("DELETE FROM comentors WHERE co_mentor_id = :mid AND co_comentor_id = :cmid");
+       $stmt->execute(array(":mid" => $mid, ":cmid" => $cmid));
+     }
+     catch (PDOException $ex)
+     {
+       $this->handleError($ex);
+     }
+   }
+   
+   /**
+    * Add a comentor dataset.
+    * @param $mid the mentor’s id
+    * @param $cmid the comentor’s id
+    */
+   public function add_comentor($mid, $cmid)
+   {
+     try
+     {
+       $stmt = $this->db->prepare("INSERT INTO comentors (co_mentor_id, co_comentor_id) VALUES (:mid, :cmid)");
+       $stmt->execute(array(":mid" => $mid, ":cmid" => $cmid));
+     }
+     catch (PDOException $ex)
+     {
+       $this->handleError($ex);
+     }
+   }
 
+  /**
+   * Returns a list of artciles created by a certain mentee.
+   * @param $id the mentee’s id
+   * @returns the mentee’s article datasets
+   */
   public function getArticlesByMenteeId($id)
   {
     try
@@ -417,9 +538,19 @@ class Database
     {
       $this->handleError($ex->getMessage());
     }
-    return array();
   }
 
+  /**
+   * Update a mentor dataset.
+   * @param $id mentor id
+   * @param $user_name new user name
+   * @param $in new in date
+   * @param $out new out date
+   * @param $active new activity state
+   * @param $barnstar new barnstar state
+   * @param $award new award state
+   * @param $remark new remark
+   */
   public function updateMentor($id, $user_name, $in, $out, $active,
                                $barnstar, $award, $remark)
   {
@@ -449,6 +580,14 @@ class Database
     }
   }
 
+  /**
+   * Update a mentee dataset.
+   * @param int    $id        the mentee id specifies which mentee to update
+   * @param string $user_name the updated user name
+   * @param string $in        the updated in date
+   * @param string $out       the updated out date
+   * @param string $remark    the updated remark
+   */
   public function updateMentee($id, $user_name, $in, $out, $remark)
   {
     try
@@ -471,6 +610,10 @@ class Database
     }
   }
 
+  /**
+   * Counts the currently active mentees and mentors.
+   * @return the count of active mentees and mentors
+   */
   public function getCountsDB()
   {
     try
@@ -486,9 +629,12 @@ class Database
     {
       $this->handleError($ex->getMessage());
     }
-    return array();
   }
 
+  /**
+   * Counts all mentees and mentors ever.
+   * @return the mentee and mentor counts
+   */
   public function getCountsAllDB()
   {
     try
@@ -504,27 +650,13 @@ class Database
     {
       $this->handleError($ex->getMessage());
     }
-    return array();
   }
-
-  public function getCountsWP()
-  {
-    try
-    {
-      $rv = array();
-      $q = $this->db->query("SELECT COUNT(*) as mentor_count_wp FROM dewiki_p.categorylinks WHERE cl_to = 'Benutzer_ist_Mentor'");
-      $rv = array_merge($rv, $q->fetch());
-      $q = $this->db->query("SELECT COUNT(*) as newbie_count_wp FROM dewiki_p.categorylinks WHERE cl_to = 'Wird_im_Mentorenprogramm_betreut'");
-      $rv = array_merge($rv, $q->fetch());
-      return $rv;
-    }
-    catch (PDOException $ex)
-    {
-      $this->handleError($ex->getMessage());
-    }
-    return array();
-  }
-
+  
+  /**
+   * Get the login password hash for a certain mentor.
+   * @param string $user the mentor’s user name
+   * @returns the mentor’s password hash or -1 if the mentor doesn’t exist.
+   */
   public function get_hash_for_user($user)
   {
     try
@@ -545,9 +677,13 @@ class Database
     {
       $this->handleError($ex);
     }
-    return -1;
   }
 
+  /**
+   * Update the password hash for a mentor.
+   * @param string $user the mentor’s user name
+   * @param sha1   $hash the new password hash 
+   */
   public function set_hash_for_user($user, $hash)
   {
     try
@@ -561,6 +697,15 @@ class Database
     }
   }
 
+  /**
+   * Get mentee/mentor relations meeting certain requirements.
+   * @param int    $mentor_id the mentor’s id or 0
+   * @param int    $mentee_id the mentee’s id or 0
+   * @param string $start     the relation start or ""
+   * @param string $stop      the relation end or ""
+   * @returns a list of all mentee/mentor relations that meet the 
+   *          requirements specified by the parameters (0 or "" is a wildcard).
+   */
   public function get_mm_items($mentor_id, $mentee_id, $start, $stop)
   {
     try
@@ -615,6 +760,15 @@ class Database
     }
   }
 
+  /**
+   * Update the start or stop of a mentee/mentor relation.
+   * @param int    $mentor_id the mentor’s id
+   * @param int    $mentee_id the mentee’s id
+   * @param string $ostart    the old start
+   * @param string $ostop     the old stop
+   * @param string $start     the updated start
+   * @param string $stop      the updated stop
+   */
   public function update_mm_item($mentor_id, $mentee_id, $ostart, $ostop, $start, $stop)
   {
     try
@@ -647,14 +801,38 @@ class Database
       $this->handleError($ex);
     }
   }
-
-  # handleError(string)
-  # gibt eine Fehlermeldung aus und terminiert
+  
+  /**
+   * Get the count of mentees and mentors currently active. The functionen uses
+   * the categories ‘Benutzer ist Mentor’ and ‘Wird im Mentorenprogramm 
+   * betreut’.
+   * @return mentee/mentor count
+   */
+  public function getCountsWP()
+  {
+    try
+    {
+      $rv = array();
+      $q = $this->db->query("SELECT COUNT(*) as mentor_count_wp FROM dewiki_p.categorylinks WHERE cl_to = 'Benutzer_ist_Mentor'");
+      $rv = array_merge($rv, $q->fetch());
+      $q = $this->db->query("SELECT COUNT(*) as newbie_count_wp FROM dewiki_p.categorylinks WHERE cl_to = 'Wird_im_Mentorenprogramm_betreut'");
+      $rv = array_merge($rv, $q->fetch());
+      return $rv;
+    }
+    catch (PDOException $ex)
+    {
+      $this->handleError($ex->getMessage());
+    }
+    return array();
+  }
+  
+  /**
+   * Prints an error message and quits the application.
+   * @param string $msg error message
+   */
   protected function handleError($msg)
   {
     die("<p class='error'>Datenbank-Fehler: <pre>" . $msg . "</pre></p>");
   }
 
 }
-
-?>

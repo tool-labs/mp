@@ -1,6 +1,5 @@
 <?php
 /*
- * lmpage.php
  * Copyright (C) 2010 by Robin Krahl, Merlissimo and others
  *
  * This file is published under the terms of the MIT license
@@ -10,7 +9,7 @@
  * For more information, see http://toolserver.org/~dewpmp.
  */
 
-class LMPage implements Page
+class ListPage implements Page
 {
   # Datenbank-Handle
   private $db;

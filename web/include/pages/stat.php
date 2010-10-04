@@ -17,7 +17,7 @@
 class StatPage implements Page
 {
   /**
-   * A MP database handle.
+   * A database handle.
    */
   private $db;
 

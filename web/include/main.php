@@ -10,25 +10,26 @@
  * For more information, see http://toolserver.org/~dewpmp.
  */
 
-# notwendige Einbindungen
 require_once('database.php');
 require_once('output.php');
 require_once('access.php');
 require_once('validator.php');
-require_once('page.php');
-require_once('aboutpage.php');
-require_once('changepwpage.php');
-require_once('editpage.php');
-require_once('editmmpage.php');
-require_once('errorpage.php');
-require_once('infopage.php');
-require_once('lmpage.php');
-require_once('loginpage.php');
-require_once('logoutpage.php');
-require_once('searchpage.php');
-require_once('statpage.php');
-require_once('viewpage.php');
-require_once('viewmpage.php');
+require_once('pages/page.php');
+require_once('pages/about.php');
+require_once('pages/addcom.php');
+require_once('pages/changepw.php');
+require_once('pages/delcom.php');
+require_once('pages/edit.php');
+require_once('pages/editmm.php');
+require_once('pages/error.php');
+require_once('pages/info.php');
+require_once('pages/list.php');
+require_once('pages/login.php');
+require_once('pages/logout.php');
+require_once('pages/search.php');
+require_once('pages/stat.php');
+require_once('pages/view.php');
+require_once('pages/viewm.php');
 
 /**
  * Format a date stamp.
@@ -70,13 +71,9 @@ function fdt($dt, $def = '-')
 class Main
 {
   /**
-   * The database object representing the Wikipedia database.
+   * A database handle.
    */
-  private $db_wp;
-  /**
-   * The database object representing the MP database.
-   */
-  private $db_mp;
+  private $db;
   /**
    * The existing pages in form ‘access-name’ → ‘instance’. A page can be
    * called with ?action=access-name.
@@ -98,25 +95,26 @@ class Main
   public function __construct()
   {
     # initialise databases
-    $this->db_mp = new Database();
-    $this->db_wp = new Database('dewiki_p');
+    $this->db = new Database();
 
-    $this->access = new Access($this->db_mp);
+    $this->access = new Access($this->db);
     $this->output = new Output($this->access);
 
     # load pages
     $this->pages['']            = new InfoPage    ();
     $this->pages['about']       = new AboutPage   ();
-    $this->pages['changepw']    = new ChangePWPage($this->db_mp, $this->access);
-    $this->pages['edit']        = new EditPage    ($this->db_mp, $this->access);
-    $this->pages['editmm']      = new EditMMPage  ($this->db_mp, $this->access);
-    $this->pages['error']       = new ErrorPage   ($this->db_mp);
-    $this->pages['list']        = new LMPage      ($this->db_mp);
-    $this->pages['view']        = new ViewPage    ($this->db_mp);
-    $this->pages['viewmentee']  = new ViewMPage   ($this->db_mp);
-    $this->pages['search']      = new SearchPage  ($this->db_mp);
-    $this->pages['stat']        = new StatPage    ($this->db_mp);
-    $this->pages['login']       = new LoginPage   ($this->db_mp, $this->access);
+    $this->pages['addcom']      = new AddComPage  ($this->db, $this->access);
+    $this->pages['changepw']    = new ChangePWPage($this->db, $this->access);
+    $this->pages['delcom']      = new DelComPage  ($this->db, $this->access);
+    $this->pages['edit']        = new EditPage    ($this->db, $this->access);
+    $this->pages['editmm']      = new EditMMPage  ($this->db, $this->access);
+    $this->pages['error']       = new ErrorPage   ($this->db);
+    $this->pages['list']        = new ListPage    ($this->db);
+    $this->pages['view']        = new ViewPage    ($this->db);
+    $this->pages['viewmentee']  = new ViewMPage   ($this->db);
+    $this->pages['search']      = new SearchPage  ($this->db);
+    $this->pages['stat']        = new StatPage    ($this->db);
+    $this->pages['login']       = new LoginPage   ($this->db, $this->access);
     $this->pages['logout']      = new LogoutPage  ($this->access);
   }
 
@@ -135,7 +133,7 @@ class Main
 
     $page = $this->pages[$pagename];
     $tmp  = $page->display();
-    $cd   = array_merge($this->db_mp->getCountsDB(), $this->db_wp->getCountsWP());
+    $cd   = array_merge($this->db->getCountsDB(), $this->db->getCountsWP());
 
     if (gettype($tmp) == 'string')
     {

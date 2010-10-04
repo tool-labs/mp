@@ -1,4 +1,12 @@
+<div class="box">
+<?php
+if (!($this->data["prev_offset"] === -1 && $this->data["next_offset"] === -1))
+{
+?>
 <p class="lm-navi">
+<?php
+}
+?>
 <?php
 if ($this->data["prev_offset"] != -1)
 {
@@ -18,34 +26,41 @@ if ($this->data["next_offset"] != -1)
 <span class="lm-next"><a href="index.php?action=list&amp;offset=<?= $this->data["next_offset"] ?>&amp;count=<?= $this->data["count"] ?>">Weiter</a></span>
 <?php
 }
+if (!($this->data["prev_offset"] === -1 && $this->data["next_offset"] === -1))
+{
 ?>
 </p>
+<hr />
+<?php
+}
+?>
 
+<div>
+<ul>
 <form id="lm-count" action="index.php" method="get">
-  <div>
-  <label for="count">Mentoren pro Seite</label> <select name="count" id="count">
+  <li><label for="count">Mentoren pro Seite</label> <select name="count" id="count">
     <option<?php if ($this->data["count"] == 10) { ?> selected="selected"<?php } ?>>10</option>
     <option<?php if ($this->data["count"] == 20) { ?> selected="selected"<?php } ?>>20</option>
     <option<?php if ($this->data["count"] == 50) { ?> selected="selected"<?php } ?>>50</option></select>
   <input type="submit" value="Ändern" />
   <input type="hidden" name="offset" value="<?= $this->data['offset'] ?>" />
-  <input type="hidden" name="action" value="list" />
-</div>
+  <input type="hidden" name="action" value="list" /></li>
 </form>
 <?php
 if (!$this->data['all'])
 {
 ?>
 <form id="lm-list-all" action="index.php" method="get">
-  <div>
-  <input type="submit" value="Alle anzeigen" />
+  <li><input type="submit" value="Alle anzeigen" /></li>
   <input type="hidden" name="action" value="list" />
   <input type="hidden" name="all"    value="1" />
-</div>
 </form>
 <?php
 }
 ?>
+</ul>
+</div>
+</div>
 
 <?php
 if (!empty($this->data["mentors"]))
@@ -70,8 +85,14 @@ foreach ($this->data["mentors"] as $mentor)
 }
 ?>
 
+<?php
+if (!($this->data["prev_offset"] === -1 && $this->data["next_offset"] === -1))
+{
+?>
+<div class="box">
 <p class="lm-navi">
 <?php
+}
 if ($this->data["prev_offset"] != -1)
 {
 ?>
@@ -90,5 +111,11 @@ if ($this->data["next_offset"] != -1)
 <span class="lm-next"><a href="index.php?action=list&amp;offset=<?= $this->data["next_offset"] ?>&amp;count=<?= $this->data["count"] ?>">Weiter</a></span>
 <?php
 }
+if (!($this->data["prev_offset"] === -1 && $this->data["next_offset"] === -1))
+{
 ?>
 </p>
+</div>
+<?php
+}
+?>

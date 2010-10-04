@@ -2,19 +2,37 @@
 $m = $this->data["mentor"];
 ?>
 <h2>Informationen<?php if ($this->access->is_editor()) { ?><a href="index.php?action=edit&amp;what=mentor&amp;id=<?= $m['mentor_id'] ?>" class="mentor-edit-link"> [bearbeiten]</a><?php } ?></h2>
-<p id="view-userpage"><a href="http://de.wikipedia.org/wiki/Benutzer:<?= $m["mentor_user_name"] ?>">Wikipedia-Benutzerseite</a></p>
-<?php
-if ($m['mentor_has_barnstar'] == 1)
-{
-?>
- <p id="view-barnstar">Träger des Ordens.</p>
-<?php
-}
-?>
+
+<table id="view-top-table">
+<tr>
+<td class="vtttd">
   <table id="view-table" rules="all">
     <tr id="view-in"><th>Eintritt</th><td><?= fd($m["mentor_in"]) ?></td></tr>
     <tr id="view-out"><th>Austritt</th><td><?= fd($m["mentor_out"]) ?></td></tr>
     <tr id="view-mentees"><th>Betreute Neulinge</th><td><?= $this->data['mentee_mentor_count'] ?> – <a href="#mentees">Liste</a></td></tr>
+    <tr id="view-comentors"><th>Co-Mentoren<?php
+    if ($this->access->is_editor())
+    {
+    ?>
+     <a href="index.php?action=addcom&amp;id=<?= $m['mentor_id'] ?>" title="Co-Mentor hinzufügen">(+)</a>
+    <?php
+    } 
+    ?></th><td><ul><?php
+      foreach ($this->data['comentors'] as $cm)
+      {
+    ?>
+      <li><a href="index.php?action=view&amp;id=<?= $cm['mentor_id'] ?>"><?= $cm['mentor_user_name'] ?></a><?php
+      if ($this->access->is_editor())
+      {
+      ?>
+       <a href="index.php?action=delcom&amp;mid=<?= $m['mentor_id'] ?>&amp;cmid=<?= $cm['mentor_id'] ?>" title="Co-Mentor löschen">(-)</a>
+      <?php
+      }
+      ?></li>
+    <?php
+    }
+    ?></ul></td></tr>
+    
    <?php
     if ($m['mentor_award_level'] != 0)
     {
@@ -29,17 +47,35 @@ if ($m['mentor_has_barnstar'] == 1)
     }
    ?>
   </table>
+</td>
+
+<td class="vtttd">
+<ul id="view-ul-right">
+<li id="view-userpage"><a href="http://de.wikipedia.org/wiki/Benutzer:<?= $m["mentor_user_name"] ?>">Wikipedia-Benutzerseite</a></li>
+<?php
+if ($m['mentor_has_barnstar'] == 1)
+{
+?>
+ <li id="view-barnstar">Träger des Ordens.</li>
+<?php
+}
+?>
 
 <?php
 if (!empty($m["mentor_remark"]))
 {
 ?>
-<p id="view-comment"><strong>Anmerkung:</strong> <?= $m["mentor_remark"] ?></p>
+<li id="view-comment"><strong>Anmerkung:</strong> <?= $m["mentor_remark"] ?></li>
 <?php
 }
 ?>
 
-<p id="view-updated">Letzte Aktualisierung: <?= fdt($m["mentor_lastupdate"]) ?></p>
+<li id="view-updated">Letzte Aktualisierung: <?= fdt($m["mentor_lastupdate"]) ?></li>
+
+</ul>
+</td>
+</tr>
+</table>
 
 <h2 id="view-mentees-all"><a id="mentees"></a>Betreute Neulinge</h2>
 
@@ -68,7 +104,7 @@ else
       <td class="listmentees-in"><?= fd($mentee['mm_start']) ?></td>
       <td class="listmentees-out"><?= fd($mentee['mm_stop']) ?></td>
       <?php if ($this->access->is_editor()) { ?>
-        <td class ="listmentees-edit"><a href="index.php?action=editmm&amp;mentee_id=<?= $mentee['mentee_id'] ?>&amp;mentor_id=<?= $m['mentor_id'] ?>" title="bearbeiten">∓</a></td>
+        <td class ="listmentees-edit"><a href="index.php?action=editmm&amp;mentee_id=<?= $mentee['mentee_id'] ?>&amp;mentor_id=<?= $m['mentor_id'] ?>" title="bearbeiten">±</a></td>
       <?php } ?></tr>
   <?php
   }
