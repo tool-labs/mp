@@ -25,6 +25,8 @@ $m = $this->data["mentee"];
    }
  }
  ?></td></tr>
+     <tr id="view-editcount"><th>Bearbeitungen</th><td><?= number_format($this->data['mentee_edit_count'], 0, '', '.') ?> (<a href="http://toolserver.org/~soxred93/pcount/index.php?name=<?= $m['mentee_user_name'] ?>&lang=de&wiki=wikipedia" title="Editcounter">EC</a>)</td></tr>
+     <tr id="view-activity"><th>Aktivität</th><td><?php if ($this->data['activity']) { ?>aktiv<?php } else { ?>inaktiv<?php } ?> (<a href="http://toolserver.org/~guandalug/tools/stimmberechtigung.php?user=<?= $m['mentee_user_name'] ?>" title="Stimmberechtigung">SB</a>)</td></tr>
   </table>
 </td>
 
@@ -44,6 +46,7 @@ if (!empty($m["mentee_remark"]))
 
 <li id="view-updated">Letzte Aktualisierung: <?= fdt($m["mentee_lastupdate"]) ?></li>
 </ul>
+<p><strong>Erläuterung:</strong> <em>Bearbeitungen</em> gibt alle Bearbeitungen dieses Benutzers an; der Link führt zum Editcounter. <em>Aktivität</em> gibt an, ob der Benutzer im letzten Monat editiert hat; der Link führt zum Stimmberechtigungs-Tool. Die <em>Artikel</em> beziehen sich nicht nur auf die Phase der Betreuung, sondern sind davon unabhängig.</p>
 </td>
 </tr>
 </table>
@@ -65,7 +68,7 @@ else
   foreach ($this->data['articles'] as $article)
   {
   ?>
-  <tr><td class="listarticles-article"><a href="http://de.wikipedia.org/w/index.php?action=diff&amp;oldid=<?= $article['ma_rev_id'] ?>">...</a></td>
+  <tr><td class="listarticles-article"><a href="http://de.wikipedia.org/w/index.php?oldid=<?= $article['ma_rev_id'] ?>"><?= $article['title'] ?></a></td>
       <td class="listarticles-creation"><?= fd($article['ma_creation_date']) ?></td>
   <?php
   }

@@ -1450,3 +1450,15 @@ table#view-table { float: left; margin-bottom: 0px; }
 table#view-top-table { background-color: transparent; border: 0px; }
 table#view-top-table td.vtttd { border: 0px; vertical-align: top; }
 h2#view-mentees-all { clear: both; }
+span.award-3 { 
+  background: url("http://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Gold_medal_blank.svg/10px-Gold_medal_blank.svg.png") no-repeat scroll left center transparent; 
+}
+span.award-2 {
+  background: url("http://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Silver_medal_blank.svg/10px-Silver_medal_blank.svg.png") no-repeat scroll left center transparent;
+}
+span.award-1 {
+  background: url("http://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Bronze_medal_blank.svg/10px-Bronze_medal_blank.svg.png") no-repeat scroll left center transparent;
+}
+span.award-1, span.award-2, span.award-3, span.award-4 {
+  padding-left: 13px; 
+}

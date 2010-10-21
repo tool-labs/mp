@@ -42,7 +42,7 @@ $m = $this->data["mentor"];
                       4 => 'Platin',
                       5 => 'Smaragd');
    ?>
-    <tr id="view-award"><th>Auszeichnung</th><td><?= $awards[$m['mentor_award_level']] ?></td></tr>
+    <tr id="view-award"><th>Auszeichnung</th><td><span class="award-<?= $m['mentor_award_level'] ?>"><?= $awards[$m['mentor_award_level']] ?></span></td></tr>
    <?php
     }
    ?>
@@ -92,6 +92,7 @@ else
 <table id="listmentees-table">
   <tr id="listmentees-headers">
     <th>Benutzername</th>
+    <th>Aktivität</th>
     <th>Eintritt</th>
     <th>Austritt</th>
     <?php if ($this->access->is_editor()) { ?><th></th><?php } ?>
@@ -101,6 +102,7 @@ else
   {
   ?>
   <tr><td class="listmentees-mentee"><a href="index.php?action=viewmentee&amp;id=<?= $mentee['mentee_id'] ?>"><?= $mentee['mentee_user_name'] ?></a></td>
+      <td class="listmentees-activity"><?php if ($mentee['mentee_active']) { ?>aktiv<?php } else { ?>inaktiv<?php } ?></td>
       <td class="listmentees-in"><?= fd($mentee['mm_start']) ?></td>
       <td class="listmentees-out"><?= fd($mentee['mm_stop']) ?></td>
       <?php if ($this->access->is_editor()) { ?>

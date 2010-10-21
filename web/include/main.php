@@ -22,6 +22,7 @@ require_once('pages/delcom.php');
 require_once('pages/edit.php');
 require_once('pages/editmm.php');
 require_once('pages/error.php');
+require_once('pages/index.php');
 require_once('pages/info.php');
 require_once('pages/list.php');
 require_once('pages/login.php');
@@ -109,6 +110,7 @@ class Main
     $this->pages['edit']        = new EditPage    ($this->db, $this->access);
     $this->pages['editmm']      = new EditMMPage  ($this->db, $this->access);
     $this->pages['error']       = new ErrorPage   ($this->db);
+    $this->pages['index']       = new IndexPage   ();
     $this->pages['list']        = new ListPage    ($this->db);
     $this->pages['view']        = new ViewPage    ($this->db);
     $this->pages['viewmentee']  = new ViewMPage   ($this->db);

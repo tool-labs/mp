@@ -21,6 +21,10 @@ class Database
    * Database handle.
    */
   protected $db;
+  /**
+   * MediaWiki timestamp format.
+   */
+  const timestamp_format = 'YmdHis';
 
   /**
    * Constructor. Connects with a database using the information in the
@@ -72,6 +76,40 @@ class Database
     }
   }
 
+  /**
+   * Returns a list of all mentors.
+   */
+  public function get_all_mentors()
+  {
+    try
+    {
+      $stmt = $this->db->prepare('SELECT * FROM mentor ORDER BY mentor_id;');
+      $stmt->execute();
+      return $stmt->fetchAll();
+    }
+    catch (PDOException $e)
+    {
+      $this->handleError($e);
+    }
+  }
+
+  /**
+   * Returns a list of all mentees.
+   */
+  public function get_all_mentees()
+  {
+    try
+    {
+      $stmt = $this->db->prepare('SELECT * FROM mentee ORDER BY mentee_in;');
+      $stmt->execute();
+      return $stmt->fetchAll();
+    }
+    catch (PDOException $e)
+    {
+      $this->handleError($e);
+    }
+  }
+  
   /**
    * Returns a list of mentors in lexical order.
    * @param $offset the list’s offset
@@ -417,7 +455,7 @@ class Database
   {
     try
     {
-      $stmt = $this->db->prepare("SELECT mentee_id, mentee_user_name, mentee_in, mentee_out, mm_start, mm_stop FROM mentee_mentor INNER JOIN mentee ON mm_mentee_id=mentee_id WHERE mm_mentor_id = :id ORDER BY mentee_user_name");
+      $stmt = $this->db->prepare("SELECT mentee_id, mentee_user_id, mentee_user_name, mentee_in, mentee_out, mm_start, mm_stop FROM mentee_mentor INNER JOIN mentee ON mm_mentee_id=mentee_id WHERE mm_mentor_id = :id ORDER BY mentee_user_name");
       $stmt->execute(array(":id" => $id));
       return $stmt->fetchAll();
     }
@@ -530,7 +568,7 @@ class Database
   {
     try
     {
-      $stmt = $this->db->prepare('SELECT * FROM mentee_articles WHERE ma_mentee_id = :id');
+      $stmt = $this->db->prepare('SELECT * FROM mentee_articles WHERE ma_mentee_id = :id ORDER BY ma_creation_date DESC');
       $stmt->execute(array(':id' => $id));
       return $stmt->fetchAll();
     }
@@ -824,6 +862,70 @@ class Database
       $this->handleError($ex->getMessage());
     }
     return array();
+  }
+
+  /**
+   * Get the edit count of a Wikipedia user.
+   * @param $id the user’s MediaWiki id
+   * @returns the edit count
+   */
+  public function get_user_edit_count($user_id)
+  {
+    try
+    {
+      $stmt = $this->db->prepare('SELECT COUNT(*) AS edit_count FROM dewiki_p.revision WHERE rev_user = :id');
+      $stmt->execute(array(':id' => $user_id));
+      $line = $stmt->fetch();
+      return $line['edit_count'];
+    }
+    catch (PDOException $ex)
+    {
+      $this->handleError($ex->getMessage());
+    }
+  }
+
+  /**
+   * Check if a user is active.
+   * @param $id the user’s MediaWiki id
+   * @returns boolean value
+   */
+  public function is_user_active($user_id, $delay = '-1 month')
+  {
+    try
+    {
+      $stmt = $this->db->prepare('SELECT COUNT(1) AS active FROM (' . 
+          'SELECT rev_id FROM dewiki_p.revision WHERE rev_user = :id AND rev_timestamp between :start and :end LIMIT 1' .
+          ') i');
+      $now   = time();
+      $start = date(self::timestamp_format, strtotime($delay, $now));
+      $end   = date(self::timestamp_format, $now);
+      $stmt->execute(array(':id' => $user_id, ':start' => $start, ':end' => $end));
+      $row   = $stmt->fetch();
+      return (bool) $row['active'];
+    }
+    catch (PDOException $e)
+    {
+      $this->handleError($e);
+    }
+  }
+
+  /**
+   * Returns the name of the corresponding article.
+   * @param $id article id
+   */
+  public function get_article_name_by_id($id)
+  {
+    try
+    {
+      $stmt = $this->db->prepare('select page_title from dewiki_p.page where page_id = :id');
+      $stmt->execute(array(':id' => $id));
+      $row = $stmt->fetch();
+      return preg_replace('/_/', ' ', $row['page_title']);
+    }
+    catch (PDOException $e)
+    {
+      $this->handleError($e);
+    }
   }
   
   /**
