@@ -1462,3 +1462,21 @@ span.award-1 {
 span.award-1, span.award-2, span.award-3, span.award-4 {
   padding-left: 13px; 
 }
+.highlight-okay {
+  color: green;
+}
+.highlight-problem {
+  color: red;
+}
+.mentee-okay, .mentee-problem, .mentee-critical {
+  font-weight: bold;
+}
+.mentee-okay, .mentee-okay a {
+  color: green;
+}
+.mentee-problem, .mentee-problem a {
+  color: #ff9900;
+}
+.mentee-critical, .mentee-critical a {
+  color: red;
+}

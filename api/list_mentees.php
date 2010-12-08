@@ -40,6 +40,10 @@ foreach ($mentees as $m)
     $mout->appendChild($doc->createTextNode($m['mentee_out']));
     $mentee->appendChild($mout);
   }
+
+  $mentor_id = $doc->createElement('mentor_id');
+  $mentor_id->appendChild($doc->createTextNode($m['mentor_id']));
+  $mentee->appendChild($mentor_id);
   
   $ml->appendChild($mentee);
 }

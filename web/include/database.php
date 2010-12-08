@@ -89,7 +89,7 @@ class Database
     }
     catch (PDOException $e)
     {
-      $this->handleError($e);
+      $this->handleError($e->getMessage());
     }
   }
 
@@ -102,14 +102,49 @@ class Database
     {
       $stmt = $this->db->prepare('SELECT * FROM mentee ORDER BY mentee_in;');
       $stmt->execute();
+      $mentees = $stmt->fetchAll();
+      foreach ($mentees as $key => $m)
+      {
+        $stmt = $this->db->prepare('SELECT mm_mentor_id FROM mentee_mentor WHERE mm_mentee_id = :id AND mm_stop IS NULL;');
+	$stmt->execute(array(':id' => $m['mentee_id']));
+	if ($stmt->rowCount() == 1)
+	{
+	  $i = $stmt->fetch();
+	  $mentees[$key]['mentor_id'] = $i['mm_mentor_id'];
+	}
+	else
+	{
+	  $stmt = $this->db->prepare('SELECT mm_mentor_id FROM mentee_mentor WHERE mm_mentee_id = :id ORDER BY mm_start DESC;');
+	  $stmt->execute(array(':id' => $m['mentee_id']));
+	  $i = $stmt->fetch();
+	  $mentees[$key]['mentor_id'] = $i['mm_mentor_id'];
+	}
+      }
+      return $mentees;
+    }
+    catch (PDOException $e)
+    {
+      $this->handleError($e->getMessage());
+    }
+  }
+  
+  /**
+   * Returns a list of all active mentees.
+   */
+  public function get_all_active_mentees()
+  {
+    try
+    {
+      $stmt = $this->db->prepare('SELECT mentee_id, mentee_user_name, mentee_user_id, mentee_in, mm_mentor_id, mentor_user_name FROM mentee JOIN (mentee_mentor, mentor) ON (mm_mentee_id = mentee_id AND mentor_id = mm_mentor_id) WHERE mentee_out IS NULL AND mm_stop IS NULL ORDER BY mentee_in;');
+      $stmt->execute();
       return $stmt->fetchAll();
     }
     catch (PDOException $e)
     {
-      $this->handleError($e);
+      $this->handleError($e->getMessage());
     }
   }
-  
+
   /**
    * Returns a list of mentors in lexical order.
    * @param $offset the list’s offset
@@ -145,7 +180,7 @@ class Database
     }
     catch (PDOException $ex)
     {
-      $this->handleError($ex);
+      $this->handleError($ex->getMessage());
     }
   }
 
@@ -163,7 +198,7 @@ class Database
     }
     catch (PDOException $ex)
     {
-      $this->handleError($ex);
+      $this->handleError($ex->getMessage());
     }
   }
 
@@ -336,6 +371,23 @@ class Database
   }
 
   /**
+   * Add a mentee.
+   */
+  public function add_mentee($name, $userid)
+  {
+    try
+    {
+      $sql = "INSERT INTO mentee (mentee_user_id, mentee_user_name, mentee_user_name_normalized, mentee_in) VALUES (:userid, :name, :name, NOW())";
+      $stmt = $this->db->prepare($sql);
+      $stmt->execute(array(':userid' => $userid, ':name' => $name));
+    }
+    catch (PDOException $ex)
+    {
+      $this->handleError($ex->getMessage());
+    }
+  }
+
+  /**
    * Searches mentors with certain conditions:
    *   - the user name ($name)
    *   - whether to search an active ($actives) and/or inactive ($inactives)
@@ -426,6 +478,22 @@ class Database
     }
   }
 
+  /**
+   * Archives a mentee.
+   */
+  public function archive_mentee($mentee_id)
+  {
+    try
+    {
+      $sql = "UPDATE mentee SET mentee_out = NOW() WHERE mentee_id = :id";
+      $stmt = $this->db->prepare($sql);
+      $stmt->execute(array(':id' => $mentee_id));
+    }
+    catch (PDOException $ex)
+    {
+      $this->handleError($ex->getMessage());
+    }
+  }
 
   /**
    * Returns a list of all mentors who took care of a certain mentee.
@@ -537,7 +605,7 @@ class Database
      }
      catch (PDOException $ex)
      {
-       $this->handleError($ex);
+       $this->handleError($ex->getMessage());
      }
    }
    
@@ -555,7 +623,7 @@ class Database
      }
      catch (PDOException $ex)
      {
-       $this->handleError($ex);
+       $this->handleError($ex->getMessage());
      }
    }
 
@@ -644,7 +712,7 @@ class Database
     }
     catch (PDOException $ex)
     {
-      $this->handleError($ex);
+      $this->handleError($ex->getMessage());
     }
   }
 
@@ -713,7 +781,7 @@ class Database
     }
     catch (PDOException $ex)
     {
-      $this->handleError($ex);
+      $this->handleError($ex->getMessage());
     }
   }
 
@@ -731,7 +799,7 @@ class Database
     }
     catch (PDOException $ex)
     {
-      $this->handleError($ex);
+      $this->handleError($ex->getMessage());
     }
   }
 
@@ -794,7 +862,27 @@ class Database
     }
     catch (PDOException $ex)
     {
-      $this->handleError($ex);
+      $this->handleError($ex->getMessage());
+    }
+  }
+
+  /**
+   * Get all current mm relations of a certain mentee.
+   * @param int $mentee_id the mentee’s id
+   * @return a list of mm items
+   */
+  public function get_mm_items_by_mentee_id($mentee_id)
+  {
+    try
+    {
+      $sql = "SELECT * FROM mentee_mentor WHERE mm_mentee_id = :menteeid AND mm_stop IS NULL";
+      $stmt = $this->db->prepare($sql);
+      $stmt->execute(array(':menteeid' => $mentee_id));
+      return $stmt->fetchAll();
+    }
+    catch (PDOException $ex)
+    {
+      $this->handleError($ex->getMessage());
     }
   }
 
@@ -836,7 +924,41 @@ class Database
     }
     catch (PDOException $ex)
     {
-      $this->handleError($ex);
+      $this->handleError($ex->getMessage());
+    }
+  }
+
+  /**
+   * Archive a mentee/mentor relation.
+   */
+  public function archive_mm_item($mentor_id, $mentee_id, $start, $stop)
+  {
+    try
+    {
+      $sql = "UPDATE mentee_mentor SET mm_stop = NOW() WHERE mm_mentor_id = :mentorid AND mm_mentee_id = :menteeid AND mm_start = :start AND mm_stop IS NULL";
+      $stmt = $this->db->prepare($sql);
+      $stmt->execute(array(':mentorid' => $mentor_id, ':menteeid' => $mentee_id, ':start' => $start));
+    }
+    catch (PDOException $ex)
+    {
+      $this->handleError($ex->getMessage());
+    }
+  }
+  
+  /**
+   * Add a mm item.
+   */
+  public function add_mm_item($mentor_id, $mentee_id)
+  {
+    try
+    {
+      $sql = "INSERT INTO mentee_mentor (mm_mentor_id, mm_mentee_id, mm_start, mm_stop) VALUES (:mentorid, :menteeid, NOW(), NULL)";
+      $stmt = $this->db->prepare($sql);
+      $stmt->execute(array(':mentorid' => $mentor_id, ':menteeid' => $mentee_id));
+    }
+    catch (PDOException $ex)
+    {
+      $this->handleError($ex->getMessage());
     }
   }
   
@@ -905,7 +1027,7 @@ class Database
     }
     catch (PDOException $e)
     {
-      $this->handleError($e);
+      $this->handleError($e->getMessage());
     }
   }
 
@@ -924,10 +1046,164 @@ class Database
     }
     catch (PDOException $e)
     {
-      $this->handleError($e);
+      $this->handleError($e->getMessage());
+    }
+  }
+
+  /**
+   * Checks if a user did edit.
+   */
+  public function has_recent_edit($user_id, $delay = '-60 days')
+  {
+    try
+    {
+      $now   = time();
+      $start = date(self::timestamp_format, strtotime($delay, $now));
+      $end   = date(self::timestamp_format, strtotime('1 second', $now));
+      $sql   = 'SELECT COUNT(1) AS has_edit FROM (SELECT rev_id FROM dewiki_p.revision WHERE rev_user = :user AND rev_timestamp BETWEEN :start AND :end LIMIT 1) i;';
+      $stmt  = $this->db->prepare($sql);
+      $stmt->execute(array(':user' => $user_id, ':start' => $start, ':end' => $end));
+      $row = $stmt->fetch();
+      return (bool) $row['has_edit'];
+    }
+    catch (PDOException $e)
+    {
+      $this->handleError($e->getMessage());
+    }
+  }
+
+  /**
+   * Returns the MW user id or -1 for certain user name.
+   */
+  public function get_user_id($user_name)
+  {
+    try
+    {
+      $sql = "SELECT * FROM dewiki_p.user WHERE user_name = :name";
+      $stmt = $this->db->prepare($sql);
+      $stmt->execute(array(':name' => $user_name));
+      $row = $stmt->fetch();
+      if (!($row === false))
+      {
+	return (int) $row['user_id'];
+      }
+      return -1;
+    }
+    catch (PDOException $ex)
+    {
+      $this->handleError($ex->getMessage());
+    }
+  }
+
+  /**
+   * Returns a list of mentors with different user names stored in mentor and
+   * dewiki_p.user.
+   */
+  public function get_renamed_mentors()
+  {
+    try
+    {
+      $sql = "SELECT mentor_user_id, mentor_id, mentor_user_name, user_name FROM mentor JOIN dewiki_p.user ON mentor_user_id = user_id WHERE mentor_user_name != user_name";
+      $stmt = $this->db->prepare($sql);
+      $stmt->execute();
+      return $stmt->fetchAll();
+    }
+    catch (PDOException $e)
+    {
+      $this->handleError($e->getMessage());
+    }
+  }
+
+  /**
+   * Renames a mentor.
+   */
+  public function rename_mentor($mentor_id, $new_name)
+  {
+    try
+    {
+      $sql = 'UPDATE mentor SET mentor_user_name = :name WHERE mentor_id = :id';
+      $stmt = $this->db->prepare($sql);
+      $stmt->execute(array(':name' => $new_name, ':id' => $mentor_id));
+    }
+    catch (PDOException $e)
+    {
+      $this->handleError($e->getMessage());
+    }
+  }
+
+  /**
+   * Return a list of mentors who are no longer in the mentor category.
+   */
+  public function get_archived_mentors($mentor_cat)
+  {
+    try
+    {
+      $sql = 'SELECT mentor_user_name, mentor_id FROM mentor WHERE mentor_out IS NULL AND NOT EXISTS (SELECT cl_from FROM dewiki_p.categorylinks JOIN dewiki_p.page ON page_id = cl_from WHERE page_title = REPLACE(mentor_user_name, \' \', \'_\') AND page_namespace = 2 AND cl_to = :cat);';
+      $stmt = $this->db->prepare($sql);
+      $stmt->execute(array(':cat' => $mentor_cat));
+      return $stmt->fetchAll();
+    }
+    catch (PDOException $e)
+    {
+      $this->handleError($e->getMessage());
     }
   }
   
+  /**
+   * Archives a mentor.
+   */
+  public function archive_mentor($mentor_id)
+  {
+    try
+    {
+      $sql = 'UPDATE mentor SET mentor_out = CURRENT_DATE() WHERE mentor_id = :id';
+      $stmt = $this->db->prepare($sql);
+      $stmt->execute(array(':id' => $mentor_id));
+    }
+    catch (PDOException $e)
+    {
+      $this->handleError($e->getMessage());
+    }
+  }
+
+  /**
+   * Returns a list of mentors who are in the mentor category but not in the database.
+   */
+   public function get_new_mentors($mentor_cat)
+   {
+     try
+     {
+       $sql = 'SELECT REPLACE(page_title, \'_\', \' \') AS mentor_name, user_id FROM dewiki_p.categorylinks JOIN (dewiki_p.page, dewiki_p.user) ON (page_id = cl_from AND REPLACE(user_name, \' \', \'_\') = page_title) WHERE cl_to = :cat AND page_namespace = 2 AND NOT EXISTS (SELECT mentor_id FROM mentor WHERE mentor_user_id = user_id AND mentor_out IS NULL);';
+       $stmt = $this->db->prepare($sql);
+       $stmt->execute(array(':cat' => $mentor_cat));
+       return $stmt->fetchAll();
+     }
+     catch (PDOException $e)
+     {
+       $this->handleError($e->getMessage());
+     }
+   }
+
+  /**
+   * Adds a new mentor.
+   */
+  public function add_mentor($user_id, $user_name)
+  {
+    try
+    {
+      $sql = 'INSERT INTO mentor (mentor_user_id, mentor_user_name, mentor_user_name_normalized, mentor_login_name, mentor_in) VALUES (:id, :name, :name, :name, CURRENT_DATE());';
+      $stmt = $this->db->prepare($sql);
+      $stmt->execute(array(':name' => $user_name, ':id' => $user_id));
+      $sql = 'UPDATE mentor SET mentor_out = NULL WHERE mentor_user_id = :id';
+      $stmt = $this->db->prepare($sql);
+      $stmt->execute(array(':id' => $user_id));
+    }
+    catch (PDOException $e)
+    {
+      $this->handleError($e);
+    }
+  }
+
   /**
    * Prints an error message and quits the application.
    * @param string $msg error message

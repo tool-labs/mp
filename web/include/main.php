@@ -27,6 +27,7 @@ require_once('pages/info.php');
 require_once('pages/list.php');
 require_once('pages/login.php');
 require_once('pages/logout.php');
+require_once('pages/mentees.php');
 require_once('pages/search.php');
 require_once('pages/stat.php');
 require_once('pages/view.php');
@@ -112,6 +113,7 @@ class Main
     $this->pages['error']       = new ErrorPage   ($this->db);
     $this->pages['index']       = new IndexPage   ();
     $this->pages['list']        = new ListPage    ($this->db);
+    $this->pages['mentees']     = new MenteesPage ($this->db);
     $this->pages['view']        = new ViewPage    ($this->db);
     $this->pages['viewmentee']  = new ViewMPage   ($this->db);
     $this->pages['search']      = new SearchPage  ($this->db);
