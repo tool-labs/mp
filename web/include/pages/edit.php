@@ -58,7 +58,7 @@ class EditPage implements Page
 		if (isset($_GET['id']))
 			$id = trim($_GET['id']);
 		if (empty($id))
-			return "Du musst angeben, wen du bearbeten willst (<tt>id</tt>).";
+			return "Du musst angeben, wen du bearbeiten willst (<tt>id</tt>).";
 			
 		$rv = array();
 		$rv['data'] = array();
@@ -105,6 +105,11 @@ class EditPage implements Page
 				$rv['data']['mentor_id']        = $id;
 				$rv['title']   = "Mentor $mentor_user_name erfolgreich bearbeitet";
 				$rv['heading'] =  "<em>$mentor_user_name</em> erfolgreich bearbeitet";
+
+				$this->db->log($this->access->user(),
+                                               'Updated mentor data for ' . $mentor_user_name,
+					       'update_mentor',
+					       $id);
 			}
 			else
 			{
@@ -149,7 +154,13 @@ class EditPage implements Page
 				$rv['data']['mentee_user_name'] = $mentee_user_name;
 				$rv['data']['mentee_id']        = $id;
 				$rv['title']   = "Neuling $mentee_user_name erfolgreich bearbeitet.";
-        $rv['heading'] = "<em>$mentee_user_name</em> erfolgreich bearbeitet";
+				$rv['heading'] = "<em>$mentee_user_name</em> erfolgreich bearbeitet";
+
+				$this->db->log($this->access->user(),
+                                               'Updated mentee data for ' . $mentee_user_name,
+					       'update_mentee',
+					       $id);
+
 			}
 			else
 			{

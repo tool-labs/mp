@@ -1200,8 +1200,45 @@ class Database
     }
     catch (PDOException $e)
     {
-      $this->handleError($e);
+      $this->handleError($e->getMessage());
     }
+  }
+
+  /**
+   * Logs a message in the `logging` table.
+   */
+  public function log($user, $comment, $action, $target)
+  {
+    try
+    {
+      $sql = "INSERT INTO logging (log_comment, log_user_name, log_type, log_target) VALUES (:comment, :user, :type, :target);";
+      $stmt = $this->db->prepare($sql);
+      $stmt->execute(array(':comment' => $comment, ':user' => $user, ':type' => $action, ':target' => $target));
+    }
+    catch (PDOException $e)
+    {
+      $this->handleError($e->getMessage());
+    }
+  }
+
+  /**
+   * Gets the recent 50 entries from the `logging` table.
+   */
+  public function get_log_entries()
+  {
+    try
+    {
+      $sql = "SELECT log_id, log_date, log_comment, log_user_name, log_type, log_target FROM logging ORDER BY log_date DESC LIMIT 50";
+      $stmt = $this->db->prepare($sql);
+      $stmt->execute();
+      print $n;
+      print $stmt->rowCount();
+      return $stmt->fetchAll();
+    }
+    catch (PDOException $e)
+    {
+      $this->handleError($e->getMessage());
+    }   
   }
 
   /**

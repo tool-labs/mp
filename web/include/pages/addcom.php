@@ -80,6 +80,12 @@ class AddComPage implements Page
       
       $rv['data']['cmid'] = $cmid;
       $rv['page'] = 'addcom_result';
+
+      $this->db->log($this->access->user(),
+	             "Added comentor $cmid for mentor $mid",
+	             'add_comentor',
+		     $mid);
+
     }
     else
     {

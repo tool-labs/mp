@@ -25,6 +25,7 @@ require_once('pages/error.php');
 require_once('pages/index.php');
 require_once('pages/info.php');
 require_once('pages/list.php');
+require_once('pages/log.php');
 require_once('pages/login.php');
 require_once('pages/logout.php');
 require_once('pages/mentees.php');
@@ -113,6 +114,7 @@ class Main
     $this->pages['error']       = new ErrorPage   ($this->db);
     $this->pages['index']       = new IndexPage   ();
     $this->pages['list']        = new ListPage    ($this->db);
+    $this->pages['log']         = new LogPage     ($this->db);
     $this->pages['mentees']     = new MenteesPage ($this->db);
     $this->pages['view']        = new ViewPage    ($this->db);
     $this->pages['viewmentee']  = new ViewMPage   ($this->db);

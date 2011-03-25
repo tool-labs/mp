@@ -105,6 +105,8 @@ class EditMMPage implements Page
 
       $this->db->update_mm_item($mentor_id, $mentee_id, $start, $end, $_POST['start'], $_POST['end']);
 
+      $this->db->log($this->access->user(), "Updated mentee-mentor relation between $mentor_id and $mentee_id", "update_menteementor", $mentee_id);
+
       $rv['page'] = "editmm_result";
     }
     else

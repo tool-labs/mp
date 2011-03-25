@@ -28,6 +28,7 @@ class ChangePWPage implements Page
     {
       $rv['data']['what'] = 'success';
       $this->db->set_hash_for_user($this->access->user(), sha1($_POST['new_password']));
+      $this->db->log($this->access->user(), "Changed user password", 'change_password', 0);
     }
 
     return $rv;

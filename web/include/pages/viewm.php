@@ -23,7 +23,10 @@ class ViewMPage implements Page
     $id = $_GET['id'];
     $mentee = $this->db->getMenteeById($id);
     if (empty($mentee))
+    {
+      $id = htmlspecialchars($id);
       return "Es existiert kein Mentee mit der ID <tt>$id</tt>.";
+    }
 
     $rv = array();
     $rv['page'] = 'viewmentee';

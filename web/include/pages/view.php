@@ -18,7 +18,10 @@ class ViewPage implements Page
     $id = $_GET['id'];
     $mentor = $this->db->getMentorById($id);
     if (empty($mentor))
+    {
+      $id = htmlspecialchars($id);
       return "Es existiert kein Mentor mit der ID <tt>$id</tt>.";
+    }
 
     $rv = array();
     $rv['page'] = "view";

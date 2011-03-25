@@ -26,6 +26,8 @@ foreach ($rms as $m)
   echo "    Now:        " . $m['user_name']        . "\n";
   $db->rename_mentor($m['mentor_id'], $m['user_name']);
   echo "    Done.\n";
+
+  $db->log('maintenance', "Renaming mentor with user id {$m['mentor_user_id']}", "rename_mentor", 0);
 }
 
 echo "\n";
@@ -41,6 +43,7 @@ foreach ($old_ms as $m)
   echo "    Dropping mentor " . $m['mentor_user_name'] . "\n";
   $db->archive_mentor($m['mentor_id']);
   echo "    Done.\n";
+  $db->log('maintenance', "Dropping mentor {$m['mentor_user_name']}", 'drop_mentor', 0);
 }
 
 echo "\n";
@@ -55,6 +58,7 @@ foreach ($new_ms as $m)
   echo "    Adding mentor " . $m['mentor_name'] . "\n";
   $db->add_mentor($m['user_id'], $m['mentor_name']);
   echo "    Done.\n";
+  $db->log('maintenance', "Adding mentor {$m['mentor_name']}", 'add_mentor', 0);
 }
 
 echo "\n";

@@ -66,6 +66,8 @@ if (isset($_GET['menteename']) && isset($_GET['mentorid']))
       {
 	$suc = $doc->createElement('success');
 	$res->appendChild($suc);
+
+	$this->db->log('api', "Added mentee $menteename.", 'add_mentee', 0);
       }
       else
       {

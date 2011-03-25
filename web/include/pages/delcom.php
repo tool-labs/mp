@@ -67,6 +67,9 @@ class DelComPage implements Page
     $rv['data']['mid'] = $mid;
     $rv['title']   = "Co-Mentor löschen";
     $rv['heading'] = "Co-Mentor löschen";
+
+    $this->db->log($this->access->user(), "Removed comentor $cmid for mentor $mid", "remove_comentor", $mid);
+
     return $rv;
   }
 }

@@ -74,6 +74,8 @@ if (isset($_GET['menteeid']))
       {
         $suc = $doc->createElement('success');
         $res->appendChild($suc);
+
+	$this->db->log('api', "Archived mentee {$mentee['mentee_user_name']}", 'archive_mentee', $menteeid);
       }
       else
       {
