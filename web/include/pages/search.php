@@ -57,7 +57,7 @@ class SearchPage implements Page
 	$m = $this->db->getMentorByNameAndActivity($rv['data']['content'], $search_active, $search_inactive);
 	if (!empty($m))
 	{
-	  header("Location: index.php?action=view&id={$m['mentor_id']}");
+	  header("Location: index.php?action=view&id={$m['mentor_user_id']}");
 	}
       }
       elseif ($rv['data']['where'] == 'mentee')
@@ -65,7 +65,7 @@ class SearchPage implements Page
 	$m = $this->db->getMenteeByNameAndActivity($rv['data']['content'], $search_active, $search_inactive);
 	if (!empty($m))
 	{
-	  header("Location: index.php?action=viewmentee&id={$m['mentee_id']}");
+	  header("Location: index.php?action=viewmentee&id={$m['mentee_user_id']}");
 	}
       }
       else
@@ -75,11 +75,11 @@ class SearchPage implements Page
 
 	if (!empty($mr) && empty($me))
 	{
-	  header("Location: index.php?action=view&id={$mr['mentor_id']}");
+	  header("Location: index.php?action=view&id={$mr['mentor_user_id']}");
 	}
 	elseif (empty($mr) && !empty($me))
 	{
-	  header("Location: index.php?action=viewmentee&id={$me['mentee_id']}");
+	  header("Location: index.php?action=viewmentee&id={$me['mentee_user_id']}");
 	}
 	elseif (!empty($mr) && !empty($me))
 	{

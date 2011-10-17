@@ -83,7 +83,7 @@ class Database
   {
     try
     {
-      $stmt = $this->db->prepare('SELECT * FROM mentor ORDER BY mentor_id;');
+      $stmt = $this->db->prepare('SELECT * FROM mentor ORDER BY mentor_user_id;');
       $stmt->execute();
       return $stmt->fetchAll();
     }
@@ -100,13 +100,13 @@ class Database
   {
     try
     {
-      $stmt = $this->db->prepare('SELECT * FROM mentee ORDER BY mentee_in;');
+      $stmt = $this->db->prepare('SELECT * FROM mentee ORDER BY mentee_user_id;');
       $stmt->execute();
       $mentees = $stmt->fetchAll();
       foreach ($mentees as $key => $m)
       {
         $stmt = $this->db->prepare('SELECT mm_mentor_id FROM mentee_mentor WHERE mm_mentee_id = :id AND mm_stop IS NULL;');
-	$stmt->execute(array(':id' => $m['mentee_id']));
+	$stmt->execute(array(':id' => $m['mentee_user_id']));
 	if ($stmt->rowCount() == 1)
 	{
 	  $i = $stmt->fetch();
@@ -115,7 +115,7 @@ class Database
 	else
 	{
 	  $stmt = $this->db->prepare('SELECT mm_mentor_id FROM mentee_mentor WHERE mm_mentee_id = :id ORDER BY mm_start DESC;');
-	  $stmt->execute(array(':id' => $m['mentee_id']));
+	  $stmt->execute(array(':id' => $m['mentee_user_id']));
 	  $i = $stmt->fetch();
 	  $mentees[$key]['mentor_id'] = $i['mm_mentor_id'];
 	}
@@ -135,7 +135,7 @@ class Database
   {
     try
     {
-      $stmt = $this->db->prepare('SELECT mentee_id, mentee_user_name, mentee_user_id, mentee_in, mm_mentor_id, mentor_user_name FROM mentee JOIN (mentee_mentor, mentor) ON (mm_mentee_id = mentee_id AND mentor_id = mm_mentor_id) WHERE mentee_out IS NULL AND mm_stop IS NULL ORDER BY mentee_in;');
+      $stmt = $this->db->prepare('SELECT mentee_user_name, mentee_user_id, mm_start, mentor_user_id, mentor_user_name FROM mentee JOIN (mentee_mentor, mentor) ON (mm_mentee_id = mentee_user_id AND mentor_user_id = mm_mentor_id) WHERE mm_stop IS NULL ORDER BY mm_start;');
       $stmt->execute();
       return $stmt->fetchAll();
     }
@@ -212,7 +212,7 @@ class Database
   {
     try
     {
-      $stmt = $this->db->prepare("SELECT * FROM mentor WHERE mentor_id = :id LIMIT 1");
+      $stmt = $this->db->prepare("SELECT * FROM mentor WHERE mentor_user_id = :id LIMIT 1");
       $stmt->execute(array(":id" => $id));
       return $stmt->fetch();
     }
@@ -341,9 +341,20 @@ class Database
   {
     try
     {
-      $stmt = $this->db->prepare("SELECT * FROM mentee WHERE mentee_id = :id LIMIT 1");
+      $stmt = $this->db->prepare("SELECT * FROM mentee WHERE mentee_user_id = :id LIMIT 1");
       $stmt->execute(array(":id" => $id));
-      return $stmt->fetch();
+      $result_mentee = $stmt->fetch();
+
+      $stmt = $this->db->prepare("SELECT mm_start AS mentee_in FROM mentee_mentor WHERE mm_mentee_id = :id ORDER BY mm_start LIMIT 1;");
+      $stmt->execute(array(":id" => $id));
+      $result_mentee_in = $stmt->fetch();
+
+      $stmt = $this->db->prepare("SELECT mm_stop AS mentee_out, mm_stop IS NULL AS isnull FROM mentee_mentor WHERE mm_mentee_id = :id ORDER BY isnull DESC, mm_stop DESC LIMIT 1;");
+      $stmt->execute(array(":id" => $id));
+      $result_mentee_out = $stmt->fetch();
+
+      return array_merge($result_mentee, $result_mentee_in, 
+                         $result_mentee_out);
     }
     catch (PDOException $ex)
     {
@@ -362,13 +373,48 @@ class Database
     {
       $stmt = $this->db->prepare("SELECT * FROM mentee WHERE mentee_user_name = :name LIMIT 1");
       $stmt->execute(array(":name" => $name));
-      return $stmt->fetch();
+      $result_mentee = $stmt->fetch();
+
+      $stmt = $this->db->prepare("SELECT mm_start AS mentee_in FROM mentee_mentor WHERE mm_mentee_id = :id ORDER BY mm_start LIMIT 1;");
+      $stmt->execute(array(":id" => $result_mentee['mentee_user_id']));
+      $result_mentee_in = $stmt->fetch();
+
+      $stmt = $this->db->prepare("SELECT mm_stop AS mentee_out, mm_stop IS NULL AS isnull FROM mentee_mentor WHERE mm_mentee_id = :id ORDER BY isnull DESC, mm_stop DESC LIMIT 1;");
+      $stmt->execute(array(":id" => $result_mentee['mentee_user_id']));
+      $result_mentee_out = $stmt->fetch();
+
+      return array_merge($result_mentee, $result_mentee_in, 
+                         $result_mentee_out);
     }
     catch (PDOException $ex)
     {
       $this->handleError($ex->getMessage());
     }
   }
+
+  /**
+   * Get the mentee’s status information (mentee_in, mentee_out):
+   */
+  public function get_mentee_status($id) 
+  {
+    try
+    {
+      $stmt = $this->db->prepare("SELECT mm_start AS mentee_in FROM mentee_mentor WHERE mm_mentee_id = :id ORDER BY mm_start LIMIT 1;");
+      $stmt->execute(array(":id" => $id));
+      $result_mentee_in = $stmt->fetch();
+
+      $stmt = $this->db->prepare("SELECT mm_stop AS mentee_out, mm_stop IS NULL AS isnull FROM mentee_mentor WHERE mm_mentee_id = :id ORDER BY isnull DESC, mm_stop DESC LIMIT 1;");
+      $stmt->execute(array(":id" => $id));
+      $result_mentee_out = $stmt->fetch();
+
+      return array_merge($result_mentee_in, $result_mentee_out);
+    }
+    catch (PDOException $ex)
+    {
+      $this->handleError($ex->getMessage());
+    }
+  }
+
 
   /**
    * Add a mentee.
@@ -485,7 +531,7 @@ class Database
   {
     try
     {
-      $sql = "UPDATE mentee SET mentee_out = NOW() WHERE mentee_id = :id";
+      $sql = "UPDATE mentee SET mentee_out = NOW() WHERE mentee_user_id = :id";
       $stmt = $this->db->prepare($sql);
       $stmt->execute(array(':id' => $mentee_id));
     }
@@ -504,7 +550,7 @@ class Database
   {
     try
     {
-      $stmt = $this->db->prepare('SELECT mentor_id, mentor_user_name FROM mentee_mentor INNER JOIN mentor ON mm_mentor_id = mentor_id WHERE mm_mentee_id = :id ORDER BY mentor_user_name');
+      $stmt = $this->db->prepare('SELECT mentor_user_id, mentor_user_name FROM mentee_mentor INNER JOIN mentor ON mm_mentor_id = mentor_user_id WHERE mm_mentee_id = :id ORDER BY mentor_user_name');
       $stmt->execute(array(':id' => $id));
       return $stmt->fetchAll();
     }
@@ -523,7 +569,7 @@ class Database
   {
     try
     {
-      $stmt = $this->db->prepare("SELECT mentee_id, mentee_user_id, mentee_user_name, mentee_in, mentee_out, mm_start, mm_stop FROM mentee_mentor INNER JOIN mentee ON mm_mentee_id=mentee_id WHERE mm_mentor_id = :id ORDER BY mentee_user_name");
+      $stmt = $this->db->prepare("SELECT mentee_user_id, mentee_user_name, mm_start, mm_stop FROM mentee_mentor INNER JOIN mentee ON mm_mentee_id=mentee_user_id WHERE mm_mentor_id = :id ORDER BY mentee_user_name");
       $stmt->execute(array(":id" => $id));
       return $stmt->fetchAll();
     }
@@ -561,7 +607,7 @@ class Database
   {
     try
     {
-      $stmt = $this->db->prepare("SELECT * FROM comentors INNER JOIN mentor ON co_comentor_id = mentor_id WHERE co_mentor_id = :id ORDER BY mentor_user_name");
+      $stmt = $this->db->prepare("SELECT * FROM comentors INNER JOIN mentor ON co_comentor_id = mentor_user_id WHERE co_mentor_id = :id ORDER BY mentor_user_name");
       $stmt->execute(array(":id" => $id));
       return $stmt->fetchAll();
     }
@@ -670,7 +716,7 @@ class Database
                                  'mentor_has_barnstar = :barnstar, ' .
                                  'mentor_award_level = :award, ' .
                                  'mentor_remark = :remark ' .
-                                 'WHERE mentor_id = :id');
+                                 'WHERE mentor_user_id = :id');
       $stmt->execute(array(':id' => $id,
                            ':user_name' => $user_name,
                            ':in' => $in,
@@ -690,24 +736,18 @@ class Database
    * Update a mentee dataset.
    * @param int    $id        the mentee id specifies which mentee to update
    * @param string $user_name the updated user name
-   * @param string $in        the updated in date
-   * @param string $out       the updated out date
    * @param string $remark    the updated remark
    */
-  public function updateMentee($id, $user_name, $in, $out, $remark)
+  public function updateMentee($id, $user_name, $remark)
   {
     try
     {
       $stmt = $this->db->prepare('UPDATE mentee SET ' .
                                  'mentee_user_name = :user_name, ' .
-                                 'mentee_in = :in, ' .
-                                 'mentee_out = :out, ' .
                                  'mentee_remark = :remark ' .
-                                 'WHERE mentee_id = :id');
+                                 'WHERE mentee_user_id = :id');
       $stmt->execute(array(':id' => $id,
                            ':user_name' => $user_name,
-                           ':in' => $in,
-                           ':out' => $out,
                            ':remark' => $remark));
     }
     catch (PDOException $ex)
@@ -727,7 +767,7 @@ class Database
       $rv = array();
       $q = $this->db->query("SELECT COUNT(*) as mentor_count_db FROM mentor WHERE mentor_out IS NULL");
       $rv = array_merge($rv, $q->fetch());
-      $q = $this->db->query("SELECT COUNT(*) as newbie_count_db FROM mentee WHERE mentee_out IS NULL");
+      $q = $this->db->query("SELECT COUNT(*) as newbie_count_db FROM mentee_mentor WHERE mm_stop IS NULL");
       $rv = array_merge($rv, $q->fetch());
       return $rv;
     }
@@ -1103,7 +1143,7 @@ class Database
   {
     try
     {
-      $sql = "SELECT mentor_user_id, mentor_id, mentor_user_name, user_name FROM mentor JOIN dewiki_p.user ON mentor_user_id = user_id WHERE mentor_user_name != user_name";
+      $sql = "SELECT mentor_user_id, mentor_user_id, mentor_user_name, user_name FROM mentor JOIN dewiki_p.user ON mentor_user_id = user_id WHERE mentor_user_name != user_name";
       $stmt = $this->db->prepare($sql);
       $stmt->execute();
       return $stmt->fetchAll();
@@ -1121,7 +1161,7 @@ class Database
   {
     try
     {
-      $sql = 'UPDATE mentor SET mentor_user_name = :name WHERE mentor_id = :id';
+      $sql = 'UPDATE mentor SET mentor_user_name = :name WHERE mentor_user_id = :id';
       $stmt = $this->db->prepare($sql);
       $stmt->execute(array(':name' => $new_name, ':id' => $mentor_id));
     }
@@ -1138,7 +1178,7 @@ class Database
   {
     try
     {
-      $sql = 'SELECT mentor_user_name, mentor_id FROM mentor WHERE mentor_out IS NULL AND NOT EXISTS (SELECT cl_from FROM dewiki_p.categorylinks JOIN dewiki_p.page ON page_id = cl_from WHERE page_title = REPLACE(mentor_user_name, \' \', \'_\') AND page_namespace = 2 AND cl_to = :cat);';
+      $sql = 'SELECT mentor_user_name, mentor_user_id FROM mentor WHERE mentor_out IS NULL AND NOT EXISTS (SELECT cl_from FROM dewiki_p.categorylinks JOIN dewiki_p.page ON page_id = cl_from WHERE page_title = REPLACE(mentor_user_name, \' \', \'_\') AND page_namespace = 2 AND cl_to = :cat);';
       $stmt = $this->db->prepare($sql);
       $stmt->execute(array(':cat' => $mentor_cat));
       return $stmt->fetchAll();
@@ -1156,7 +1196,7 @@ class Database
   {
     try
     {
-      $sql = 'UPDATE mentor SET mentor_out = CURRENT_DATE() WHERE mentor_id = :id';
+      $sql = 'UPDATE mentor SET mentor_out = CURRENT_DATE() WHERE mentor_user_id = :id';
       $stmt = $this->db->prepare($sql);
       $stmt->execute(array(':id' => $mentor_id));
     }
@@ -1173,7 +1213,7 @@ class Database
    {
      try
      {
-       $sql = 'SELECT REPLACE(page_title, \'_\', \' \') AS mentor_name, user_id FROM dewiki_p.categorylinks JOIN (dewiki_p.page, dewiki_p.user) ON (page_id = cl_from AND REPLACE(user_name, \' \', \'_\') = page_title) WHERE cl_to = :cat AND page_namespace = 2 AND NOT EXISTS (SELECT mentor_id FROM mentor WHERE mentor_user_id = user_id AND mentor_out IS NULL);';
+       $sql = 'SELECT REPLACE(page_title, \'_\', \' \') AS mentor_name, user_id FROM dewiki_p.categorylinks JOIN (dewiki_p.page, dewiki_p.user) ON (page_id = cl_from AND REPLACE(user_name, \' \', \'_\') = page_title) WHERE cl_to = :cat AND page_namespace = 2 AND NOT EXISTS (SELECT mentor_user_id FROM mentor WHERE mentor_user_id = user_id AND mentor_out IS NULL);';
        $stmt = $this->db->prepare($sql);
        $stmt->execute(array(':cat' => $mentor_cat));
        return $stmt->fetchAll();
@@ -1231,8 +1271,6 @@ class Database
       $sql = "SELECT log_id, log_date, log_comment, log_user_name, log_type, log_target FROM logging ORDER BY log_date DESC LIMIT 50";
       $stmt = $this->db->prepare($sql);
       $stmt->execute();
-      print $n;
-      print $stmt->rowCount();
       return $stmt->fetchAll();
     }
     catch (PDOException $e)

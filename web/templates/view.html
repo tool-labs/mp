@@ -1,7 +1,7 @@
 <?php
 $m = $this->data["mentor"];
 ?>
-<h2>Informationen<?php if ($this->access->is_editor()) { ?><a href="index.php?action=edit&amp;what=mentor&amp;id=<?= $m['mentor_id'] ?>" class="mentor-edit-link"> [bearbeiten]</a><?php } ?></h2>
+<h2>Informationen<?php if ($this->access->is_editor()) { ?><a href="index.php?action=edit&amp;what=mentor&amp;id=<?= $m['mentor_user_id'] ?>" class="mentor-edit-link"> [bearbeiten]</a><?php } ?></h2>
 
 <table id="view-top-table">
 <tr>
@@ -14,18 +14,18 @@ $m = $this->data["mentor"];
     if ($this->access->is_editor())
     {
     ?>
-     <a href="index.php?action=addcom&amp;id=<?= $m['mentor_id'] ?>" title="Co-Mentor hinzufügen">(+)</a>
+     <a href="index.php?action=addcom&amp;id=<?= $m['mentor_user_id'] ?>" title="Co-Mentor hinzufügen">(+)</a>
     <?php
     } 
     ?></th><td><ul><?php
       foreach ($this->data['comentors'] as $cm)
       {
     ?>
-      <li><a href="index.php?action=view&amp;id=<?= $cm['mentor_id'] ?>"><?= $cm['mentor_user_name'] ?></a><?php
+      <li><a href="index.php?action=view&amp;id=<?= $cm['mentor_user_id'] ?>"><?= $cm['mentor_user_name'] ?></a><?php
       if ($this->access->is_editor())
       {
       ?>
-       <a href="index.php?action=delcom&amp;mid=<?= $m['mentor_id'] ?>&amp;cmid=<?= $cm['mentor_id'] ?>" title="Co-Mentor löschen">(-)</a>
+       <a href="index.php?action=delcom&amp;mid=<?= $m['mentor_user_id'] ?>&amp;cmid=<?= $cm['mentor_user_id'] ?>" title="Co-Mentor löschen">(-)</a>
       <?php
       }
       ?></li>
@@ -101,12 +101,12 @@ else
   foreach ($this->data['mentees'] as $mentee)
   {
   ?>
-  <tr><td class="listmentees-mentee"><a href="index.php?action=viewmentee&amp;id=<?= $mentee['mentee_id'] ?>"><?= $mentee['mentee_user_name'] ?></a></td>
+  <tr><td class="listmentees-mentee"><a href="index.php?action=viewmentee&amp;id=<?= $mentee['mentee_user_id'] ?>"><?= $mentee['mentee_user_name'] ?></a></td>
       <td class="listmentees-activity"><?php if ($mentee['mentee_active']) { ?>aktiv<?php } else { ?>inaktiv<?php } ?></td>
       <td class="listmentees-in"><?= fd($mentee['mm_start']) ?></td>
       <td class="listmentees-out"><?= fd($mentee['mm_stop']) ?></td>
       <?php if ($this->access->is_editor()) { ?>
-        <td class ="listmentees-edit"><a href="index.php?action=editmm&amp;mentee_id=<?= $mentee['mentee_id'] ?>&amp;mentor_id=<?= $m['mentor_id'] ?>" title="bearbeiten">±</a></td>
+        <td class ="listmentees-edit"><a href="index.php?action=editmm&amp;mentee_id=<?= $mentee['mentee_user_id'] ?>&amp;mentor_id=<?= $m['mentor_user_id'] ?>" title="bearbeiten">±</a></td>
       <?php } ?></tr>
   <?php
   }

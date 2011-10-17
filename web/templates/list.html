@@ -73,7 +73,7 @@ foreach ($this->data["mentors"] as $mentor)
   {
 ?>
   <tr>
-    <td><a href="index.php?action=view&amp;id=<?= $mentor["mentor_id"] ?>"><?= $mentor["mentor_user_name"] ?></a></td>
+    <td><a href="index.php?action=view&amp;id=<?= $mentor["mentor_user_id"] ?>"><?= $mentor["mentor_user_name"] ?></a></td>
     <td><?= fd($mentor['mentor_in']) ?></td>
     <td><?= fd($mentor['mentor_out']) ?></td>
   </tr>

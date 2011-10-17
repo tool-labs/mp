@@ -1,7 +1,7 @@
 <?php
 $m = $this->data["mentee"];
 ?>
-<h2>Informationen <?php if ($this->access->is_editor()) { ?><a href="index.php?action=edit&amp;what=mentee&amp;id=<?= $m['mentee_id'] ?>" class="mentee-edit-link">[bearbeiten]</a><?php } ?></h2>
+<h2>Informationen <?php if ($this->access->is_editor()) { ?><a href="index.php?action=edit&amp;what=mentee&amp;id=<?= $m['mentee_user_id'] ?>" class="mentee-edit-link">[bearbeiten]</a><?php } ?></h2>
 
 <table id="view-top-table">
 <tr>
@@ -15,9 +15,9 @@ $m = $this->data["mentee"];
  for ($i = 0; $i < $count; $i++)
  {
    $mentor = $this->data['mentors'][$i];
- ?><a href="index.php?action=view&amp;id=<?= $mentor['mentor_id'] ?>"><?= $mentor['mentor_user_name'] ?></a><?php
+ ?><a href="index.php?action=view&amp;id=<?= $mentor['mentor_user_id'] ?>"><?= $mentor['mentor_user_name'] ?></a><?php
    if ($this->access->is_editor()) {
-     ?> (<a href="index.php?action=editmm&amp;mentee_id=<?= $m['mentee_id'] ?>&amp;mentor_id=<?= $mentor['mentor_id'] ?>" title="bearbeiten">∓</a>)<?php
+     ?> (<a href="index.php?action=editmm&amp;mentee_id=<?= $m['mentee_user_id'] ?>&amp;mentor_id=<?= $mentor['mentor_user_id'] ?>" title="bearbeiten">∓</a>)<?php
    }
    if ($i < $count - 1)
    {

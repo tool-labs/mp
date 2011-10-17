@@ -65,6 +65,8 @@ $(function() { $('#search-content')[0].select(); });
 /* ]]> */
 </script>
 
+<p class="error">Aufgrund von Änderungen an der Datenbank funktioniert die Suchfunktion momentan nicht stabil! Wir bitten, dies zu entschuldigen. Bei dringden Anfragen kannst du dich gerne an uns wenden; wir werden dir dann weiterhelfen.</p>
+
 <p id="search-explaination">Wenn in der Datenbank ein Benutzer direkt auf den angegebenen Namen passt, wird dieser angezeigt. Andernfalls wird der Suchbegriff als regulärer Ausdruck interpretiert.<span class="javascript-only"> Außerdem wird dir eine Vorschlagsliste präsentiert.</span></p>
 
 <form method="get" action="index.php">
@@ -97,13 +99,13 @@ if ($this->data['w'] == 'results')
   <table id="search-result">
    <tr><th>Benutzername</th><th>Eintritt</th><th>Austritt</th></tr>
    <tr class="sr-mentor">
-     <td><a href="index.php?action=view&amp;id=<?= $this->data['mr']['mentor_id'] ?>">
+     <td><a href="index.php?action=view&amp;id=<?= $this->data['mr']['mentor_user_id'] ?>">
        Mentor <?= $this->data['mr']['mentor_user_name'] ?></a></td>
      <td><?= fd($this->data['mr']['mentor_in']) ?></td>
      <td><?= fd($this->data['mr']['mentor_out']) ?></td>
    </tr>
    <tr class="sr-mentee">
-     <td><a href="index.php?action=viewmentee&amp;id=<?= $this->data['me']['mentee_id'] ?>">
+     <td><a href="index.php?action=viewmentee&amp;id=<?= $this->data['me']['mentee_user_id'] ?>">
        Mentee <?= $this->data['me']['mentee_user_name'] ?></a></td>
      <td><?= fd($this->data['me']['mentee_in']) ?></td>
      <td><?= fd($this->data['me']['mentee_out']) ?></td>

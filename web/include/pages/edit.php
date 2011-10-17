@@ -130,26 +130,16 @@ class EditPage implements Page
 				# Aktualisieren
 				$rv['page'] = 'edit_mentee_result';
 				
-				if (!isset($_POST['mentee_in']) ||
-				    !isset($_POST['mentee_out']) ||
-				    !isset($_POST['mentee_remark']))
+				if (!isset($_POST['mentee_remark']))
 					return "Du hast ein falsches Formular verwendet.";
 				$mentee_user_name = trim($_POST['mentee_user_name']);
-				$mentee_in        = trim($_POST['mentee_in']);
-				$mentee_out       = trim($_POST['mentee_out']);
 				$mentee_remark    = trim($_POST['mentee_remark']);
-				
-				if ((!validate_timestamp($mentee_in) && !empty($mentee_in)) ||
-				    (!validate_timestamp($mentee_out) && !empty($mentee_out)))
-					return "Du hast eine invalide Zeitangabe gemacht.";
 				
 				if (empty($mentee_user_name))
 				  return "Der Benutzername darf nicht leer sein.";
 				
 				$this->db->updateMentee($id,
 				                        $mentee_user_name,
-				                        $mentee_in,
-				                        $mentee_out,
 				                        $mentee_remark);
 				$rv['data']['mentee_user_name'] = $mentee_user_name;
 				$rv['data']['mentee_id']        = $id;
