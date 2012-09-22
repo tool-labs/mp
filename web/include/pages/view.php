@@ -16,6 +16,7 @@ class ViewPage implements Page
       return "No id.";
     }
     $id = $_GET['id'];
+
     $mentor = $this->db->getMentorById($id);
     if (empty($mentor))
     {
@@ -33,6 +34,13 @@ class ViewPage implements Page
     foreach ($rv['data']['mentees'] as &$m)
     {
       $m['mentee_active'] = $this->db->is_user_active($m['mentee_user_id']);
+      $m['mentee_entrance'] = 0;
+      foreach ($rv['data']['mentees'] as &$mm)
+      {
+         if ($m['mentee_user_id'] == $mm['mentee_user_id']) {
+            $m['mentee_entrance'] += 1;
+         }
+      }
     }
     $rv['data']['comentors'] = $this->db->get_comentors_by_mentor_id($id);
     $rv['title']   = "Mentor {$rv['data']['mentor']['mentor_user_name']}";

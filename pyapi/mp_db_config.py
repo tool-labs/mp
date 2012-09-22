@@ -9,4 +9,4 @@ import os.path
 # path to the database conf file
 db_conf_file = os.path.expanduser("~/.my-dewpmp.cnf")
 # database 
-db_name = "p_dewpmp"
+db_name = "p_dewpmp_production"

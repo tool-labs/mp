@@ -83,7 +83,7 @@ class Database
   {
     try
     {
-      $stmt = $this->db->prepare('SELECT * FROM mentor ORDER BY mentor_user_id;');
+      $stmt = $this->db->prepare('SELECT * FROM mentor ORDER BY mentor_user_name;');
       $stmt->execute();
       return $stmt->fetchAll();
     }
@@ -550,7 +550,7 @@ class Database
   {
     try
     {
-      $stmt = $this->db->prepare('SELECT mentor_user_id, mentor_user_name FROM mentee_mentor INNER JOIN mentor ON mm_mentor_id = mentor_user_id WHERE mm_mentee_id = :id ORDER BY mentor_user_name');
+      $stmt = $this->db->prepare('SELECT mentor_user_id, mentor_user_name, mm_start, mm_stop, mm_type FROM mentee_mentor INNER JOIN mentor ON mm_mentor_id = mentor_user_id WHERE mm_mentee_id = :id ORDER BY mentor_user_name');
       $stmt->execute(array(':id' => $id));
       return $stmt->fetchAll();
     }
@@ -569,7 +569,7 @@ class Database
   {
     try
     {
-      $stmt = $this->db->prepare("SELECT mentee_user_id, mentee_user_name, mm_start, mm_stop FROM mentee_mentor INNER JOIN mentee ON mm_mentee_id=mentee_user_id WHERE mm_mentor_id = :id ORDER BY mentee_user_name");
+      $stmt = $this->db->prepare("SELECT mentee_user_id, mentee_user_name, mm_start, mm_stop, mm_type FROM mentee_mentor INNER JOIN mentee ON mm_mentee_id=mentee_user_id WHERE mm_mentor_id = :id ORDER BY mm_start DESC");
       $stmt->execute(array(":id" => $id));
       return $stmt->fetchAll();
     }
@@ -580,7 +580,7 @@ class Database
   }
 
   /**
-   * Returns the count of mentees a mentor ever took care of.
+   * Returns the count of mentorings and mentees a mentor ever took care of.
    * @param $id the mentor’s id
    * @returns the mentee count
    */
@@ -588,7 +588,7 @@ class Database
   {
     try
     {
-      $stmt = $this->db->prepare("SELECT COUNT(*) AS mentee_mentor_count FROM mentee_mentor WHERE mm_mentor_id = :id");
+      $stmt = $this->db->prepare("SELECT COUNT(mm_mentee_id) AS mentee_mentor_count, COUNT(DISTINCT mm_mentee_id) mentee_count FROM mentee_mentor WHERE mm_mentor_id = :id");
       $stmt->execute(array(":id" => $id));
       return $stmt->fetch();
     }
@@ -932,23 +932,28 @@ class Database
    * @param int    $mentee_id the mentee’s id
    * @param string $ostart    the old start
    * @param string $ostop     the old stop
+   * @param int    $new_mentor_id    the new mentor user id
    * @param string $start     the updated start
    * @param string $stop      the updated stop
+   * @param int    $type      the updated type
    */
-  public function update_mm_item($mentor_id, $mentee_id, $ostart, $ostop, $start, $stop)
+  public function update_mm_item($mentor_id, $mentee_id, $ostart, $ostop, $new_mentor_id, $start, $stop, $type)
   {
     try
     {
       $args = array(':mentor_id' => $mentor_id,
                     ':mentee_id' => $mentee_id,
                     ':ostart'    => $ostart,
-                    ':start'     => $start,);
-      $sql = "UPDATE mentee_mentor SET mm_start = :start, mm_stop = ";
+                    ':new_mentor_id' => $new_mentor_id,
+                    ':start'     => $start,
+                    #':stop'      => $stop,
+                    ':type'      => $type);
+      $sql = "UPDATE mentee_mentor SET mm_mentor_id = :new_mentor_id, mm_type = :type, mm_start = :start, ";
       if ($stop === '')
-        $sql .= "NULL";
+        $sql .= "mm_stop = NULL";
       else
       {
-        $sql .= ":stop";
+        $sql .= "mm_stop = :stop";
         $args[':stop'] = $stop;
       }
       $sql .= " WHERE mm_mentor_id = :mentor_id AND mm_mentee_id = :mentee_id AND mm_start = :ostart AND ";
@@ -967,6 +972,41 @@ class Database
       $this->handleError($ex->getMessage());
     }
   }
+
+   /**
+    * Delete all matching mentee_mentor datasets.
+   * @param int    $mentor_id the mentor’s id
+   * @param int    $mentee_id the mentee’s id
+   * @param string $start     the updated start
+   * @param string $stop      the updated stop
+   * @param int    $type      the updated type
+    */
+  public function delete_mm_item($mentor_id, $mentee_id, $start, $stop, $type)
+  {
+    try
+    {
+      $args = array(':mentor_id' => $mentor_id,
+                    ':mentee_id' => $mentee_id,
+                    ':start'     => $start,
+                    #':stop'      => $stop,
+                    ':type'      => $type);
+      $sql = "DELETE FROM mentee_mentor WHERE mm_mentor_id = :mentor_id AND mm_mentee_id = :mentee_id AND mm_type = :type, mm_start = :start, ";
+      if ($stop === '')
+        $sql .= "mm_stop IS NULL";
+      else
+      {
+        $sql .= "mm_stop = :stop";
+        $args[':stop'] = $stop;
+      }
+      $stmt = $this->db->prepare($sql);
+      $stmt->execute($args);
+    }
+    catch (PDOException $ex)
+    {
+      $this->handleError($ex->getMessage());
+    }
+  }
+
 
   /**
    * Archive a mentee/mentor relation.
@@ -988,13 +1028,28 @@ class Database
   /**
    * Add a mm item.
    */
-  public function add_mm_item($mentor_id, $mentee_id)
+  public function add_mm_item($mentor_id, $mentee_id, $start, $stop, $type)
   {
     try
     {
-      $sql = "INSERT INTO mentee_mentor (mm_mentor_id, mm_mentee_id, mm_start, mm_stop) VALUES (:mentorid, :menteeid, NOW(), NULL)";
+      $args = array(':mentor_id' => $mentor_id,
+                    ':mentee_id' => $mentee_id,
+                    ':start'     => $start,
+                    #':stop'      => $stop,
+                    ':type'      => $type);
+      $sql = "INSERT INTO mentee_mentor (mm_mentor_id, mm_mentee_id, mm_start, mm_stop, mm_type) VALUES (:mentor_id, :mentee_id, :start, ";
+      if ($stop === '')
+      {
+        $sql .= "NULL, ";
+      }
+      else
+      {
+        $sql .= ":stop, ";
+        $args[':stop'] = $stop;
+      }
+      $sql .= " :type)";
       $stmt = $this->db->prepare($sql);
-      $stmt->execute(array(':mentorid' => $mentor_id, ':menteeid' => $mentee_id));
+      $stmt->execute($args);
     }
     catch (PDOException $ex)
     {
@@ -1004,8 +1059,7 @@ class Database
   
   /**
    * Get the count of mentees and mentors currently active. The functionen uses
-   * the categories ‘Benutzer ist Mentor’ and ‘Wird im Mentorenprogramm 
-   * betreut’.
+   * the categories ‘Benutzer:Mentor’ and 'Mentee’.
    * @return mentee/mentor count
    */
   public function getCountsWP()
@@ -1013,9 +1067,9 @@ class Database
     try
     {
       $rv = array();
-      $q = $this->db->query("SELECT COUNT(*) as mentor_count_wp FROM dewiki_p.categorylinks WHERE cl_to = 'Benutzer_ist_Mentor'");
+      $q = $this->db->query("SELECT cat_pages as newbie_count_wp FROM dewiki_p.category WHERE `cat_title` = 'Benutzer:Mentee'");
       $rv = array_merge($rv, $q->fetch());
-      $q = $this->db->query("SELECT COUNT(*) as newbie_count_wp FROM dewiki_p.categorylinks WHERE cl_to = 'Wird_im_Mentorenprogramm_betreut'");
+      $q = $this->db->query("SELECT cat_pages as mentor_count_wp FROM dewiki_p.category WHERE `cat_title` = 'Benutzer:Mentor'");
       $rv = array_merge($rv, $q->fetch());
       return $rv;
     }
@@ -1046,6 +1100,28 @@ class Database
     }
   }
 
+  /**
+   * Get the user page hostory of a Wikipedia user.
+   * @param $name the user’s MediaWiki name
+   * @returns the fields
+   */
+  public function get_user_page_history($user_name)
+  {
+    try
+    {
+      $stmt = $this->db->prepare('SELECT rev_timestamp, rev_user_text, rev_comment FROM dewiki_p.revision ' .
+           'JOIN dewiki_p.page ON rev_page=page_id AND page_namespace = 2 AND page_title = :user_name ' . 
+           'ORDER BY rev_timestamp DESC LIMIT 50');
+      # white space -> _
+      $stmt->execute(array(':user_name' => str_replace(' ', '_', $user_name)));
+      return $stmt->fetchAll();
+    }
+    catch (PDOException $ex)
+    {
+      $this->handleError($ex->getMessage());
+    }
+  }
+  
   /**
    * Check if a user is active.
    * @param $id the user’s MediaWiki id

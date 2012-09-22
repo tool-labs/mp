@@ -198,14 +198,14 @@ class Database:
         with self.conn as curs:
             if timestamp == None:
                curs.execute('''
-               INSERT INTO `p_dewpmp`.`mentee_mentor`
+               INSERT INTO `mentee_mentor`
                   (`mm_mentee_id`, `mm_mentor_id`,
                    `mm_start`, `mm_stop`, `mm_type`)
                   VALUE (?, ?, CURRENT_TIMESTAMP, NULL, ?)
                ;''',(mentee_user_id, mentor_user_id, mentoring_type,))
             else:
                curs.execute('''
-               INSERT INTO `p_dewpmp`.`mentee_mentor`
+               INSERT INTO `mentee_mentor`
                   (`mm_mentee_id`, `mm_mentor_id`,
                    `mm_start`, `mm_stop`, `mm_type`)
                   VALUE (?, ?, ?, NULL, ?)
@@ -218,14 +218,14 @@ class Database:
         with self.conn as curs:
             if timestamp == None:
                curs.execute('''
-               INSERT INTO `p_dewpmp`.`mentee` (`mentee_user_id`,
+               INSERT INTO `mentee` (`mentee_user_id`,
                    `mentee_user_name` , `mentee_is_hidden`,
                    `mentee_remark` , `mentee_lastupdate` )
                    VALUES (?, ?, '0', NULL, CURRENT_TIMESTAMP)
                ;''', (mentee_id, mentee_name,))
             else:
                curs.execute('''
-               INSERT INTO `p_dewpmp`.`mentee` (`mentee_user_id`,
+               INSERT INTO `mentee` (`mentee_user_id`,
                    `mentee_user_name` , `mentee_is_hidden`,
                    `mentee_remark` , `mentee_lastupdate` )
                    VALUES (?, ?, '0', NULL, ?)
@@ -247,7 +247,7 @@ class Database:
                # user is unknow, add it
                with self.conn as curs:
                   curs.execute('''
-                  INSERT INTO `p_dewpmp`.`mentor` (
+                  INSERT INTO `mentor` (
                      `mentor_user_id`, `mentor_user_name`, `mentor_login_password`,
                      `mentor_in`, `mentor_out`, `mentor_is_active`,
                      `mentor_has_barnstar`, `mentor_award_level`,
@@ -259,8 +259,8 @@ class Database:
                # -> the user was renamed, update our datebase
                with self.conn as curs:
                   curs.execute('''
-                  UPDATE `p_dewpmp`.`mentor`
-                     SET `mentor_user_name` = '?'
+                  UPDATE `mentor`
+                     SET `mentor_user_name` =  ? 
                      WHERE `mentor_user_id` = ? LIMIT 1
                       ;''', (mentor_name, mentor_user_id,))               
  
@@ -268,9 +268,9 @@ class Database:
     def rename_mentee(self, mentee_id, new_mentee_name):
         with self.conn as curs:
             curs.execute('''
-            UPDATE `p_dewpmp`.`mentee`
-                SET `mentee_user_name` = '?'
-                WHERE `mentee`.`mentee_user_id` = ? LIMIT 1
+            UPDATE `mentee`
+                SET `mentee_user_name` =  ?  
+                WHERE `mentee`.`mentee_user_id` =  ?  LIMIT 1
             ;''', (new_mentee_name, mentee_id,))
         return True
 
@@ -278,13 +278,13 @@ class Database:
         with self.conn as curs:
             if (timestamp == None):
                curs.execute('''
-               UPDATE `p_dewpmp`.`mentee_mentor`
+               UPDATE `mentee_mentor`
                    SET `mm_stop` = CURRENT_TIMESTAMP
                    WHERE `mm_stop` is NULL AND `mm_mentee_id` = ?
                ;''', (mentee_id,))
             else:
                curs.execute('''
-               UPDATE `p_dewpmp`.`mentee_mentor`
+               UPDATE `mentee_mentor`
                    SET `mm_stop` = ?
                    WHERE `mm_stop` is NULL AND `mm_mentee_id` = ?
                ;''', (timestamp, mentee_id,))
@@ -339,7 +339,7 @@ class Database:
                 WHERE `user_name` = CONVERT(CAST(? AS BINARY) USING latin1)
             ;''',(user_name,))
             row = curs.fetchone()
-            if row != None:
+            if row != None and row[0] != None:
                 return int(row[0])
             else:
                 return None
@@ -374,7 +374,7 @@ class Database:
                 WHERE `user_id` = ? AND DATEDIFF(NOW(), day) < ?
             ;''',(user_id, latest_days,))
             row = curs.fetchone()
-            if row != None:
+            if row != None and row[0] != None:
                 return int(row[0])
             else:
                 return None
