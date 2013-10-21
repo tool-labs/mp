@@ -36,9 +36,9 @@ class Database
   {
     $ts_pw = posix_getpwuid(posix_getuid());
     $ts_mycnf = array();
-    if (file_exists($ts_pw['dir'] . "/.my.cnf"))
+    if (file_exists($ts_pw['dir'] . "/replica.my.cnf"))
     {
-      $ts_mycnf = parse_ini_file($ts_pw['dir'] . "/.my.cnf");
+      $ts_mycnf = parse_ini_file($ts_pw['dir'] . "/replica.my.cnf");
     }
     if (file_exists(__DIR__ . "/../../db_settings.ini"))
     {
@@ -49,7 +49,8 @@ class Database
     {
       $this->db = new PDO("mysql:host=" . $ts_mycnf['host']. ";dbname=" . $ts_mycnf['dbname'],
                           $ts_mycnf['user'], $ts_mycnf['password'], array(
-                            PDO::ATTR_PERSISTENT         => true
+                            PDO::ATTR_PERSISTENT         => true,
+			    PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES \'UTF8\''
                           ));
     }
     catch (PDOException $ex)
@@ -1089,7 +1090,7 @@ class Database
   {
     try
     {
-      $stmt = $this->db->prepare('SELECT COUNT(*) AS edit_count FROM dewiki_p.revision WHERE rev_user = :id');
+      $stmt = $this->db->prepare('SELECT COUNT(*) AS edit_count FROM dewiki_p.revision_userindex WHERE rev_user = :id');
       $stmt->execute(array(':id' => $user_id));
       $line = $stmt->fetch();
       return $line['edit_count'];
@@ -1109,7 +1110,7 @@ class Database
   {
     try
     {
-      $stmt = $this->db->prepare('SELECT rev_timestamp, rev_user_text, rev_comment FROM dewiki_p.revision ' .
+      $stmt = $this->db->prepare('SELECT rev_timestamp, rev_user_text, rev_comment FROM dewiki_p.revision_userindex ' .
            'JOIN dewiki_p.page ON rev_page=page_id AND page_namespace = 2 AND page_title = :user_name ' . 
            'ORDER BY rev_timestamp DESC LIMIT 50');
       # white space -> _
@@ -1132,7 +1133,7 @@ class Database
     try
     {
       $stmt = $this->db->prepare('SELECT COUNT(1) AS active FROM (' . 
-          'SELECT rev_id FROM dewiki_p.revision WHERE rev_user = :id AND rev_timestamp between :start and :end LIMIT 1' .
+          'SELECT rev_id FROM dewiki_p.revision_userindex WHERE rev_user = :id AND rev_timestamp between :start and :end LIMIT 1' .
           ') i');
       $now   = time();
       $start = date(self::timestamp_format, strtotime($delay, $now));
@@ -1176,7 +1177,7 @@ class Database
       $now   = time();
       $start = date(self::timestamp_format, strtotime($delay, $now));
       $end   = date(self::timestamp_format, strtotime('1 second', $now));
-      $sql   = 'SELECT COUNT(1) AS has_edit FROM (SELECT rev_id FROM dewiki_p.revision WHERE rev_user = :user AND rev_timestamp BETWEEN :start AND :end LIMIT 1) i;';
+      $sql   = 'SELECT COUNT(1) AS has_edit FROM (SELECT rev_id FROM dewiki_p.revision_userindex WHERE rev_user = :user AND rev_timestamp BETWEEN :start AND :end LIMIT 1) i;';
       $stmt  = $this->db->prepare($sql);
       $stmt->execute(array(':user' => $user_id, ':start' => $start, ':end' => $end));
       $row = $stmt->fetch();
