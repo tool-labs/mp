@@ -9,7 +9,7 @@
  * For more information, see http://toolserver.org/~dewpmp.
  */
 
-class ListPage implements Page
+class MentorListPage implements Page
 {
   # Datenbank-Handle
   private $db;
@@ -34,6 +34,11 @@ class ListPage implements Page
     {
       $count = (int) $_GET["count"];
     }
+    $no_activity_filter = 0; // -> show only active mentors
+    if (isset($_GET["no_activity_filter"]) && !empty($_GET["no_activity_filter"]))
+    {
+      $no_activity_filter = (int) $_GET["no_activity_filter"];
+    }
 
     $num = $this->db->getMentorCount();
 
@@ -43,6 +48,7 @@ class ListPage implements Page
       $offset = 0;
       $count  = $num;
       $all    = true;
+      $no_activity_filter = 1; // -> show all
     }
 
     # überprüfe gegebene Parameter
@@ -79,7 +85,8 @@ class ListPage implements Page
     $rv['page']    = "mentorlist";
     $rv['data']    = array();
     $rv['data']['count']       = $count;
-    $rv['data']['mentors']     = $this->db->getMentors($offset, $count);
+    $rv['data']['no_activity_filter'] = $no_activity_filter;
+    $rv['data']['mentors']     = $this->db->getMentors($offset, $count, $no_activity_filter);
     $rv['data']['prev_offset'] = $prev_offset;
     $rv['data']['next_offset'] = $next_offset;
     $rv['data']['offset']      = $offset;

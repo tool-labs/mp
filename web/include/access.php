@@ -93,9 +93,15 @@ class Access
    */
   public function login($user, $password)
   {
-    $pw_hash = sha1($password);
-    $db_hash = $this->db->get_hash_for_user($user);
-    if ($db_hash == -1 || $pw_hash != $db_hash)
+    $db_hash_salt_result = $this->db->get_hash_and_salt_for_user($user);
+    if ($db_hash_salt_result == -1 || $password == NULL || strlen($password) == 0)
+    {
+      return false;
+    }
+    $db_hash_with_salt = $db_hash_salt_result['mentor_login_password'];
+    $db_salt = $db_hash_salt_result['mentor_pw_salt'];
+    $given_pw_hash_with_salt = $this->doubleSaltedHash($password, $db_salt);
+    if ($db_hash_with_salt != $given_pw_hash_with_salt)
     {
       return false;
     }
@@ -105,6 +111,24 @@ class Access
     $this->user            = $user;
 
     return true;
+  }
+ 
+  public function generate_salt() {
+        $dummy = array_merge(range('0', '9'));
+        mt_srand((double)microtime()*1000000);
+        for ($i = 1; $i <= (count($dummy)*2); $i++)
+        {
+                $swap = mt_rand(0,count($dummy)-1);
+                $tmp = $dummy[$swap];
+                $dummy[$swap] = $dummy[0];
+                $dummy[0] = $tmp;
+        }
+        return sha1(substr(implode('',$dummy),0,9));
+  }
+
+  public function doubleSaltedHash($pw, $salt)
+  {
+    return sha1($salt.sha1($salt.sha1($pw)));
   }
 
   /**

@@ -127,14 +127,21 @@ class EditMMPage implements Page
         return "<tt>type</tt> nicht gesetzt!";
       }
       
-      // do it!
+      // Commit the change to the data base!
       if ($create_new_item)
       {
-         $this->db->add_mm_item($mentee_id, $_POST['new_mentor_id'], $_POST['start'], $_POST['end'], $_POST['type']);
-         $this->db->log($this->access->user(), "Added mentee-mentor relation between $mentor_id and $mentee_id", "add_menteementor", $mentee_id);
+         $new_mentor_id = $_POST['new_mentor_id'];
+         $this->db->add_mm_item($new_mentor_id, $mentee_id, $_POST['start'], $_POST['end'], $_POST['type']);
+         // log
+         $new_mentor_name = $this->db->getMentorById($new_mentor_id);
+         $mentee_name = $this->db->getMenteeById($mentee_id);
+         $this->db->log($this->access->user(), "Added mentee-mentor relation between '$new_mentor_name[1]' and '$mentee_name[1]'", "add_menteementor", $mentee_id);
       } else {
          $this->db->update_mm_item($mentor_id, $mentee_id, $start, $end, $_POST['new_mentor_id'], $_POST['start'], $_POST['end'], $_POST['type']);
-         $this->db->log($this->access->user(), "Updated mentee-mentor relation between $mentor_id and $mentee_id", "update_menteementor", $mentee_id);
+         // log
+         $mentor_name = $this->db->getMentorById($mentor_id);
+         $mentee_name = $this->db->getMenteeById($mentee_id);
+         $this->db->log($this->access->user(), "Updated mentee-mentor relation between '$mentor_name[1]' and '$mentee_name[1]'", "update_menteementor", $mentee_id);
       }
 
       $rv['page'] = "editmm_result";
@@ -149,6 +156,7 @@ class EditMMPage implements Page
           $mentee = $this->db->getMenteeById($p['mm_mentee_id']);
           $p['mentor_user_name'] = $mentor['mentor_user_name'];
           $p['mentee_user_name'] = $mentee['mentee_user_name'];
+          $p['create_new_item'] = '';
           $pos[$key] = $p;
         }
       } else

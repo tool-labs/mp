@@ -68,7 +68,7 @@ class Database:
             curs.execute('''
             SELECT `mentor_user_id`, `mentor_user_name`,
                    `mentor_login_password`,
-                   `mentor_in`, `mentor_out`, `mentor_is_active`,
+                   `mentor_in`, `mentor_out`,
                    `mentor_has_barnstar`, `mentor_award_level`,
                    `mentor_remark`, `mentor_lastupdate`
                 FROM `mentor`
@@ -82,11 +82,10 @@ class Database:
                                      'login_password':item[2],
                                      'in':item[3],
                                      'out':item[4],
-                                     'is_active':item[5],
-                                     'has_barnstar':item[6],
-                                     'award_level':item[7],
-                                     'remark':item[8],
-                                     'lastupdate':item[9]})
+                                     'has_barnstar':item[5],
+                                     'award_level':item[6],
+                                     'remark':item[7],
+                                     'lastupdate':item[8]})
             return mentors_dict
 
     def get_all_mentees(self, mentor_user_name=None, only_active=True):
@@ -249,10 +248,10 @@ class Database:
                   curs.execute('''
                   INSERT INTO `mentor` (
                      `mentor_user_id`, `mentor_user_name`, `mentor_login_password`,
-                     `mentor_in`, `mentor_out`, `mentor_is_active`,
+                     `mentor_in`, `mentor_out`,
                      `mentor_has_barnstar`, `mentor_award_level`,
                      `mentor_remark`, `mentor_lastupdate`) 
-                      VALUES (?, ?, NULL , CURRENT_TIMESTAMP, NULL , 1, 0, 0, NULL , CURRENT_TIMESTAMP)
+                      VALUES (?, ?, NULL , CURRENT_TIMESTAMP, NULL , 0, 0, NULL , CURRENT_TIMESTAMP)
                       ;''', (mentor_user_id, mentor_name))
             elif (row[1] != mentor_name):
                # we know the id, but not the name
@@ -288,7 +287,39 @@ class Database:
                    SET `mm_stop` = ?
                    WHERE `mm_stop` is NULL AND `mm_mentee_id` = ?
                ;''', (timestamp, mentee_id,))
- 
+
+    def get_overall_mentee_number(self):
+        """
+        Returns the number of mentees ever been in WP:MP.
+        """
+        if self.conn == None:
+            return False
+
+        with self.conn as curs:
+            curs.execute('''SELECT COUNT(`mentee_user_id`) FROM `mentee`;''')
+            row = curs.fetchone()
+            if row != None and row[0] != None:
+                return int(row[0])
+            else:
+                return None
+    
+    def get_active_mentor_number(self):
+        """
+        Returns the number of mentors that are active and have at least one mentee.
+        """
+        if self.conn == None:
+            return False
+
+        with self.conn as curs:
+            curs.execute('''SELECT COUNT( DISTINCT mentor_user_id ) FROM `mentor`
+            JOIN mentee_mentor ON mentee_mentor.mm_mentor_id = mentor.mentor_user_id
+            WHERE `mentor_out` IS NULL AND mm_stop IS NULL;''')
+            row = curs.fetchone()
+            if row != None and row[0] != None:
+                return int(row[0])
+            else:
+                return None
+
     # XXX not used
     def get_mentee_by_id(self, mentee_id):
         with self.conn as curs:

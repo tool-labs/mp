@@ -76,9 +76,6 @@ class EditPage implements Page
 				$mentor_user_name      = trim($_POST['mentor_user_name']);
 				$mentor_in             = trim($_POST['mentor_in']);
 				$mentor_out            = trim($_POST['mentor_out']);
-				$mentor_is_active      = false;
-				if (isset($_POST['mentor_is_active']))
-					$mentor_is_active    = true;
 				$mentor_has_barnstar   = false;
 				if (isset($_POST['mentor_has_barnstar']))
 					$mentor_has_barnstar = true;
@@ -92,14 +89,8 @@ class EditPage implements Page
 				if (empty($mentor_user_name))
 					return "Der Benutzername darf nicht leer sein.";
 					
-				$this->db->updateMentor($id,
-																$mentor_user_name,
-																$mentor_in,
-																$mentor_out,
-																$mentor_is_active,
-																$mentor_has_barnstar,
-																$mentor_award_level,
-																$mentor_remark);
+				$this->db->updateMentor($id, $mentor_user_name, $mentor_in,
+					$mentor_out, $mentor_has_barnstar, $mentor_award_level, $mentor_remark);
 					
 				$rv['data']['mentor_user_name'] = $mentor_user_name;
 				$rv['data']['mentor_id']        = $id;

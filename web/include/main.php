@@ -18,21 +18,26 @@ require_once('pages/page.php');
 require_once('pages/about.php');
 require_once('pages/addcom.php');
 require_once('pages/changepw.php');
+require_once('pages/compdat.php');
 require_once('pages/delcom.php');
 require_once('pages/edit.php');
 require_once('pages/editmm.php');
 require_once('pages/error.php');
 require_once('pages/index.php');
 require_once('pages/info.php');
-require_once('pages/mentorlist.php');
 require_once('pages/log.php');
 require_once('pages/login.php');
 require_once('pages/logout.php');
+require_once('pages/maintenance.php');
+require_once('pages/maintenance_wm.php');
 require_once('pages/mentees.php');
+require_once('pages/mentorlist.php');
 require_once('pages/search.php');
 require_once('pages/stat.php');
-require_once('pages/view.php');
+require_once('pages/viewmentor.php');
 require_once('pages/viewm.php');
+// external code
+require_once('libchart/classes/libchart.php');
 
 /**
  * Format a date stamp.
@@ -64,7 +69,7 @@ function fdt($dt, $def = '-')
     return $def;
   }
   $date = new DateTime($dt);
-  return $date->format('d.m.Y, G:s');
+  return $date->format('d.m.Y, H:i');
 }
 
 /**
@@ -108,15 +113,18 @@ class Main
     $this->pages['about']       = new AboutPage   ();
     $this->pages['addcom']      = new AddComPage  ($this->db, $this->access);
     $this->pages['changepw']    = new ChangePWPage($this->db, $this->access);
+    $this->pages['compdat']     = new CompDatPage ($this->db);
     $this->pages['delcom']      = new DelComPage  ($this->db, $this->access);
     $this->pages['edit']        = new EditPage    ($this->db, $this->access);
     $this->pages['editmm']      = new EditMMPage  ($this->db, $this->access);
     $this->pages['error']       = new ErrorPage   ($this->db);
     $this->pages['index']       = new IndexPage   ();
-    $this->pages['mentorlist']  = new ListPage    ($this->db);
+    $this->pages['mentorlist']  = new MentorListPage($this->db);
     $this->pages['log']         = new LogPage     ($this->db);
     $this->pages['mentees']     = new MenteesPage ($this->db);
-    $this->pages['view']        = new ViewPage    ($this->db);
+    $this->pages['maintenance'] = new MaintenancePage ($this->db);
+    $this->pages['maintenance_wm'] = new MaintenanceWmPage ($this->db);
+    $this->pages['viewmentor']  = new ViewMentorPage($this->db);
     $this->pages['viewmentee']  = new ViewMPage   ($this->db);
     $this->pages['search']      = new SearchPage  ($this->db);
     $this->pages['stat']        = new StatPage    ($this->db);

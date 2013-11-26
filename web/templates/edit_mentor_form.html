@@ -45,27 +45,23 @@ $m = $this->data['mentor'];
  }
  /* ]]> */
 </script>
-<p id="em-back"><a href="index.php?action=view&amp;id=<?= $m['mentor_user_id'] ?>">Zur Normalansicht</a></p>
+<p id="em-back"><a href="index.php?action=viewmentor&amp;id=<?= $m['mentor_user_id'] ?>">Zur Normalansicht</a></p>
 <form id="em-form" action="index.php?action=edit&amp;id=<?= $m['mentor_user_id'] ?>&amp;what=mentor" method="post" onsubmit="return validate();">
   <table>
     <tr>
       <th><label for="mentor_user_name">Benutzername</label></th>
-      <td><input type="text" name="mentor_user_name" id="mentor_user_name" value="<?= $m['mentor_user_name'] ?>" /></td>
+      <td><input type="text" name="mentor_user_name" id="mentor_user_name" value="<?= $m['mentor_user_name'] ?>" width="100%" /></td>
     </tr>
     <tr>
       <th><label for="mentor_in">Eintritt</label></th>
-      <td><input type="text" name="mentor_in" id="mentor_in" value="<?= $m['mentor_in'] ?>" /></td>
+      <td><input type="text" name="mentor_in" id="mentor_in" value="<?= $m['mentor_in'] ?>" /><br /><small>JJJJ-MM-TT</small></td>
     </tr>
     <tr>
       <th><label for="mentor_out">Austritt</label></th>
-      <td><input type="text" name="mentor_out" id="mentor_out" value="<?= $m['mentor_out'] ?>" /></td>
+      <td><input type="text" name="mentor_out" id="mentor_out" value="<?= $m['mentor_out'] ?>" /><br /><small>JJJJ-MM-TT oder leer</small></td>
     </tr>
     <tr>
-      <th><label for="mentor_is_active">Aktiv</label></th>
-      <td><input type="checkbox" name="mentor_is_active" id="mentor_is_active" <? if ($this->data['mentor']['mentor_is_active'] == 1) { ?>checked="checked" <? } ?>/></td>
-    </tr>
-    <tr>
-      <th><label for="mentor_has_barnstar">Orden</label></th>
+      <th><label for="mentor_has_barnstar">Orden of Mentoring</label></th>
       <td><input type="checkbox" name="mentor_has_barnstar" id="mentor_has_barnstar" <? if ($m['mentor_has_barnstar'] == 1) { ?>checked="checked" <? } ?>/></td>
     </tr>
     <tr>
@@ -98,4 +94,6 @@ $m = $this->data['mentor'];
       <td colspan="2" class="tac"><input type="submit" value="Aktualisieren" /></td>
     </tr>
   </table>
+<p>Ein Mentor zählt genau dann als <em>ehemalig</em>, wenn ein Austrittsdatum eingetragen wurde.</p>
+<p>Der Orden und die Auszeichnungen sollten <a href="http://de.wikipedia.org/wiki/Wikipedia:Mentorenprogramm/Auszeichnungen">in der Wikipedia</a> natürlich auch eingetragen sein.</p>
 </form>

@@ -11,8 +11,7 @@
  */
 
 /**
- * This page displays some kind of statistics. In the moment, most of these
- * statistics have still to be created yet.
+ * This page displays some kind of statistics.
  */
 class StatPage implements Page
 {
@@ -37,12 +36,14 @@ class StatPage implements Page
   public function display()
   {
     $rv = array();
-    $rv['heading'] = 'Statistik';
-    $rv['title']   = "Statistik";
+    $rv['heading'] = 'Statistiken';
+    $rv['title']   = "Statistiken";
     $rv['page']    = "stat";
     $rv['data']    = array();
-    $rv['data']    = array_merge($this->db->getCountsDB(), $this->db->getCountsWP(),
-      $this->db->getCountsAllDB());
+    $rv['data']    = array_merge($this->db->getCountsDB(),
+            $this->db->getCountsWP(),
+            $this->db->getCountsAllDB());
+    $rv['data']['stats_mentees'] = $this->db->get_stats_mentees();
     return $rv;
   }
 }

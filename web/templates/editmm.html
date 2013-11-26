@@ -77,10 +77,10 @@
     <tr><th>Mentee</th><td><a href="index.php?action=viewmentee&amp;id=<?= $p[0]['mm_mentee_id'] ?>"><?= $p[0]['mentee_user_name'] ?></a></td></tr>
     <tr><th><label for="start">Beginn</label></th>
         <td><input type="text" name="start" value="<?= $p[0]['mm_start'] ?>" id="start" />
-            <span class="javascript-only"><a onclick="set_start(get_datetime_now(), false)">(jetzt)<a></span></td></tr>
+            <span class="javascript-only"><a onclick="set_start(get_datetime_now(), false)" style="cursor: pointer;">(jetzt)</a></span></td></tr>
     <tr><th><label for="end">Ende</label></th>
         <td><input type="text" name="end" value="<?= $p[0]['mm_stop']  ?>" id="end" />
-            <span class="javascript-only"><a onclick="set_stop(get_datetime_now(), false)">(jetzt)<a></span> <span class="javascript-only"><a onclick="set_stop('', false)">(noch betreut)<a></span></td></tr>
+            <span class="javascript-only"><a onclick="set_stop(get_datetime_now(), false)" style="cursor: pointer;">(jetzt)</a></span> <span class="javascript-only"><a onclick="set_stop('', false)" style="cursor: pointer;">(noch betreut)</a></span></td></tr>
     <tr><th><label for="type">Aufnahmetyp</label></th>
         <td><select name="type" id="type" size="1">
            <option value=0 <?php if($p[0]['mm_type']==0) { ?>selected<?php } ?>>nicht gesetzt</option>
@@ -89,8 +89,9 @@
         </select></td></tr>
     <tr><td colspan="2" class="tac"><input type="submit" value="Ändern" /></td></tr>
   </table>
-</td>
+</form>
 
+</td>
 <td class="vtttd">
 <p><b>Hinweise:</b></p>
 <ul>
@@ -98,17 +99,16 @@
 <li>Wenn der Mentee nun von einem anderen Mentor betreut wird, ändere nicht einfach das <em>Mentor-Feld</em>, sondern schließe diese Betreuung ab und erstelle einen neuen Eintrag.</li>
 </ul>
 </td></tr></table>
-</form>
 
 <form action="index.php?action=editmm&amp;mentor_id=<?= $p[0]['mm_mentor_id']
   ?>&amp;mentee_id=<?= $p[0]['mm_mentee_id'] ?>&amp;start=<?= $p[0]['mm_start']
   ?>&amp;end=<?= $p[0]['mm_stop'] ?>" method="post" onsubmit="return validate();">
-  <input type="submit" value="Lösche diese Betreuung!" /> Der Eintrag des Mentees bleibt davon unberührt.
+  <input type="submit" disabled value="Lösche diese Betreuung (geht noch nicht)!" /> Der Eintrag des Mentees bleibt davon unberührt.
 </form>
 
 <h2>Mentee-Benutzerseitenhistorie (<a href="http://de.wikipedia.org/w/index.php?title=Benutzer:<?= $p[0]['mentee_user_name'] ?>&action=history" target="_blank">original</a>)</h2>
 <table>
-<tr><th>Kopiere Zeit<br />nach oben</th><th>Zeit (UTC!)</th><th>Bearbeiter</th><th>Kommentar</th></tr>
+<tr><th width="90">Kopiere Zeit<br />nach oben</th><th>Zeit (UTC!)</th><th>Bearbeiter</th><th>Kommentar</th></tr>
 <?php
 
  function highlightByComment($comment)
@@ -137,11 +137,11 @@
  foreach ($history as $key => $edit)
  {
    ?><tr>
-      <td><span class="javascript-only"><a onclick="set_start(<?= $edit['rev_timestamp'] ?>, true)">(Anfang)<a></span>
-          <span class="javascript-only"><a onclick="set_stop(<?= $edit['rev_timestamp'] ?>, true)">(Ende)<a></span></td>
+      <td><span class="javascript-only"><a onclick="set_start(<?= $edit['rev_timestamp'] ?>, true)" style="cursor: pointer;">Anfang</a></span>
+          <span class="javascript-only"><a onclick="set_stop(<?= $edit['rev_timestamp'] ?>, true)" style="cursor: pointer;">Ende</a></span></td>
       <td><?= fdt($edit['rev_timestamp']) ?></td>
-      <td <?= highlightByUser($edit['rev_user_text'], $p[0]['mentor_user_name']) ?>><?= $edit['rev_user_text'] ?></td>
-      <td <?= highlightByComment($edit['rev_comment']) ?>><?= $edit['rev_comment'] ?></td>
+      <td <?= highlightByUser($edit['rev_user_text'], $p[0]['mentor_user_name']) ?>><?= htmlspecialchars($edit['rev_user_text']) ?></td>
+      <td <?= highlightByComment($edit['rev_comment']) ?>><?= htmlspecialchars($edit['rev_comment']) ?></td>
     </tr><?php
  }
 ?></table>

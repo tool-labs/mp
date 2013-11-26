@@ -52,6 +52,8 @@ class Database
                             PDO::ATTR_PERSISTENT         => true,
 			    PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES \'UTF8\''
                           ));
+      $stmt = $this->db->prepare("SET NAMES 'utf8'");
+      $stmt->execute();
     }
     catch (PDOException $ex)
     {
@@ -147,15 +149,67 @@ class Database
   }
 
   /**
-   * Returns a list of mentors in lexical order.
-   * @param $offset the list’s offset
-   * @param $count the list’s length
+   * Returns a list of all active mentors.
    */
-  public function getMentors($offset, $count)
+  public function get_all_active_mentors()
   {
     try
     {
-      $stmt = $this->db->prepare("SELECT * FROM mentor ORDER BY mentor_user_name LIMIT :count OFFSET :offset");
+      $stmt = $this->db->prepare('SELECT mentor_user_name FROM mentor WHERE mentor_out IS NULL;');
+      $stmt->execute();
+      return $stmt->fetchAll();
+    }
+    catch (PDOEXception $e)
+    {
+      $this->handleError($e->getMessage());
+    }
+  }
+
+  /**
+   * Returns a list of all mentor_mentee where the mm_type is not set (=0).
+   */
+  public function get_all_mentor_mentees_with_unset_type()
+  {
+    try
+    {
+      $stmt = $this->db->prepare("SELECT mm_start, mm_stop, mentee_user_id, mentee_user_name, mentor_user_id, mentor_user_name FROM mentee_mentor " .
+	"JOIN mentee ON mentee_mentor.mm_mentee_id = mentee.mentee_user_id " .
+	"JOIN mentor ON mentee_mentor.mm_mentor_id = mentor.mentor_user_id " .
+	"WHERE mm_type = 0 " .
+	"ORDER BY mm_start ASC");
+      $stmt->execute();
+      return $stmt->fetchAll();
+    }
+    catch (PDOException $e)
+    {
+      $this->handleError($e->getMessage());
+    }
+  }
+
+  /**
+   * Returns a list of mentors in lexical order.
+   * @param $offset the list’s offset
+   * @param $count the list’s length
+   * @param $no_activity_filter 0=return only active, 1=don't filter by activity status
+   */
+  public function getMentors($offset, $count, $no_activity_filter)
+  {
+    try
+    {
+      $whereCl = "";
+      if ($no_activity_filter == 0)
+      {
+        $whereCl = " WHERE mentor.mentor_out IS NULL ";
+      }
+      $stmt = $this->db->prepare("SELECT mentor_user_id, mentor_user_name, mentor_login_password, mentor_pw_salt, mentor_in, mentor_out, " .
+		"mentor_award_level, mentor_has_barnstar, mentor_remark, mentor_lastupdate, mm_mentee_id, " .
+		"COUNT(DISTINCT mm_mentee_id) AS mm_active_mentee_count " .
+	"FROM mentor " .
+	"LEFT OUTER JOIN mentee_mentor ON mentee_mentor.mm_mentor_id=mentor.mentor_user_id AND mm_stop IS NULL " .
+	$whereCl .
+	"GROUP BY mentor_user_id, mentor_user_name, mentor_login_password, mentor_pw_salt, mentor_in, mentor_out, mentor_award_level, mentor_has_barnstar, " .
+		"mentor_remark, mentor_lastupdate " .
+	"ORDER BY mentor_user_name LIMIT :count OFFSET :offset");
       $stmt->bindParam(":count",  $count,  PDO::PARAM_INT);
       $stmt->bindParam(":offset", $offset, PDO::PARAM_INT);
       $stmt->execute();
@@ -699,30 +753,31 @@ class Database
    * @param $user_name new user name
    * @param $in new in date
    * @param $out new out date
-   * @param $active new activity state
    * @param $barnstar new barnstar state
    * @param $award new award state
    * @param $remark new remark
    */
-  public function updateMentor($id, $user_name, $in, $out, $active,
+  public function updateMentor($id, $user_name, $in, $out,
                                $barnstar, $award, $remark)
   {
     try
     {
+      // write NULL if $out is emtpy
+      if (empty($out) || $out == '0000-00-00') {
+          $out = NULL;
+      }
       $stmt = $this->db->prepare('UPDATE mentor SET ' .
-                                 'mentor_user_name = :user_name, ' .
-                                 'mentor_in = :in, ' .
-                                 'mentor_out = :out, ' .
-                                 'mentor_is_active = :active, ' .
-                                 'mentor_has_barnstar = :barnstar, ' .
-                                 'mentor_award_level = :award, ' .
-                                 'mentor_remark = :remark ' .
-                                 'WHERE mentor_user_id = :id');
+                         'mentor_user_name = :user_name, ' .
+                         'mentor_in = :in, ' .
+                         'mentor_out = :out, ' .
+                         'mentor_has_barnstar = :barnstar, ' .
+                         'mentor_award_level = :award, ' .
+                         'mentor_remark = :remark ' .
+                         'WHERE mentor_user_id = :id');
       $stmt->execute(array(':id' => $id,
                            ':user_name' => $user_name,
                            ':in' => $in,
                            ':out' => $out,
-                           ':active' => (int) $active,
                            ':barnstar' => (int) $barnstar,
                            ':award' => $award,
                            ':remark' => $remark));
@@ -800,20 +855,20 @@ class Database
   }
   
   /**
-   * Get the login password hash for a certain mentor.
+   * Get the login password hash and the salt for a certain mentor.
    * @param string $user the mentor’s user name
-   * @returns the mentor’s password hash or -1 if the mentor doesn’t exist.
+   * @returns the mentor’s password hash and salt or -1 if the mentor doesn’t exist or something was not set.
    */
-  public function get_hash_for_user($user)
+  public function get_hash_and_salt_for_user($user)
   {
     try
     {
-      $stmt = $this->db->prepare("SELECT mentor_login_password FROM mentor WHERE mentor_user_name = :user");
+      $stmt = $this->db->prepare("SELECT mentor_login_password, mentor_pw_salt FROM mentor WHERE mentor_user_name = :user");
       $stmt->execute(array(":user" => $user));
       $result = $stmt->fetch();
-      if (isset($result['mentor_login_password']))
+      if (isset($result['mentor_login_password']) and isset($result['mentor_pw_salt']))
       {
-        return $result['mentor_login_password'];
+        return $result;
       }
       else
       {
@@ -829,14 +884,15 @@ class Database
   /**
    * Update the password hash for a mentor.
    * @param string $user the mentor’s user name
-   * @param sha1   $hash the new password hash 
+   * @param sha1   $hash the new salted password hash
+   * @param salt   $salt the salt you used
    */
-  public function set_hash_for_user($user, $hash)
+  public function set_hash_and_salt_for_user($user, $hash_with_salt, $salt)
   {
     try
     {
-      $stmt = $this->db->prepare('UPDATE mentor SET mentor_login_password = :np WHERE mentor_user_name = :user');
-      $stmt->execute(array(':np' => $hash, ':user' => $user));
+      $stmt = $this->db->prepare('UPDATE mentor SET mentor_login_password = :hs, mentor_pw_salt = :salt WHERE mentor_user_name = :user');
+      $stmt->execute(array(':hs' => $hash_with_salt, ':salt' => $salt, ':user' => $user));
     }
     catch (PDOException $ex)
     {
@@ -1082,6 +1138,23 @@ class Database
   }
 
   /**
+   * Returns a list of all users in the category 'Benutzer:Mentee'.
+   */
+  public function get_all_wp_mentees()
+  {
+    try
+    {
+      $q = $this->db->query("SELECT page_title FROM dewiki_p.page JOIN dewiki_p.categorylinks ON cl_from = page_id WHERE cl_to = 'Benutzer:Mentee'");
+      return $q->fetchAll();
+    }
+    catch (PDOException $e)
+    {
+      $this->handleError($e->getMessage());
+    }
+    return array();
+  }
+
+  /**
    * Get the edit count of a Wikipedia user.
    * @param $id the user’s MediaWiki id
    * @returns the edit count
@@ -1233,6 +1306,7 @@ class Database
 
   /**
    * Renames a mentor.
+   *  XXX veraltet?
    */
   public function rename_mentor($mentor_id, $new_name)
   {
@@ -1268,6 +1342,7 @@ class Database
   
   /**
    * Archives a mentor.
+   *  XXX veraltet?
    */
   public function archive_mentor($mentor_id)
   {
@@ -1346,6 +1421,32 @@ class Database
     try
     {
       $sql = "SELECT log_id, log_date, log_comment, log_user_name, log_type, log_target FROM logging ORDER BY log_date DESC LIMIT 50";
+      $stmt = $this->db->prepare($sql);
+      $stmt->execute();
+      return $stmt->fetchAll();
+    }
+    catch (PDOException $e)
+    {
+      $this->handleError($e->getMessage());
+    }   
+  }
+
+  /**
+   * Anzahl der neuer und alter Betreuungen gruppiert nach Wochen.
+   * Achtung, wenn es keine neuen in der Woche gab, werden die entlassenden nicht
+   * ausgegeben. Damit kann man hoffentlich leben.
+   */
+  public function get_stats_mentees()
+  {
+    try
+    {
+      $sql = "SELECT s_year, s_week, s_count, e_count FROM (SELECT YEARWEEK(mm_start) AS s_year_week, SUBSTRING(YEARWEEK(mm_start),1,4) as s_year, SUBSTRING(YEARWEEK(mm_start),5,2) as s_week, COUNT(mm_mentee_id) as s_count FROM `mentee_mentor` " .
+             "GROUP BY SUBSTRING(YEARWEEK(mm_start),1,4), SUBSTRING(YEARWEEK(mm_start),5,2) " .
+             ") AS a LEFT JOIN (" .
+             "SELECT YEARWEEK(mm_stop) AS e_year_week, COUNT(mm_mentee_id) as e_count FROM `mentee_mentor` " .
+             "GROUP BY SUBSTRING(YEARWEEK(mm_stop),1,4), SUBSTRING(YEARWEEK(mm_stop),5,2) " .
+             ") AS b ON s_year_week = e_year_week " .
+             "ORDER BY s_year DESC, s_week ASC";
       $stmt = $this->db->prepare($sql);
       $stmt->execute();
       return $stmt->fetchAll();

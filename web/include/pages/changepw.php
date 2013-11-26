@@ -27,7 +27,10 @@ class ChangePWPage implements Page
     if (isset($_POST['new_password']))
     {
       $rv['data']['what'] = 'success';
-      $this->db->set_hash_for_user($this->access->user(), sha1($_POST['new_password']));
+      $new_salt = $this->access->generate_salt();
+      $salted_pw = $this->access->doubleSaltedHash($_POST['new_password'], $new_salt);
+
+      $this->db->set_hash_and_salt_for_user($this->access->user(), $salted_pw, $new_salt);
       $this->db->log($this->access->user(), "Changed user password", 'change_password', 0);
     }
 

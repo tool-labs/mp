@@ -99,7 +99,7 @@ if ($this->data['w'] == 'results')
   <table id="search-result">
    <tr><th>Benutzername</th><th>Eintritt</th><th>Austritt</th></tr>
    <tr class="sr-mentor">
-     <td><a href="index.php?action=view&amp;id=<?= $this->data['mr']['mentor_user_id'] ?>">
+     <td><a href="index.php?action=viewmentor&amp;id=<?= $this->data['mr']['mentor_user_id'] ?>">
        Mentor <?= $this->data['mr']['mentor_user_name'] ?></a></td>
      <td><?= fd($this->data['mr']['mentor_in']) ?></td>
      <td><?= fd($this->data['mr']['mentor_out']) ?></td>
@@ -133,7 +133,7 @@ if ($this->data['w'] == 'results')
       {
 ?>
     <tr>
-      <td><li class="sr-mentor"><a href="index.php?action=view&id=<?= $mentor['mentor_id'] ?>">Mentor <?= $mentor['mentor_user_name'] ?></a></td>
+      <td><li class="sr-mentor"><a href="index.php?action=viewmentor&id=<?= $mentor['mentor_id'] ?>">Mentor <?= $mentor['mentor_user_name'] ?></a></td>
       <td><?= fd($mentor['mentor_in']) ?></td>
       <td><?= fd($mentor['mentor_out']) ?></td>
     </tr>
@@ -196,7 +196,7 @@ if ($this->data['w'] == 'results')
       {
 ?>
         <tr class="sr-mentor">
-          <td><a href="index.php?action=view&id=<?= $mentor['mentor_id'] ?>">Mentor <?= $mentor['mentor_user_name'] ?></a></td>
+          <td><a href="index.php?action=viewmentor&id=<?= $mentor['mentor_id'] ?>">Mentor <?= $mentor['mentor_user_name'] ?></a></td>
           <td><?= fd($mentor['mentor_in']) ?></td>
           <td><?= fd($mentor['mentor_out']) ?></td>
         </tr>
