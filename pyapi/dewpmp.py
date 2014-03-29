@@ -13,14 +13,14 @@ import string
 
 class Database:
     def __init__(self, user_name=None, password=None, host=None,
-                 wp_host=None, database='p_dewpmp', wp_database='dewiki_p'):
+                 database=None, wp_database='dewiki_p'):
         """
         Constructor.
 
         *wp_database* may be `None`. Otherwise it should be the wiki’s database
         name, e. g. 'dewiki_p'.
         """
-        # try to read the .my-dewpmp.cnf
+        # try to read the replica.mp-db.cnf
         import ConfigParser
         import os.path
         import mp_db_config
@@ -31,33 +31,22 @@ class Database:
             parser.read(p)
             if parser.has_section('client'):
                 if parser.has_option('client', 'user') and user_name is None:
-                    user_name = parser.get('client', 'user')
-                if (parser.has_option('client', 'password')
-                    and password is None):
-                    password = string.strip(parser.get('client', 'password'),
-                                            '"')
+                    user_name = string.strip(parser.get('client', 'user'), '"\'')
+                if (parser.has_option('client', 'password') and password is None):
+                    password = string.strip(parser.get('client', 'password'), '"\'')
                 if parser.has_option('client', 'host') and host is None:
-                    host = string.strip(parser.get('client', 'host'), '"')
+                    host = string.strip(parser.get('client', 'host'), '"\'')
 
-                if parser.has_option('client', 'dewikihost') and wp_host is None:
-                    wp_host = string.strip(parser.get('client', 'dewikihost'), '"')
-
-
-        if user_name is None or password is None or host is None or wp_host is None:
+        if user_name is None or password is None or host is None:
             raise DewpmpException(u'You did not specify enough information on' +
-                                u' the database connection. The .my-dewpmp.cnf ' +
+                                u' the database connection. The replica.mp-db.cnf ' +
                                 u'file did not contain the required ' +
-                                u'information.')
+                                u'information. Used user_name: %s, host: %s' % (user_name, host))
 
         try:
-            self.conn = oursql.connect(user=user_name,
-                                       passwd=password,
-                                       host=host,
-                                       db=database)
-            self.conn_wp = oursql.connect(user=user_name,
-                                          passwd=password,
-                                          host=wp_host,
-                                          db=wp_database)
+            self.conn = oursql.connect(user=user_name, passwd=password, host=host, db=database)
+            self.conn_wp = oursql.connect(user=user_name, passwd=password, host=host, db=wp_database,
+                           charset='utf8', use_unicode=True)
         except oursql.DatabaseError, e:
             raise DewpmpException(u'You specified wrong database ' +
                                   u'connection data. Error message: ' + 
@@ -400,9 +389,8 @@ class Database:
         """
         with self.conn_wp as curs:
             curs.execute(u'''
-            SELECT SUM(contribs)
-                FROM `user_daily_contribs`
-                WHERE `user_id` = ? AND DATEDIFF(NOW(), day) < ?
+              select COUNT(rev_id) from revision_userindex join page on (page_id = rev_page) where 
+              rev_user=? and DATEDIFF(NOW(), rev_timestamp) < ?
             ;''',(user_id, latest_days,))
             row = curs.fetchone()
             if row != None and row[0] != None:
