@@ -21,6 +21,7 @@ class Database
    * Database handle.
    */
   protected $db;
+  private $mp_db_name;
   /**
    * MediaWiki timestamp format.
    */
@@ -47,7 +48,8 @@ class Database
     if (isset($db)) $ts_mycnf['dbname'] = $db;
     try
     {
-      $this->db = new PDO("mysql:host=" . $ts_mycnf['host']. ";dbname=" . $ts_mycnf['dbname'],
+      $mp_db_name = $ts_mycnf['dbname'];
+      $this->db = new PDO("mysql:host=" . $ts_mycnf['host']. ";dbname=" . $mp_db_name,
                           $ts_mycnf['user'], $ts_mycnf['password'], array(
                             PDO::ATTR_PERSISTENT         => true,
 			    PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES \'UTF8\''
@@ -160,6 +162,28 @@ class Database
       return $stmt->fetchAll();
     }
     catch (PDOEXception $e)
+    {
+      $this->handleError($e->getMessage());
+    }
+  }
+
+  /**
+   * Returns a list of all mentors that are not archived yet and are not in the category anymore.
+   */
+  public function get_all_active_mentors_without_category()
+  {
+    try
+    {
+      $mentor_cat_name = 'Benutzer:Mentor';
+      $stmt = $this->db->prepare("SELECT user_id AS mentor_user_id, page_title AS mentor_user_name FROM dewiki_p.page " .
+                "JOIN dewiki_p.user ON user_name=page_title " .
+                "WHERE page_namespace=2 AND page_title IN " .
+		"(SELECT mentor_user_name FROM " . $this->mp_db_name . ".mentor WHERE mentor_out IS NULL) AND page_id NOT IN " . 
+		"(SELECT cl_from FROM dewiki_p.categorylinks WHERE cl_to='" . $mentor_cat_name . "')");
+      $stmt->execute();
+      return $stmt->fetchAll();
+    }
+    catch (PDOException $e)
     {
       $this->handleError($e->getMessage());
     }

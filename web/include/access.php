@@ -93,6 +93,8 @@ class Access
    */
   public function login($user, $password)
   {
+#echo "<p>salt" . $this->generate_salt() . "</p>";
+#die();
     $db_hash_salt_result = $this->db->get_hash_and_salt_for_user($user);
     if ($db_hash_salt_result == -1 || $password == NULL || strlen($password) == 0)
     {
@@ -101,6 +103,8 @@ class Access
     $db_hash_with_salt = $db_hash_salt_result['mentor_login_password'];
     $db_salt = $db_hash_salt_result['mentor_pw_salt'];
     $given_pw_hash_with_salt = $this->doubleSaltedHash($password, $db_salt);
+#echo $given_pw_hash_with_salt;
+#die();
     if ($db_hash_with_salt != $given_pw_hash_with_salt)
     {
       return false;
