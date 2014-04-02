@@ -18,7 +18,7 @@ $m = $this->data["mentee"];
    (<? if ($mentor['mm_type'] == '0') {?>?<? } elseif ($mentor['mm_type'] == '1') { ?>N<? } elseif ($mentor['mm_type'] == '2') { ?>W<? } ?>;
    <?= fdt($mentor['mm_start']) ?> - <? if ($mentor['mm_stop'] != NULL) {?><?= fdt($mentor['mm_stop']) ?><? } else { ?>jetzt<? } ?>)<?php
    if ($this->access->is_editor()) {
-     ?> (<a href="index.php?action=editmm&amp;mentee_id=<?= $m['mentee_user_id'] ?>&amp;mentor_id=<?= $mentor['mentor_user_id'] ?>" title="bearbeiten">∓</a>)<?php
+     ?> (<a href="index.php?action=editmm&amp;mentee_id=<?= $m['mentee_user_id'] ?>&amp;mentor_id=<?= $mentor['mentor_user_id'] ?>&amp;start=<?= $mentor['mm_start'] ?>" title="bearbeiten">∓</a>)<?php
    }
    ?></li><?php
  }
