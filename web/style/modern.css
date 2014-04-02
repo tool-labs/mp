@@ -1447,7 +1447,7 @@ table {
 div.box { background-color: #F2F2F2; border: 1px solid #AAAAAA; padding: 0.2em; margin-top: 10px; margin-bottom: 10px; }
 p.lm-navi { text-align: center; margin: 0px; padding: 0px; }
 p.yearly-sum { clear: both; margin: 0; }
-table#view-table { float: left; margin-bottom: 0px; width: 25em; }
+table#view-table { float: left; margin-bottom: 0px; width: 30em; }
 table#view-top-table { background-color: transparent; border: 0px; }
 table#view-top-table td.vtttd { border: 0px; vertical-align: top; }
 h2#view-mentees-all { clear: both; }
