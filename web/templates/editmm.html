@@ -100,13 +100,14 @@
 </ul>
 </td></tr></table>
 
-<form action="index.php?action=editmm&amp;mentor_id=<?= $p[0]['mm_mentor_id']
-  ?>&amp;mentee_id=<?= $p[0]['mm_mentee_id'] ?>&amp;start=<?= $p[0]['mm_start']
-  ?>&amp;end=<?= $p[0]['mm_stop'] ?>" method="post" onsubmit="return validate();">
-  <input type="submit" disabled value="Lösche diese Betreuung (geht noch nicht)!" /> Der Eintrag des Mentees bleibt davon unberührt.
+<form action="index.php?action=delete_mm" method="post">
+  <input type="hidden" name="mentor_id" value="<?= $p[0]['mm_mentor_id'] ?>" />
+  <input type="hidden" name="mentee_id" value="<?= $p[0]['mm_mentee_id'] ?>" />
+  <input type="hidden" name="mm_start" value="<?= $p[0]['mm_start'] ?>" />
+  <input type="submit" class="delete-mm" value="Lösche diese Betreuung!" /> Es gibt keine Bestätigungsabfrage. Der Eintrag des Mentees bleibt davon unberührt.
 </form>
 
-<h2>Mentee-Benutzerseitenhistorie (<a href="http://de.wikipedia.org/w/index.php?title=Benutzer:<?= $p[0]['mentee_user_name'] ?>&action=history" target="_blank">original</a>)</h2>
+<h2>Mentee-Benutzerseitenhistorie (<a href="//de.wikipedia.org/w/index.php?title=Benutzer:<?= $p[0]['mentee_user_name'] ?>&action=history" target="_blank">original</a>)</h2>
 <table>
 <tr><th width="90">Kopiere Zeit<br />nach oben</th><th>Zeit (UTC!)</th><th>Bearbeiter</th><th>Kommentar</th></tr>
 <?php

@@ -1478,6 +1478,7 @@ span.award-1, span.award-2, span.award-3, span.award-4 {
 .mentee-problem, .mentee-problem a {
   color: #ff9900;
 }
-.mentee-critical, .mentee-critical a {
+.mentee-critical, .mentee-critical a, input.delete-mm {
+
   color: red;
 }

@@ -1056,31 +1056,21 @@ class Database
 
    /**
     * Delete all matching mentee_mentor datasets.
-   * @param int    $mentor_id the mentor’s id
-   * @param int    $mentee_id the mentee’s id
-   * @param string $start     the updated start
-   * @param string $stop      the updated stop
-   * @param int    $type      the updated type
+    * @param int    $mentor_id the mentor’s id
+    * @param int    $mentee_id the mentee’s id
+    * @param string $mm_start
     */
-  public function delete_mm_item($mentor_id, $mentee_id, $start, $stop, $type)
+  public function delete_mm_item($mentor_id, $mentee_id, $mm_start)
   {
     try
     {
       $args = array(':mentor_id' => $mentor_id,
                     ':mentee_id' => $mentee_id,
-                    ':start'     => $start,
-                    #':stop'      => $stop,
-                    ':type'      => $type);
-      $sql = "DELETE FROM mentee_mentor WHERE mm_mentor_id = :mentor_id AND mm_mentee_id = :mentee_id AND mm_type = :type, mm_start = :start, ";
-      if ($stop === '')
-        $sql .= "mm_stop IS NULL";
-      else
-      {
-        $sql .= "mm_stop = :stop";
-        $args[':stop'] = $stop;
-      }
+                    ':mm_start'  => $mm_start);
+      $sql = "DELETE FROM mentee_mentor WHERE mm_mentor_id = :mentor_id AND mm_mentee_id = :mentee_id AND mm_start = :mm_start LIMIT 1";
       $stmt = $this->db->prepare($sql);
-      $stmt->execute($args);
+      $rows = $stmt->execute($args);
+      return $rows == 1; // 1 row deleted FIXME wird nichts geloescht
     }
     catch (PDOException $ex)
     {

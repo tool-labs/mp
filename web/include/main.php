@@ -20,6 +20,7 @@ require_once('pages/addcom.php');
 require_once('pages/changepw.php');
 require_once('pages/compdat.php');
 require_once('pages/delcom.php');
+require_once('pages/delete_mm.php');
 require_once('pages/edit.php');
 require_once('pages/editmm.php');
 require_once('pages/error.php');
@@ -116,6 +117,7 @@ class Main
     $this->pages['changepw']    = new ChangePWPage($this->db, $this->access);
     $this->pages['compdat']     = new CompDatPage ($this->db);
     $this->pages['delcom']      = new DelComPage  ($this->db, $this->access);
+    $this->pages['delete_mm']   = new DeleteMmPage  ($this->db, $this->access);
     $this->pages['edit']        = new EditPage    ($this->db, $this->access);
     $this->pages['editmm']      = new EditMMPage  ($this->db, $this->access);
     $this->pages['error']       = new ErrorPage   ($this->db);
