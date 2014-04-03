@@ -191,6 +191,40 @@ class Database
 
   /**
    * Returns a list of all mentor_mentee where the mm_type is not set (=0).
+   * $ent_time can be null, otherwise it should be YYYY-MM-DD HH-MM-SS
+   */
+  public function get_mentor_mentee_history($end_time, $limit)
+  {
+    try
+    {
+      $sql = "SELECT mm_start AS event_time, mentee_mentor.mm_start, mm_stop, mm_mentee_id, mentee_user_name, mm_mentor_id, mentor_user_name " .
+        "FROM mentee_mentor " .
+        " JOIN mentee ON mm_mentee_id = mentee.mentee_user_id " .
+        " JOIN mentor ON mm_mentor_id = mentor.mentor_user_id " .
+        (validate_timestamp($end_time) ? "WHERE mm_start <= :end_time " : "") .
+        "UNION ALL " .
+        "SELECT mm_stop AS event_time, mm_start, mm_stop, mm_mentee_id, mentee_user_name, mm_mentor_id, mentor_user_name " .
+        "FROM mentee_mentor " .
+        " JOIN mentee ON mm_mentee_id = mentee.mentee_user_id " .
+        " JOIN mentor ON mm_mentor_id = mentor.mentor_user_id " .
+        (validate_timestamp($end_time) ? "WHERE mm_stop <= :end_time " : "") .
+        "ORDER BY event_time DESC LIMIT :limit";
+      $stmt = $this->db->prepare($sql);
+      $stmt->bindParam(":limit",  $limit,  PDO::PARAM_INT);
+      if (validate_timestamp($end_time)) {
+          $stmt->bindParam(":end_time",  $end_time);
+      }
+      $stmt->execute();
+      return $stmt->fetchAll();
+    }
+    catch (PDOException $e)
+    {
+      $this->handleError($e->getMessage());
+    }
+  }
+
+  /**
+   * Returns a list of all mentor_mentee where the mm_type is not set (=0).
    */
   public function get_all_mentor_mentees_with_unset_type()
   {

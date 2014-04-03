@@ -1479,6 +1479,14 @@ span.award-1, span.award-2, span.award-3, span.award-4 {
   color: #ff9900;
 }
 .mentee-critical, .mentee-critical a, input.delete-mm {
-
   color: red;
+}
+td.mm-list-cell-dimmed {
+  color: grey;
+}
+td.mm-list-cell { }
+.sticky {
+  position: fixed;
+  z-index: 100;
+  top: 0;
 }

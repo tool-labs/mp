@@ -31,6 +31,7 @@ require_once('pages/login.php');
 require_once('pages/logout.php');
 require_once('pages/maintenance.php');
 require_once('pages/maintenance_ex_mentor.php');
+require_once('pages/maintenance_mm_history.php');
 require_once('pages/maintenance_wm.php');
 require_once('pages/mentees.php');
 require_once('pages/mentorlist.php');
@@ -127,6 +128,7 @@ class Main
     $this->pages['mentees']     = new MenteesPage ($this->db);
     $this->pages['maintenance'] = new MaintenancePage ($this->db);
     $this->pages['maintenance_ex_mentor'] = new MaintenanceExMentorPage ($this->db);
+    $this->pages['maintenance_mm_history'] = new MaintenanceMmHistoryPage ($this->db);
     $this->pages['maintenance_wm'] = new MaintenanceWmPage ($this->db);
     $this->pages['viewmentor']  = new ViewMentorPage($this->db);
     $this->pages['viewmentee']  = new ViewMPage   ($this->db);
