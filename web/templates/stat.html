@@ -13,7 +13,7 @@ keine<?php } else { ?>
 <strong>eine</strong><?php } ?> Abweichung in der Mentoren- und Mentee-Anzahl im Vergleich zu den Wikipedia-Kategorien.</p>
 
 <h2><?= $this->heading ?></h2>
-<p>Angezeigt wird hier die Anzahl der Betreuungsanfänge und -enden von Neulingen pro Kalenderwoche. Das müssen nich zwangsläufig neue Mentees, sondern können auch Wiederaufnahmen sein.</p>
+<p>Angezeigt wird hier die Anzahl der Betreuungsanfänge und -enden von Neulingen pro Kalenderwoche. Das müssen nicht zwangsläufig neue Mentees, sondern können auch Wiederaufnahmen sein.</p>
 <?php
 $stats = $this->data['stats_mentees'];
 
@@ -29,7 +29,7 @@ for($i = 0; ; ++$i) {
    if ($i == count($stats)) {
        // render last image
        $chart->render("generated-stats-" .$year. ".png");
-          ?><img alt="Line chart" src="generated-stats-<?= $year ?>.png" style="border: 1px solid gray;"/><p class="yearly-sum">Insgesamt <?= $startYearCounter ?> Betreuungsanfänge und <?= $endYearCounter ?> Betreungsabschlüsse.</p><?php
+          ?><img alt="Line chart" src="generated-stats-<?= $year ?>.png" style="border: 1px solid gray;"/><p class="yearly-sum">Insgesamt <?= $startYearCounter ?> Betreuungsanfänge und <?= $endYearCounter ?> Betreuungsabschlüsse.</p><?php
        break;
    }
 
