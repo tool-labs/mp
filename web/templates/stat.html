@@ -29,7 +29,7 @@ for($i = 0; ; ++$i) {
    if ($i == count($stats)) {
        // render last image
        $chart->render("generated-stats-" .$year. ".png");
-          ?><img alt="Line chart" src="generated-stats-<?= $year ?>.png" style="border: 1px solid gray;"/><p class="yearly-sum">Insgesamt <?= $startYearCounter ?> Betreuungsanfänge und <?= $endYearCounter ?> Betreuungsabschlüsse.</p><?php
+          ?><img alt="Line chart" src="generated-stats-<?= $year ?>.png" style="border: 1px solid gray;"/><p class="yearly-sum">Insgesamt <?= $startYearCounter ?> Betreuungsanfänge und <?= $endYearCounter ?> Betreuungsabschlüsse. <a href="index.php?action=maintenance_mm_history&end_time=<?= $year ?>-12-31 23:59:59&limit=<?= $startYearCounter + $endYearCounter ?>">Details</a></p><?php
        break;
    }
 
@@ -37,7 +37,7 @@ for($i = 0; ; ++$i) {
        if ($year != 0) {
           // render the previous image
           $chart->render("generated-stats-" .$year. ".png");
-          ?><img alt="Line chart" src="generated-stats-<?= $year ?>.png" style="border: 1px solid gray;"/><p class="yearly-sum">Insgesamt <?= $startYearCounter ?> Betreuungsanfänge und <?= $endYearCounter ?> Betreungsabschlüsse.</p><?php
+          ?><img alt="Line chart" src="generated-stats-<?= $year ?>.png" style="border: 1px solid gray;"/><p class="yearly-sum">Insgesamt <?= $startYearCounter ?> Betreuungsanfänge und <?= $endYearCounter ?> Betreungsabschlüsse. <a href="index.php?action=maintenance_mm_history&end_time=<?= $year ?>-12-31 23:59:59&limit=<?= $startYearCounter + $endYearCounter ?>">Details</a></p><?php
        }
        $year = $stats[$i]['s_year'];
 
