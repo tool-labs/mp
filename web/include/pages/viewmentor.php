@@ -42,9 +42,11 @@ class ViewMentorPage implements Page
          }
       }
     }
-    $rv['data']['comentors'] = $this->db->get_comentors_by_mentor_id($id);
+    $rv['data']['metadata'] = $this->db->get_meta_data_by_mentor_name($mentor['mentor_user_name']);
     $rv['title']   = "Mentor {$rv['data']['mentor']['mentor_user_name']}";
     $rv['heading'] = "Mentor <em>{$rv['data']['mentor']['mentor_user_name']}</em>";
+#print_r($rv);
+#die();
     return $rv;
   }
 }

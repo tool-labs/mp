@@ -28,29 +28,30 @@ $m = $this->data["mentor"];
 ?>
 </td></tr>
     <tr id="view-mentees"><th>Betreuungen</th><td><?= $this->data['mentee_mentor_count'] ?> Betreuungen – <a href="#mentees">Liste</a><br /><?= $this->data['mentee_count'] ?> einzelne Neulinge</td></tr>
-    <tr id="view-comentors"><th>Co-Mentoren<?php
-    if ($this->access->is_editor())
-    {
-    ?>
-     <a href="index.php?action=addcom&amp;id=<?= $m['mentor_user_id'] ?>" title="Co-Mentor hinzufügen">(+)</a>
-    <?php
-    } 
-    ?></th><td><ul><?php
-      foreach ($this->data['comentors'] as $cm)
-      {
-    ?>
-      <li><a href="index.php?action=view&amp;id=<?= $cm['mentor_user_id'] ?>"><?= $cm['mentor_user_name'] ?></a><?php
-      if ($this->access->is_editor())
-      {
-      ?>
-       <a href="index.php?action=delcom&amp;mid=<?= $m['mentor_user_id'] ?>&amp;cmid=<?= $cm['mentor_user_id'] ?>" title="Co-Mentor löschen">(-)</a>
+    <tr id="view-comentors"><th>Co-Mentoren</th><td><ul><?php
+    if (array_key_exists('comentors', $this->data['metadata'])) {
+      foreach ($this->data['metadata']['comentors'] as $cm)
+      {?>
+       <li><a href="index.php?action=view&amp;id=<?= $cm['mentor_user_id'] ?>"><?= $cm ?></a> -- Funktion noch nicht fertig</li>
       <?php
       }
-      ?></li>
-    <?php
+    } else {
+      ?><em>keine</em><?php
     }
     ?></ul></td></tr>
     
+    <tr id="view-is-comentor"><th>Ist Co-Mentoren bei</th><td><ul><?php
+    if (array_key_exists('comentorof', $this->data['metadata'])) {
+      foreach ($this->data['metadata']['comentorof'] as $cm)
+      {?>
+       <li><a href="index.php?action=view&amp;id=<?= $cm['mentor_user_id'] ?>"><?= $cm ?></a> -- Funktion noch nicht fertig</li>
+      <?php
+      }
+    } else {
+      ?><em>keinem - (Funktion noch nicht fertig)</em><?php
+    }
+    ?></ul></td></tr>
+
    <?php
     if ($m['mentor_award_level'] != 0)
     {
@@ -69,7 +70,7 @@ $m = $this->data["mentor"];
 
 <td class="vtttd">
 <ul id="view-ul-right">
-<li id="view-userpage"><a href="http://de.wikipedia.org/wiki/Benutzer:<?= $m["mentor_user_name"] ?>">Wikipedia-Benutzerseite</a></li>
+<li id="view-userpage"><a href="//de.wikipedia.org/wiki/Benutzer:<?= $m["mentor_user_name"] ?>">Wikipedia-Benutzerseite</a></li>
 <?php
 if ($m['mentor_has_barnstar'] == 1)
 {

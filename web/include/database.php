@@ -710,7 +710,114 @@ class Database
       $this->handleError($ex->getMessage());
     }
   }
+
+  public function get_meta_data_by_mentor_name($mentor_name) {
+    try
+    {
+      $raw_data = $this->reload_mentor_meta_data();
+      if (empty($raw_data) or array_key_exists($mentor_name, $raw_data)) {
+          return($raw_data[$mentor_name]); // TODO
+      }
+      return array();
+      $stmt = $this->db->prepare("SELECT COUNT(mm_mentee_id) AS mentee_mentor_count, COUNT(DISTINCT mm_mentee_id) mentee_count FROM mentee_mentor WHERE mm_mentor_id = :id");
+      $stmt->execute(array(":id" => $id));
+      return $stmt->fetch();
+    }
+    catch (PDOException $ex)
+    {
+      $this->handleError($ex->getMessage());
+    } 
+  }
   
+  /**
+   * Returns a dic of co-mentors that are related to a certain mentor.
+   */
+  private function reload_mentor_meta_data()
+  {
+      $main_page_name = "Mentorenprogramm";
+      // check if timestamp of 'WP:MP' is younger than the last update for one mentor. If so, leave, otherwise update the meta data.
+      try {
+        $stmt = $this->db->prepare("SELECT mentor_user_id FROM mentor WHERE mentor_lastupdate > " .
+              "(SELECT page_touched FROM dewiki_p.page WHERE page_title='" . $main_page_name . "' AND page_namespace=4) LIMIT 1");
+        $stmt->execute();
+        if (false and $stmt->fetch()) {
+            return; // nothig to update
+        }
+      } catch (PDOException $ex) {
+        $this->handleError($ex->getMessage());
+      }
+      // ...we must update all this
+
+      // 1.1 WMFLabs databases do not offer 'text' table, so we only can send an api request
+      $response = file_get_contents("http://de.wikipedia.org/w/api.php?action=query&prop=revisions&rvprop=content&format=xml&titles=Wikipedia:" . $main_page_name);
+      $xml = new SimpleXMLElement($response);
+      $content = $xml->query->pages->page->revisions->rev;
+      $content = preg_replace("/\<!\-\-.+\-\->/", "", $content); // remove comments
+      // 1.2 split the templates, we can't use regex here
+      $matchedSnipps = array();
+      $openBrackets = 0;
+      $tmpSnipp = "";
+      foreach (str_split($content) as $c) {
+         if ($c == "{") {
+             $openBrackets += 1;
+         } elseif ($c == "}") {
+             $openBrackets -= 1;
+             if ($openBrackets == 0) {
+                $matchedMentors[] = $tmpSnipp;
+                $tmpSnipp = "";
+             }
+         }
+         if ($openBrackets >= 2) {
+             $tmpSnipp .= $c;
+         }
+      }
+      // 1.3 extract each template
+      $mentors_cm = array();
+      foreach ($matchedMentors as $templateSnippet) {
+         $mentor = null;
+         $coment = array();
+         $pause = false;
+         if (preg_match_all("/\|[\n\r\s]*Mentor[\n\r\s]*=[\n\r\s]*([^|}\n\r]+)[\n\r\s]*\|/", $templateSnippet, $match)) {
+            $mentor = $match[1][0];
+         } else {
+            continue;
+         }
+         foreach (array(1,2,3,4) as $n) {
+            if (preg_match_all("/\|[\n\r\s]*Co-Mentor" . $n . "[\n\r\s]*=[\n\r\s]*([^|}\n\r]+)[\n\r\s]*\|/", $templateSnippet, $match)) {
+               $trimmedCo = trim($match[1][0]);
+               if ($trimmedCo) {
+                   $coment[] = $trimmedCo;
+               }
+            }
+         }
+         if (preg_match_all("/\|[\n\r\s]*Pause[\n\r\s]*=[\n\r\s]*ja[\n\r\s]*\|/", $templateSnippet, $match)) {
+            $pause = true;
+         }
+         $mentors_cm[$mentor] = array("comentors" => $coment, "pause" => $pause);
+      }
+      // 2. now write it to database
+      // 2.1 set mentor_pause to the initial value 0
+      try {
+         $stmt = $this->db->prepare('UPDATE mentor SET mentor_pause=0, mentor_lastupdate=NOW() WHERE mentor_pause = 1;');
+         $stmt->execute();
+      } catch (PDOException $ex) {
+         $this->handleError($ex->getMessage());
+      }
+      // 2.2 update 'pause'
+      foreach ($mentors_cm as $mentor_name => $mentor_meta) {
+         if ($mentor_meta['pause'] == 1) {
+            try {
+               $stmt = $this->db->prepare('UPDATE mentor SET mentor_pause=1, mentor_lastupdate=NOW() WHERE mentor_name=\'' . $mentor_name . '\'');
+               $stmt->execute();
+//print($mentor_name);
+            } catch (PDOException $ex) {
+               $this->handleError($ex->getMessage());
+            }
+         }
+      }
+//die();
+      return $mentors_cm;
+  }
   /**
    * Returns a list of mentors that are co-mentors of a certain mentor.
    * @param $id the mentor’s id
@@ -730,62 +837,6 @@ class Database
     }
   }
   
-  /**
-   * Checks whether there is a comentor dataset for two certain mentors.
-   * @param $mid the mentor’s id
-   * @param $cmid the comentor’s id
-   * @returns true if there is a dataset for these mentors.
-   */
-   public function exists_comentor_connection($mid, $cmid)
-   {
-     try
-     {
-       $stmt = $this->db->prepare("SELECT * FROM comentors WHERE co_mentor_id = :mid AND co_comentor_id = :cmid");
-       $stmt->execute(array(":mid" => $mid, ":cmid" => $cmid));
-       return ($stmt->rowCount() > 0);
-     }
-     catch (PDOException $ex)
-     {
-       $this->handleError($ex->getMessage());
-     }
-   }
-   
-   /**
-    * Delete all matching comentor datasets.
-    * @param $mid the mentor’s id
-    * @param $cmid the comentor’s id
-    */
-   public function delete_comentor($mid, $cmid)
-   {
-     try
-     {
-       $stmt = $this->db->prepare("DELETE FROM comentors WHERE co_mentor_id = :mid AND co_comentor_id = :cmid");
-       $stmt->execute(array(":mid" => $mid, ":cmid" => $cmid));
-     }
-     catch (PDOException $ex)
-     {
-       $this->handleError($ex->getMessage());
-     }
-   }
-   
-   /**
-    * Add a comentor dataset.
-    * @param $mid the mentor’s id
-    * @param $cmid the comentor’s id
-    */
-   public function add_comentor($mid, $cmid)
-   {
-     try
-     {
-       $stmt = $this->db->prepare("INSERT INTO comentors (co_mentor_id, co_comentor_id) VALUES (:mid, :cmid)");
-       $stmt->execute(array(":mid" => $mid, ":cmid" => $cmid));
-     }
-     catch (PDOException $ex)
-     {
-       $this->handleError($ex->getMessage());
-     }
-   }
-
   /**
    * Returns a list of artciles created by a certain mentee.
    * @param $id the mentee’s id
