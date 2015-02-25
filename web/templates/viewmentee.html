@@ -28,7 +28,7 @@ $m = $this->data["mentee"];
      ?><p><a href="index.php?action=editmm&mentee_id=<?= $m['mentee_user_id'] ?>&create=new">Neue Mentor-Beziehung hinzufügen</a></p><?php
    }
        ?></td></tr>
-     <tr id="view-editcount"><th>Bearbeitungen</th><td><?= number_format($this->data['mentee_edit_count'], 0, '', '.') ?> (<a href="/~tparis/pcount/index.php?name=<?= $m['mentee_user_name'] ?>&lang=de&wiki=wikipedia" title="Editcounter">Editcounter</a>; <a href="http://de.wikipedia.org/wiki/Spezial:Beitr%C3%A4ge/<?= $m['mentee_user_name'] ?>" tiltle="Beiträge">Beiträge</a>)</td></tr>
+     <tr id="view-editcount"><th>Bearbeitungen</th><td><?= number_format($this->data['mentee_edit_count'], 0, '', '.') ?> (<a href="/supercount/index.php?user=<?= $m['mentee_user_name'] ?>&project=de.wikipedia" title="Editcounter">Editcounter</a>; <a href="http://de.wikipedia.org/wiki/Spezial:Beitr%C3%A4ge/<?= $m['mentee_user_name'] ?>" tiltle="Beiträge">Beiträge</a>)</td></tr>
      <tr id="view-activity"><th>Aktivität</th><td><?php if ($this->data['activity']) { ?>aktiv<?php } else { ?>inaktiv<?php } ?> (<a href="/~stimmberechtigung/index.php?user=<?= $m['mentee_user_name'] ?>" title="Stimmberechtigung">SB</a>)</td></tr>
   </table>
 </td>
