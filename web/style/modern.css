@@ -869,9 +869,6 @@ padding:0;
 #mw_portlets .portlet ul {
 line-height:1.4em;
 }
-ul {
-list-style-image:url("bullet.gif");
-}
 #p-cactions {
 height:1.5em;
 margin:0 0 0 14em;
@@ -916,7 +913,6 @@ display:none;
 display:none;
 }
 #footer {
-background:url("footer-grad.png") repeat-x scroll 0 0 transparent;
 clear:both;
 color:#444444;
 padding:10px 1em 1em;
@@ -1360,7 +1356,6 @@ vertical-align:middle;
 }
 ul {
 line-height:1.5em;
-list-style-image:url("bullet.gif");
 list-style-type:square;
 margin:0.3em 0 0 1.5em;
 padding:0;
@@ -1398,7 +1393,6 @@ padding:0.4em;
 background-color:#DADAFF;
 }
 .mw-topboxes {
-background:url("footer-grad.png") repeat-x scroll left bottom transparent;
 border-collapse:collapse;
 margin:0 -1em 1em;
 padding:0 0 8px;
@@ -1468,6 +1462,9 @@ span.award-1, span.award-2, span.award-3, span.award-4 {
 }
 .highlight-problem {
   color: red;
+}
+td.highlight-problem, td.highlight-okay {
+  text-align: right;
 }
 .mentee-okay, .mentee-problem, .mentee-critical {
   font-weight: bold;

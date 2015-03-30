@@ -1340,6 +1340,25 @@ class Database
   }
 
   /**
+   * Returns user's last edit.
+   */
+  public function get_users_recent_edit_timestamp($user_id)
+  {
+    try
+    {
+      $sql   = 'SELECT rev_timestamp AS last_edit FROM dewiki_p.revision_userindex WHERE rev_user = :user ORDER BY rev_timestamp DESC LIMIT 1;';
+      $stmt  = $this->db->prepare($sql);
+      $stmt->execute(array(':user' => $user_id));
+      $row = $stmt->fetch();
+      return $row['last_edit'];
+    }
+    catch (PDOException $e)
+    {
+      $this->handleError($e->getMessage());
+    }
+  }
+
+  /**
    * Checks if a user did edit.
    */
   public function has_recent_edit($user_id, $delay = '-60 days')

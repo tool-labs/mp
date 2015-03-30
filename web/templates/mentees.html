@@ -9,45 +9,47 @@
 <h2>Menteeübersicht</h2>
 
 <table>
-  <tr><th>Mentee</th><th>Mentor</th><th>Aktiv (60 Tage)?</th><th>&gt; 5 Monate?</tr>
+  <tr><th>Mentee</th><th>Mentor</th><th>Letzter Edit vor [Tage]</th><th>Mentee seit [Tage]</tr>
 <?php
 foreach ($this->data['mentees'] as $m)
 {
-  $d    = new DateTime();
-  $d->setTimestamp(strtotime('-5 months', time()));
+  $dLimit    = new DateTime();
+  $dLimit->setTimestamp(strtotime('-5 months', time()));
   $in   = DateTime::createFromFormat("Y-m-d H:i:s", $m['mm_start']);
-  $diff = $d->diff($in);
-  $too_long = (bool) $diff->invert;
+  $now = new DateTime();
+  $inDiff = $in->diff($now);
+  $diffLimit = $dLimit->diff($in);
+  $too_long = (bool) $diffLimit->invert;
+
+  $recentEdit = DateTime::createFromFormat("YmdHis", $m['recent_edit']);
+  $recentEditDiff = $recentEdit->diff($now);
+  $recentEditLimit = $now->modify('-60 days');
 
   $class = "mentee-okay";
   if ($too_long)
   {
     $class = "mentee-problem";
   }
-  if (!$m['recent_edit'])
+  if ($recentEdit < $recentEditLimit)
   {
     $class = "mentee-critical";
   }
 ?>
   <tr><td class="<?= $class ?>"><a href="index.php?action=viewmentee&id=<?= $m['mentee_user_id'] ?>"><?= $m['mentee_user_name'] ?></a></td><td><a href="index.php?action=viewmentor&id=<?= $m['mentor_user_id'] ?>"><?= $m['mentor_user_name'] ?></a></td><?php
-  if ($m['recent_edit'])
-  {
-?><td class="highlight-okay">ja</td><?php
+  if ($recentEdit > $recentEditLimit) {
+?><td class="highlight-okay"><?php
+  } else {
+?><td class="highlight-problem"><?php
   }
-  else
-  {
-?><td class="highlight-problem">nein</td><?php
-  } 
-?><?php
-  if (!$too_long)
-  {
-?><td class="highlight-okay">nein</td><?php
+?><?= $recentEditDiff->format('%a') ?></td>
+<?php
+  if (!$too_long) {
+?><td class="highlight-okay"><?php
+  } else {
+?><td class="highlight-problem"><?php
   }
-  else
-  {
-?><td class="highlight-problem">ja</td><?php
-  }
-?></tr>
+?><?= $inDiff->format('%a') ?></td>
+</tr>
 <?php
 }
 ?>

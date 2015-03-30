@@ -28,7 +28,7 @@ class MenteesPage implements Page
     $rv['data']['mentees'] = $this->db->get_all_active_mentees();
     foreach ($rv['data']['mentees'] as $id => $m)
     {
-      $rv['data']['mentees'][$id]['recent_edit'] = $this->db->has_recent_edit($m['mentee_user_id']);
+      $rv['data']['mentees'][$id]['recent_edit'] = $this->db->get_users_recent_edit_timestamp($m['mentee_user_id']);
     }
     return $rv;
   }
