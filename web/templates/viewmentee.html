@@ -9,14 +9,14 @@ $m = $this->data["mentee"];
     <tr id="view-in"><th>Eintritt</th><td><?= fd($m["mentee_in"]) ?></td></tr>
     <tr id="view-out"><th>Austritt</th><td><?= fd($m["mentee_out"]) ?></td></tr>
     <tr id="view-articles"><th>Erstellte Artikel</th><td><?= $this->data['article_count'] ?> – <a href="#articles">Liste</a></td></tr>
-    <tr id="view-mentors"><th><? if (count($this->data['mentors']) == 1) { ?>Mentor<? } else { ?>Mentoren<? } ?></th><td><ul><?php
+    <tr id="view-mentors"><th><?php if (count($this->data['mentors']) == 1) { ?>Mentor<?php } else { ?>Mentoren<?php } ?></th><td><ul><?php
  $count = count($this->data['mentors']);
  for ($i = 0; $i < $count; $i++)
  {
    $mentor = $this->data['mentors'][$i];
    ?><li><a href="index.php?action=viewmentor&amp;id=<?= $mentor['mentor_user_id'] ?>"><?= $mentor['mentor_user_name'] ?></a>
-   (<? if ($mentor['mm_type'] == '0') {?>?<? } elseif ($mentor['mm_type'] == '1') { ?>N<? } elseif ($mentor['mm_type'] == '2') { ?>W<? } ?>;
-   <?= fdt($mentor['mm_start']) ?> - <? if ($mentor['mm_stop'] != NULL) {?><?= fdt($mentor['mm_stop']) ?><? } else { ?>jetzt<? } ?>)<?php
+   (<?php if ($mentor['mm_type'] == '0') {?>?<?php } elseif ($mentor['mm_type'] == '1') { ?>N<?php } elseif ($mentor['mm_type'] == '2') { ?>W<?php } ?>;
+   <?= fdt($mentor['mm_start']) ?> - <?php if ($mentor['mm_stop'] != NULL) {?><?= fdt($mentor['mm_stop']) ?><?php } else { ?>jetzt<?php } ?>)<?php
    if ($this->access->is_editor()) {
      ?> (<a href="index.php?action=editmm&amp;mentee_id=<?= $m['mentee_user_id'] ?>&amp;mentor_id=<?= $mentor['mentor_user_id'] ?>&amp;start=<?= $mentor['mm_start'] ?>" title="bearbeiten">∓</a>)<?php
    }
@@ -28,14 +28,14 @@ $m = $this->data["mentee"];
      ?><p><a href="index.php?action=editmm&mentee_id=<?= $m['mentee_user_id'] ?>&create=new">Neue Mentor-Beziehung hinzufügen</a></p><?php
    }
        ?></td></tr>
-     <tr id="view-editcount"><th>Bearbeitungen</th><td><?= number_format($this->data['mentee_edit_count'], 0, '', '.') ?> (<a href="/supercount/index.php?user=<?= $m['mentee_user_name'] ?>&project=de.wikipedia" title="Editcounter">Editcounter</a>; <a href="http://de.wikipedia.org/wiki/Spezial:Beitr%C3%A4ge/<?= $m['mentee_user_name'] ?>" tiltle="Beiträge">Beiträge</a>)</td></tr>
+     <tr id="view-editcount"><th>Bearbeitungen</th><td><?= number_format($this->data['mentee_edit_count'], 0, '', '.') ?> (<a href="/supercount/index.php?user=<?= $m['mentee_user_name'] ?>&project=de.wikipedia" title="Editcounter">Editcounter</a>; <a href="https://de.wikipedia.org/wiki/Spezial:Beitr%C3%A4ge/<?= $m['mentee_user_name'] ?>" tiltle="Beiträge">Beiträge</a>)</td></tr>
      <tr id="view-activity"><th>Aktivität</th><td><?php if ($this->data['activity']) { ?>aktiv<?php } else { ?>inaktiv<?php } ?> (<a href="/~stimmberechtigung/index.php?user=<?= $m['mentee_user_name'] ?>" title="Stimmberechtigung">SB</a>)</td></tr>
   </table>
 </td>
 
 <td class="vtttd">
 <ul id="view-ul-right">
-<li id="view-userpage"><a href="http://de.wikipedia.org/wiki/Benutzer:<?= $m["mentee_user_name"] ?>">Wikipedia-Benutzerseite</a></li>
+<li id="view-userpage"><a href="https://de.wikipedia.org/wiki/Benutzer:<?= $m["mentee_user_name"] ?>">Wikipedia-Benutzerseite</a></li>
   
 
 <?php
@@ -79,7 +79,7 @@ else
   foreach ($this->data['articles'] as $article)
   {
   ?>
-  <tr><td class="listarticles-article"><a href="http://de.wikipedia.org/w/index.php?oldid=<?= $article['ma_rev_id'] ?>"><?= $article['title'] ?></a></td>
+  <tr><td class="listarticles-article"><a href="https://de.wikipedia.org/w/index.php?oldid=<?= $article['ma_rev_id'] ?>"><?= $article['title'] ?></a></td>
       <td class="listarticles-creation"><?= fd($article['ma_creation_date']) ?></td>
   <?php
   }

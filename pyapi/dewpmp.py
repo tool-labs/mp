@@ -12,7 +12,7 @@ import oursql
 import string
 
 class Database:
-    def __init__(self, user_name=None, password=None, host=None,
+    def __init__(self, user_name=None, password=None, host=None, wp_host=None,
                  database=None, wp_database='dewiki_p'):
         """
         Constructor.
@@ -36,6 +36,10 @@ class Database:
                     password = string.strip(parser.get('client', 'password'), '"\'')
                 if parser.has_option('client', 'host') and host is None:
                     host = string.strip(parser.get('client', 'host'), '"\'')
+                if parser.has_option('client', 'database') and database is None:
+                    database = string.strip(parser.get('client', 'database'), '"\'')
+                if parser.has_option('client', 'wp_host') and wp_host is None:
+                    wp_host = string.strip(parser.get('client', 'wp_host'), '"\'')
 
         if user_name is None or password is None or host is None:
             raise DewpmpException(u'You did not specify enough information on' +
@@ -45,7 +49,7 @@ class Database:
 
         try:
             self.conn = oursql.connect(user=user_name, passwd=password, host=host, db=database)
-            self.conn_wp = oursql.connect(user=user_name, passwd=password, host=host, db=wp_database,
+            self.conn_wp = oursql.connect(user=user_name, passwd=password, host=wp_host, db=wp_database,
                            charset='utf8', use_unicode=True)
         except oursql.DatabaseError, e:
             raise DewpmpException(u'You specified wrong database ' +
@@ -310,7 +314,7 @@ class Database:
                 return None
 
     # XXX not used
-    def get_mentee_by_id(self, mentee_id):
+    def XXget_mentee_by_id(self, mentee_id):
         with self.conn as curs:
             curs.execute('''
             SELECT `mentee_user_id`, `mentee_user_name`,

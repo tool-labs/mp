@@ -1,39 +1,40 @@
-<?php
-$m = $this->data["mentor"];
-?>
-<h2>Informationen<?php if ($this->access->is_editor()) { ?> <a href="index.php?action=edit&amp;what=mentor&amp;id=<?= $m['mentor_user_id'] ?>" class="mentor-edit-link">[Mentor bearbeiten]</a><?php } ?></h2>
+	<?php
+	$m = $this->data["mentor"];
+	?>
+	<h2>Informationen<?php if ($this->access->is_editor()) { ?> <a href="index.php?action=edit&amp;what=mentor&amp;id=<?= $m['mentor_user_id'] ?>" class="mentor-edit-link">[Mentor bearbeiten]</a><?php } ?></h2>
 
-<table id="view-top-table">
-<tr>
-<td class="vtttd">
-  <table id="view-table" rules="all">
-    <tr id="view-in"><th>Eintritt</th><td><?= fd($m["mentor_in"]) ?></td></tr>
-    <tr id="view-out"><th>Austritt</th><td><?= fd($m["mentor_out"]) ?>
-<?php
-  $m_has_active_mentees = false;
-  foreach ($this->data['mentees'] as $mentee)
-  {
-     if ($mentee['mm_stop'] == NULL) {
-        $m_has_active_mentees = true;
-        break;
-     }
-  }
-  if ($m["mentor_out"] != NULL and $m_has_active_mentees)
-  {
-     ?><p>Es gibt noch betreute Mentees!</p><?php
-  } else if ($m["mentor_out"] == NULL and !$m_has_active_mentees)
-  {
-     ?><p>Es gibt zurzeit keine betreuten Mentees.</p><?php
-  }
-?>
-</td></tr>
-    <tr id="view-mentees"><th>Betreuungen</th><td><?= $this->data['mentee_mentor_count'] ?> Betreuungen – <a href="#mentees">Liste</a><br /><?= $this->data['mentee_count'] ?> einzelne Neulinge</td></tr>
-    <tr id="view-comentors"><th>Co-Mentoren</th><td><ul><?php
-    if (array_key_exists('comentors', $this->data['metadata'])) {
-      foreach ($this->data['metadata']['comentors'] as $cm)
-      {?>
-       <li><a href="index.php?action=view&amp;id=<?= $cm['mentor_user_id'] ?>"><?= $cm ?></a> -- Funktion noch nicht fertig</li>
-      <?php
+	<table id="view-top-table">
+	<tr>
+	<td class="vtttd">
+	  <table id="view-table" rules="all">
+	    <tr id="view-in"><th>Eintritt</th><td><?= fd($m["mentor_in"]) ?></td></tr>
+	    <tr id="view-out"><th>Austritt</th><td><?= fd($m["mentor_out"]) ?>
+	<?php
+	  $m_has_active_mentees = false;
+	  foreach ($this->data['mentees'] as $mentee)
+	  {
+	     if ($mentee['mm_stop'] == NULL) {
+		$m_has_active_mentees = true;
+		break;
+	     }
+	  }
+	  if ($m["mentor_out"] != NULL and $m_has_active_mentees)
+	  {
+	     ?><p>Es gibt noch betreute Mentees!</p><?php
+	  } else if ($m["mentor_out"] == NULL and !$m_has_active_mentees)
+	  {
+	     ?><p>Es gibt zurzeit keine betreuten Mentees.</p><?php
+	  }
+	?>
+	</td></tr>
+	    <tr id="view-mentees"><th>Betreuungen</th><td><?= $this->data['mentee_mentor_count'] ?> Betreuungen – <a href="#mentees">Liste</a><br /><?= $this->data['mentee_count'] ?> einzelne Neulinge</td></tr>
+	    <tr id="view-comentors"><th>Co-Mentoren</th><td>
+<ul><?php
+	    if (array_key_exists('comentors', $this->data['metadata'])) {
+	      foreach ($this->data['metadata']['comentors'] as $cm)
+	      {?>
+	       <li><a href="index.php?action=viewmentor&amp;id=<?= $cm ?>"><?= $cm ?></a> -- Funktion noch nicht fertig</li>
+	      <?php
       }
     } else {
       ?><em>keine</em><?php
@@ -128,8 +129,16 @@ else
   {
   ?>
   <tr><td class="listmentees-mentee"><a href="index.php?action=viewmentee&amp;id=<?= $mentee['mentee_user_id'] ?>"><?= $mentee['mentee_user_name'] ?></a>
-      (<? if ($mentee['mm_type'] == '0') {?>?<? } else if ($mentee['mm_type'] == '1') { ?>N<? } else if ($mentee['mm_type'] == '2') { ?>W<? } ?><?
-          if ($mentee['mentee_entrance'] > 1) { ?>; <?= $mentee['mentee_entrance'] ?> Mal betreut<? } ?>)
+      (<?php if ($mentee['mm_type'] == '0') {
+		?>?<?php
+          } else if ($mentee['mm_type'] == '1') {
+		?>N<?php
+          } else if ($mentee['mm_type'] == '2') {
+		?>W<?php
+          } else {
+		?>Unbekannter Status: '<?= $mentee['mm_type'] ?>'<?php
+          }
+          if ($mentee['mentee_entrance'] > 1) { ?>; <?= $mentee['mentee_entrance'] ?> Mal betreut<?php } ?>)
 </td>
       <td class="listmentees-activity"><?php if ($mentee['mentee_active']) { ?>aktiv<?php } else { ?>inaktiv<?php } ?></td>
       <td class="listmentees-in"><?= fdt($mentee['mm_start']) ?></td>

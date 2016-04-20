@@ -21,6 +21,7 @@ class Database
    * Database handle.
    */
   protected $db;
+  protected $db_dewikip;
   private $mp_db_name;
   /**
    * MediaWiki timestamp format.
@@ -54,7 +55,14 @@ class Database
                             PDO::ATTR_PERSISTENT         => true,
 			    PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES \'UTF8\''
                           ));
+      $this->db_dewikip = new PDO("mysql:host=dewiki.labsdb;dbname=dewiki_p",
+                          $ts_mycnf['user'], $ts_mycnf['password'], array(
+                            PDO::ATTR_PERSISTENT         => true,
+			    PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES \'UTF8\''
+                          ));
       $stmt = $this->db->prepare("SET NAMES 'utf8'");
+      $stmt->execute();
+      $stmt = $this->db_dewikip->prepare("SET NAMES 'utf8'");
       $stmt->execute();
     }
     catch (PDOException $ex)
@@ -174,11 +182,18 @@ class Database
   {
     try
     {
+      // 1st step
+      $stmtMentorsInDb = $this->db->prepare("SELECT mentor_user_name FROM " . $this->mp_db_name . ".mentor WHERE mentor_out IS NULL");
+      $stmtMentorsInDb->execute();
+      $mentorsInDbList = $stmtMentorsInDb->fetchAll();
+      $mentorsInDbList = "'" . implode("','", array_map(function($n) { return $n[0];}, array_values($mentorsInDbList))) . "'";
+
+      // 2nd step
       $mentor_cat_name = 'Benutzer:Mentor';
-      $stmt = $this->db->prepare("SELECT user_id AS mentor_user_id, page_title AS mentor_user_name FROM dewiki_p.page " .
+      $stmt = $this->db_dewikip->prepare("SELECT user_id AS mentor_user_id, page_title AS mentor_user_name FROM dewiki_p.page " .
                 "JOIN dewiki_p.user ON user_name=page_title " .
                 "WHERE page_namespace=2 AND page_title IN " .
-		"(SELECT mentor_user_name FROM " . $this->mp_db_name . ".mentor WHERE mentor_out IS NULL) AND page_id NOT IN " . 
+		"(" . $mentorsInDbList . ") AND page_id NOT IN " . 
 		"(SELECT cl_from FROM dewiki_p.categorylinks WHERE cl_to='" . $mentor_cat_name . "')");
       $stmt->execute();
       return $stmt->fetchAll();
@@ -715,10 +730,11 @@ class Database
     try
     {
       $raw_data = $this->reload_mentor_meta_data();
-      if (empty($raw_data) or array_key_exists($mentor_name, $raw_data)) {
-          return($raw_data[$mentor_name]); // TODO
+      if (!empty($raw_data) and array_key_exists($mentor_name, $raw_data)) {
+          return $raw_data[$mentor_name];
       }
       return array();
+
       $stmt = $this->db->prepare("SELECT COUNT(mm_mentee_id) AS mentee_mentor_count, COUNT(DISTINCT mm_mentee_id) mentee_count FROM mentee_mentor WHERE mm_mentor_id = :id");
       $stmt->execute(array(":id" => $id));
       return $stmt->fetch();
@@ -737,11 +753,14 @@ class Database
       $main_page_name = "Mentorenprogramm";
       // check if timestamp of 'WP:MP' is younger than the last update for one mentor. If so, leave, otherwise update the meta data.
       try {
-        $stmt = $this->db->prepare("SELECT mentor_user_id FROM mentor WHERE mentor_lastupdate > " .
-              "(SELECT page_touched FROM dewiki_p.page WHERE page_title='" . $main_page_name . "' AND page_namespace=4) LIMIT 1");
+        $stmt = $this->db_dewikip->prepare("SELECT page_touched FROM dewiki_p.page WHERE page_title='" . $main_page_name . "' AND page_namespace=4 LIMIT 1");
         $stmt->execute();
-        if (false and $stmt->fetch()) {
-            return; // nothig to update
+        $mainPageTimestamp = $stmt->fetch();
+        
+        $stmt = $this->db_dewikip->prepare("SELECT mentor_user_id FROM mentor WHERE mentor_lastupdate >" . $mainPageTimestamp[0] . " LIMIT 1");
+        $stmt->execute();
+        if (false and $stmt->fetch()) { // XXX warum deaktiviert?
+            return array(); // nothig to update
         }
       } catch (PDOException $ex) {
         $this->handleError($ex->getMessage());
@@ -749,7 +768,7 @@ class Database
       // ...we must update all this
 
       // 1.1 WMFLabs databases do not offer 'text' table, so we only can send an api request
-      $response = file_get_contents("http://de.wikipedia.org/w/api.php?action=query&prop=revisions&rvprop=content&format=xml&titles=Wikipedia:" . $main_page_name);
+      $response = file_get_contents("https://de.wikipedia.org/w/api.php?action=query&prop=revisions&rvprop=content&format=xml&titles=Wikipedia:" . $main_page_name);
       $xml = new SimpleXMLElement($response);
       $content = $xml->query->pages->page->revisions->rev;
       $content = preg_replace("/\<!\-\-.+\-\->/", "", $content); // remove comments
@@ -1223,9 +1242,9 @@ class Database
     try
     {
       $rv = array();
-      $q = $this->db->query("SELECT cat_pages as newbie_count_wp FROM dewiki_p.category WHERE `cat_title` = 'Benutzer:Mentee'");
+      $q = $this->db_dewikip->query("SELECT cat_pages as newbie_count_wp FROM dewiki_p.category WHERE `cat_title` = 'Benutzer:Mentee'");
       $rv = array_merge($rv, $q->fetch());
-      $q = $this->db->query("SELECT cat_pages as mentor_count_wp FROM dewiki_p.category WHERE `cat_title` = 'Benutzer:Mentor'");
+      $q = $this->db_dewikip->query("SELECT cat_pages as mentor_count_wp FROM dewiki_p.category WHERE `cat_title` = 'Benutzer:Mentor'");
       $rv = array_merge($rv, $q->fetch());
       return $rv;
     }
@@ -1262,7 +1281,7 @@ class Database
   {
     try
     {
-      $stmt = $this->db->prepare('SELECT COUNT(*) AS edit_count FROM dewiki_p.revision_userindex WHERE rev_user = :id');
+      $stmt = $this->db_dewikip->prepare('SELECT COUNT(*) AS edit_count FROM dewiki_p.revision_userindex WHERE rev_user = :id');
       $stmt->execute(array(':id' => $user_id));
       $line = $stmt->fetch();
       return $line['edit_count'];
@@ -1282,7 +1301,7 @@ class Database
   {
     try
     {
-      $stmt = $this->db->prepare('SELECT rev_timestamp, rev_user_text, rev_comment FROM dewiki_p.revision_userindex ' .
+      $stmt = $this->db_dewikip->prepare('SELECT rev_timestamp, rev_user_text, rev_comment FROM dewiki_p.revision_userindex ' .
            'JOIN dewiki_p.page ON rev_page=page_id AND page_namespace = 2 AND page_title = :user_name ' . 
            'ORDER BY rev_timestamp DESC LIMIT 50');
       # white space -> _
@@ -1304,7 +1323,7 @@ class Database
   {
     try
     {
-      $stmt = $this->db->prepare('SELECT COUNT(1) AS active FROM (' . 
+      $stmt = $this->db_dewikip->prepare('SELECT COUNT(1) AS active FROM (' . 
           'SELECT rev_id FROM dewiki_p.revision_userindex WHERE rev_user = :id AND rev_timestamp between :start and :end LIMIT 1' .
           ') i');
       $now   = time();
@@ -1328,7 +1347,7 @@ class Database
   {
     try
     {
-      $stmt = $this->db->prepare('select page_title from dewiki_p.page where page_id = :id');
+      $stmt = $this->db_dewikip->prepare('select page_title from dewiki_p.page where page_id = :id');
       $stmt->execute(array(':id' => $id));
       $row = $stmt->fetch();
       return preg_replace('/_/', ' ', $row['page_title']);
@@ -1347,7 +1366,7 @@ class Database
     try
     {
       $sql   = 'SELECT rev_timestamp AS last_edit FROM dewiki_p.revision_userindex WHERE rev_user = :user ORDER BY rev_timestamp DESC LIMIT 1;';
-      $stmt  = $this->db->prepare($sql);
+      $stmt  = $this->db_dewikip->prepare($sql);
       $stmt->execute(array(':user' => $user_id));
       $row = $stmt->fetch();
       return $row['last_edit'];
@@ -1369,7 +1388,7 @@ class Database
       $start = date(self::timestamp_format, strtotime($delay, $now));
       $end   = date(self::timestamp_format, strtotime('1 second', $now));
       $sql   = 'SELECT COUNT(1) AS has_edit FROM (SELECT rev_id FROM dewiki_p.revision_userindex WHERE rev_user = :user AND rev_timestamp BETWEEN :start AND :end LIMIT 1) i;';
-      $stmt  = $this->db->prepare($sql);
+      $stmt  = $this->db_dewikip->prepare($sql);
       $stmt->execute(array(':user' => $user_id, ':start' => $start, ':end' => $end));
       $row = $stmt->fetch();
       return (bool) $row['has_edit'];
@@ -1388,7 +1407,7 @@ class Database
     try
     {
       $sql = "SELECT * FROM dewiki_p.user WHERE user_name = :name";
-      $stmt = $this->db->prepare($sql);
+      $stmt = $this->db_dewikip->prepare($sql);
       $stmt->execute(array(':name' => $user_name));
       $row = $stmt->fetch();
       if (!($row === false))
@@ -1412,7 +1431,7 @@ class Database
     try
     {
       $sql = "SELECT mentor_user_id, mentor_user_id, mentor_user_name, user_name FROM mentor JOIN dewiki_p.user ON mentor_user_id = user_id WHERE mentor_user_name != user_name";
-      $stmt = $this->db->prepare($sql);
+      $stmt = $this->db_dewikip->prepare($sql);
       $stmt->execute();
       return $stmt->fetchAll();
     }
@@ -1445,7 +1464,7 @@ class Database
    */
   public function get_archived_mentors($mentor_cat)
   {
-    try
+    try // TODO JOIN per code duerchfueren
     {
       $sql = 'SELECT mentor_user_name, mentor_user_id FROM mentor WHERE mentor_out IS NULL AND NOT EXISTS (SELECT cl_from FROM dewiki_p.categorylinks JOIN dewiki_p.page ON page_id = cl_from WHERE page_title = REPLACE(mentor_user_name, \' \', \'_\') AND page_namespace = 2 AND cl_to = :cat);';
       $stmt = $this->db->prepare($sql);
@@ -1481,10 +1500,10 @@ class Database
    */
    public function get_new_mentors($mentor_cat)
    {
-     try
+     try // TODO JOIN aufloesen
      {
        $sql = 'SELECT REPLACE(page_title, \'_\', \' \') AS mentor_name, user_id FROM dewiki_p.categorylinks JOIN (dewiki_p.page, dewiki_p.user) ON (page_id = cl_from AND REPLACE(user_name, \' \', \'_\') = page_title) WHERE cl_to = :cat AND page_namespace = 2 AND NOT EXISTS (SELECT mentor_user_id FROM mentor WHERE mentor_user_id = user_id AND mentor_out IS NULL);';
-       $stmt = $this->db->prepare($sql);
+       $stmt = $this->db_dewikip->prepare($sql);
        $stmt->execute(array(':cat' => $mentor_cat));
        return $stmt->fetchAll();
      }
