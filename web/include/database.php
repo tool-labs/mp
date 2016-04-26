@@ -634,15 +634,18 @@ class Database
 
     try
     {
-      $sql = 'SELECT * FROM mentee WHERE mentee_user_name REGEXP :nameregexp';
+      $sql = 'SELECT mentee_user_id, mentee_user_name, MIN(mm_start) AS mentee_in, MAX(mm_stop) AS mentee_out FROM mentee '
+          .' JOIN mentee_mentor ON mm_mentee_id = mentee_user_id'
+          .' WHERE mentee_user_name REGEXP :nameregexp ';
       if ($actives && !$inactives)
       {
-        $sql .= ' AND mentee_out IS NULL';
+        $sql .= ' AND mm_stop IS NULL';
       }
       elseif (!$actives && $inactives)
       {
-        $sql .= ' AND mentee_out IS NOT NULL';
+        $sql .= ' AND mm_stop IS NOT NULL';
       }
+      $sql .= ' GROUP BY mentee_user_id, mentee_user_name';
       $sql .= ' ORDER BY mentee_user_name';
       $stmt = $this->db->prepare($sql);
       $stmt->execute(array(':nameregexp' => $name_regexp));
