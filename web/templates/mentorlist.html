@@ -11,7 +11,7 @@ if (!($this->data["prev_offset"] === -1 && $this->data["next_offset"] === -1))
 if ($this->data["prev_offset"] != -1)
 {
 ?>
-<span class="lm-prev"><a href="index.php?action=mentorlist&amp;offset=<?= $this->data["prev_offset"] ?>&amp;count=<?= $this->data["count"] ?>">Zurück</a></span>
+<span class="lm-prev"><a href="index.php?action=mentorlist&amp;offset=<?= $this->data["prev_offset"] ?>&amp;count=<?= $this->data["count"] ?>">[urück</a></span>
 <?php
 }
 if ($this->data["prev_offset"] != -1 && $this->data["next_offset"] != -1)
@@ -66,7 +66,7 @@ if (!empty($this->data["mentors"]))
 {
 ?>
 <table id="lm-list" cellpadding=2>
-  <tr><th>Benutzername</th><th>Eintritt</th><th>Austritt</th><th>Auszeichnung</th><th>Zurzeit aktive Mentees</th></tr>
+  <tr><th>Benutzername</th><th>Eintritt</th><th>Austritt</th><th>Auszeichnung</th><th>Abgeschlossene Mentees</th><th>Zurzeit aktive Mentees</th></tr>
 <?php
 $awards = array(0 => '', 1 => 'Bronze', 2 => 'Silber', 3 => 'Gold', 4 => 'Platin', 5 => 'Smaragd');
 foreach ($this->data["mentors"] as $mentor)
@@ -76,7 +76,16 @@ foreach ($this->data["mentors"] as $mentor)
     <td><a href="index.php?action=viewmentor&amp;id=<?= $mentor["mentor_user_id"] ?>"<?php if ($mentor['mentor_out']) {?> style='color: grey;'<?php } ?> ><?= $mentor["mentor_user_name"] ?></a></td>
     <td><?= fd($mentor['mentor_in']) ?></td>
     <td><?= fd($mentor['mentor_out']) ?></td>
-    <td><span class="award-<?= $mentor['mentor_award_level'] ?>"><?= $awards[$mentor['mentor_award_level']] ?></span></td>
+    <td><span class="award-<?= $mentor['mentor_award_level'] ?>"><?= $awards[$mentor['mentor_award_level']] ?></span>
+        <?php if (($mentor['mentor_award_level'] == 0 && $mentor['mm_finished_mentee_count'] > 10) ||
+                  ($mentor['mentor_award_level'] == 1 && $mentor['mm_finished_mentee_count'] > 25) ||
+                  ($mentor['mentor_award_level'] == 2 && $mentor['mm_finished_mentee_count'] > 50) ||
+                  ($mentor['mentor_award_level'] == 3 && $mentor['mm_finished_mentee_count'] > 100) ||
+                  ($mentor['mentor_award_level'] == 4 && $mentor['mm_finished_mentee_count'] > 250) ||
+                  ($mentor['mentor_award_level'] == 5 && $mentor['mm_finished_mentee_count'] > 1000)) {?>
+		<abbr title="Hier ist wahrscheinlich schon die nächste Auszeichung fällig...">+++</abbr><?php
+        } ?></td>
+    <td align="right"><?= $mentor['mm_finished_mentee_count'] ?></td>
     <td align="right"><?= $mentor['mm_active_mentee_count'] ?></td>
   </tr>
 <?php
@@ -98,7 +107,7 @@ if (!($this->data["prev_offset"] === -1 && $this->data["next_offset"] === -1))
 if ($this->data["prev_offset"] != -1)
 {
 ?>
-<span class="lm-prev"><a href="index.php?action=mentorlist&amp;offset=<?= $this->data["prev_offset"] ?>&amp;count=<?= $this->data["count"] ?>">Zurück</a></span>
+<span class="lm-prev"><a href="index.php?action=mentorlist&amp;offset=<?= $this->data["prev_offset"] ?>&amp;count=<?= $this->data["count"] ?>">[urück</a></span>
 <?php
 }
 if ($this->data["prev_offset"] != -1 && $this->data["next_offset"] != -1)

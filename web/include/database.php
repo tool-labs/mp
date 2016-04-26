@@ -275,10 +275,12 @@ class Database
         $whereCl = " WHERE mentor.mentor_out IS NULL ";
       }
       $stmt = $this->db->prepare("SELECT mentor_user_id, mentor_user_name, mentor_login_password, mentor_pw_salt, mentor_in, mentor_out, " .
-		"mentor_award_level, mentor_has_barnstar, mentor_remark, mentor_lastupdate, mm_mentee_id, " .
-		"COUNT(DISTINCT mm_mentee_id) AS mm_active_mentee_count " .
+		"mentor_award_level, mentor_has_barnstar, mentor_remark, mentor_lastupdate, " .
+		"COUNT(DISTINCT mm_active.mm_mentee_id) AS mm_active_mentee_count, " .
+		"COUNT(DISTINCT mm_finished.mm_mentee_id) AS mm_finished_mentee_count " .
 	"FROM mentor " .
-	"LEFT OUTER JOIN mentee_mentor ON mentee_mentor.mm_mentor_id=mentor.mentor_user_id AND mm_stop IS NULL " .
+	"LEFT OUTER JOIN mentee_mentor mm_active ON mm_active.mm_mentor_id=mentor.mentor_user_id AND mm_active.mm_stop IS NULL " .
+	"LEFT OUTER JOIN mentee_mentor mm_finished ON mm_finished.mm_mentor_id=mentor.mentor_user_id AND mm_finished.mm_stop IS NOT NULL " .
 	$whereCl .
 	"GROUP BY mentor_user_id, mentor_user_name, mentor_login_password, mentor_pw_salt, mentor_in, mentor_out, mentor_award_level, mentor_has_barnstar, " .
 		"mentor_remark, mentor_lastupdate " .
