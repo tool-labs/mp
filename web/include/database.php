@@ -729,15 +729,54 @@ class Database
   public function get_meta_data_by_mentor_name($mentor_name) {
     try
     {
-      $raw_data = $this->reload_mentor_meta_data();
-      if (!empty($raw_data) and array_key_exists($mentor_name, $raw_data)) {
-          return $raw_data[$mentor_name];
-      }
-      return array();
+      $main_page_name = "Mentorenprogramm";
+      // check if timestamp of 'WP:MP' is younger than the last update for one mentor. If so, leave, otherwise update the meta data.
+      $stmt = $this->db_dewikip->prepare("SELECT page_touched FROM dewiki_p.page WHERE page_title='" . $main_page_name . "' AND page_namespace=4 LIMIT 1");
+      $stmt->execute();
+      $mainPageTimestamp = $stmt->fetch();
+      
+      $stmt = $this->db->prepare("SELECT mentor_user_id FROM mentor JOIN comentors ON mentor_user_id = co_mentor_id WHERE mentor_lastupdate >" . $mainPageTimestamp[0] . " LIMIT 1");
+      $stmt->execute();
+      if (!$stmt->fetch()) { // Update needed
+          $raw_data = $this->reload_mentor_meta_data($main_page_name);
+          if (empty($raw_data)) {
+              return array();
+          }
+ 
+          // Load all Mentor IDs
+          $stmt = $this->db->prepare("SELECT mentor_user_name, mentor_user_id FROM mentor");
+          $stmt->execute();
+          $mentorIdMap = $stmt->fetchAll(PDO::FETCH_COLUMN|PDO::FETCH_GROUP);
 
-      $stmt = $this->db->prepare("SELECT COUNT(mm_mentee_id) AS mentee_mentor_count, COUNT(DISTINCT mm_mentee_id) mentee_count FROM mentee_mentor WHERE mm_mentor_id = :id");
-      $stmt->execute(array(":id" => $id));
-      return $stmt->fetch();
+          // build UPDATE string
+          $valueSqlString = "START TRANSACTION; DELETE FROM comentors; INSERT INTO comentors (co_mentor_id, co_comentor_id) VALUES";
+          $counter = 0;
+          foreach($raw_data as $mentorName => $mentorMetaData) {
+             if (!array_key_exists($mentorName, $mentorIdMap)) { continue; }
+             $mentorId = $mentorIdMap[$mentorName][0];
+             foreach($mentorMetaData['comentors'] as $coMentorName) {
+                if (!array_key_exists($coMentorName, $mentorIdMap)) { continue; }
+                $coMentorId = $mentorIdMap[$coMentorName][0];
+                if ($mentorId and $coMentorId) {
+print($mentorName . '--> ' . $coMentorName . '\n ');
+                   $valueSqlString .= ($counter==0?"":",") . "(" . $mentorId . "," . $coMentorId . ")";
+                   $counter++;
+                }
+             }
+          }
+          // update mentor.last_update
+          $valueSqlString .= "; UPDATE mentor SET mentor_lastupdate = NOW() WHERE mentor_user_id IN (SELECT DISTINCT co_mentor_id FROM comentors);";
+          $valueSqlString .= "COMMIT;";
+
+          // exucute it
+          $stmt = $this->db->prepare($valueSqlString);
+          $stmt->execute();
+      }
+      $stmtCo = $this->db->prepare("SELECT co_comentor_id, cm.mentor_user_name comentor_name FROM comentors JOIN mentor m ON m.mentor_user_id = co_mentor_id JOIN mentor cm ON cm.mentor_user_id = co_comentor_id WHERE m.mentor_user_name = :name");
+      $stmtCo->execute(array(":name" => $mentor_name));
+      $stmtCoOf = $this->db->prepare("SELECT co_mentor_id, m.mentor_user_name comentor_name FROM comentors JOIN mentor m ON m.mentor_user_id = co_mentor_id JOIN mentor cm ON cm.mentor_user_id = co_comentor_id WHERE cm.mentor_user_name = :name");
+      $stmtCoOf->execute(array(":name" => $mentor_name));
+      return array('comentors' => $stmtCo->fetchAll(), 'comentorOf' => $stmtCoOf->fetchAll());
     }
     catch (PDOException $ex)
     {
@@ -748,25 +787,8 @@ class Database
   /**
    * Returns a dic of co-mentors that are related to a certain mentor.
    */
-  private function reload_mentor_meta_data()
+  private function reload_mentor_meta_data($main_page_name)
   {
-      $main_page_name = "Mentorenprogramm";
-      // check if timestamp of 'WP:MP' is younger than the last update for one mentor. If so, leave, otherwise update the meta data.
-      try {
-        $stmt = $this->db_dewikip->prepare("SELECT page_touched FROM dewiki_p.page WHERE page_title='" . $main_page_name . "' AND page_namespace=4 LIMIT 1");
-        $stmt->execute();
-        $mainPageTimestamp = $stmt->fetch();
-        
-        $stmt = $this->db_dewikip->prepare("SELECT mentor_user_id FROM mentor WHERE mentor_lastupdate >" . $mainPageTimestamp[0] . " LIMIT 1");
-        $stmt->execute();
-        if (false and $stmt->fetch()) { // XXX warum deaktiviert?
-            return array(); // nothig to update
-        }
-      } catch (PDOException $ex) {
-        $this->handleError($ex->getMessage());
-      }
-      // ...we must update all this
-
       // 1.1 WMFLabs databases do not offer 'text' table, so we only can send an api request
       $response = file_get_contents("https://de.wikipedia.org/w/api.php?action=query&prop=revisions&rvprop=content&format=xml&titles=Wikipedia:" . $main_page_name);
       $xml = new SimpleXMLElement($response);
@@ -828,13 +850,11 @@ class Database
             try {
                $stmt = $this->db->prepare('UPDATE mentor SET mentor_pause=1, mentor_lastupdate=NOW() WHERE mentor_name=\'' . $mentor_name . '\'');
                $stmt->execute();
-//print($mentor_name);
             } catch (PDOException $ex) {
                $this->handleError($ex->getMessage());
             }
          }
       }
-//die();
       return $mentors_cm;
   }
   /**

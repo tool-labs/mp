@@ -33,7 +33,7 @@
 	    if (array_key_exists('comentors', $this->data['metadata'])) {
 	      foreach ($this->data['metadata']['comentors'] as $cm)
 	      {?>
-	       <li><a href="index.php?action=viewmentor&amp;id=<?= $cm ?>"><?= $cm ?></a> -- Funktion noch nicht fertig</li>
+	       <li><a href="index.php?action=viewmentor&amp;id=<?= $cm['co_comentor_id'] ?>"><?= $cm['comentor_name'] ?></a></li>
 	      <?php
       }
     } else {
@@ -41,15 +41,15 @@
     }
     ?></ul></td></tr>
     
-    <tr id="view-is-comentor"><th>Ist Co-Mentoren bei</th><td><ul><?php
-    if (array_key_exists('comentorof', $this->data['metadata'])) {
-      foreach ($this->data['metadata']['comentorof'] as $cm)
+    <tr id="view-is-comentor"><th>Ist Co-Mentor bei</th><td><ul><?php
+    if (array_key_exists('comentorOf', $this->data['metadata'])) {
+      foreach ($this->data['metadata']['comentorOf'] as $cm)
       {?>
-       <li><a href="index.php?action=view&amp;id=<?= $cm['mentor_user_id'] ?>"><?= $cm ?></a> -- Funktion noch nicht fertig</li>
+       <li><a href="index.php?action=viewmentor&amp;id=<?= $cm['co_mentor_id'] ?>"><?= $cm['comentor_name'] ?></a></li>
       <?php
       }
     } else {
-      ?><em>keinem - (Funktion noch nicht fertig)</em><?php
+      ?><em>keinem</em><?php
     }
     ?></ul></td></tr>
 
