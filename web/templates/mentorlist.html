@@ -43,7 +43,7 @@ if (!($this->data["prev_offset"] === -1 && $this->data["next_offset"] === -1))
     <option<?php if ($this->data["count"] == 5000) { ?> selected="selected"<?php } ?>>5000</option></select> <input type="submit" value="anzeigen" />
   <input type="checkbox" name="no_activity_filter" value="1" <?php if($this->data['no_activity_filter'] == 1) { ?>checked<?php } ?>> <label>Auch ehemalige Mentoren anzeigen</label>
   <input type="hidden" name="offset" value="<?= $this->data['offset'] ?>" />
-  <input type="hidden" name="action" value="mentorlist" /></li>
+  <input type="hidden" name="action" value="mentorlist" />
 </form>
 <?php
 if (!$this->data['all'])
@@ -76,7 +76,7 @@ if (!empty($this->data["mentors"]))
         });
       });
 </script>
-<table id="lm-list" cellpadding=2 class="tablesorter">
+<table id="lm-list" class="tablesorter">
 <thead>
   <tr><th>Benutzername</th><th>Eintritt</th><th>Austritt</th><th>Auszeichnung</th><th>Abgeschlossene Mentees</th><th>Zurzeit aktive Mentees</th></tr>
 </thead><tbody>
@@ -98,8 +98,8 @@ foreach ($this->data["mentors"] as $mentor)
                   ($mentor['mentor_award_level'] == 5 && $mentor['mm_finished_mentee_count'] > 1000)) {?>
 		<abbr title="Hier ist wahrscheinlich schon die nächste Auszeichung fällig...">+++</abbr><?php
         } ?></td>
-    <td align="right"><?= $mentor['mm_finished_mentee_count'] ?></td>
-    <td align="right"><?= $mentor['mm_active_mentee_count'] ?></td>
+    <td style="text-align: right;"><?= $mentor['mm_finished_mentee_count'] ?></td>
+    <td style="text-align: right;"><?= $mentor['mm_active_mentee_count'] ?></td>
   </tr>
 <?php
   }
