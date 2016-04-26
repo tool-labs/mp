@@ -116,14 +116,25 @@ if (empty($this->data['mentees']))
 else
 {
 ?>
-<table id="listmentees-table">
+<script type="text/javascript" id="js">
+      // start the tablesorter
+      $(document).ready(function() {
+        $(".tablesorter").tablesorter({
+            headers: {
+                2: { sorter:'datumDE' },
+                3: { sorter:'datumDE' }
+            }
+        });
+      });
+</script>
+<table id="listmentees-table" class="tablesorter"><thead>
   <tr id="listmentees-headers">
     <th>Benutzername</th>
     <th>Aktivität</th>
     <th>Aufnahme</th>
     <th>Betreuungsende</th>
     <?php if ($this->access->is_editor()) { ?><th>Bearbeiten</th><?php } ?>
-  </tr>
+  </tr></thead><tbody>
   <?php
   foreach ($this->data['mentees'] as $mentee)
   {
@@ -149,7 +160,7 @@ else
   <?php
   }
   ?>
-</table>
+</tbody></table>
 <?php
 }
 ?>

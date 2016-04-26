@@ -14,11 +14,27 @@ mb_internal_encoding('UTF-8');
   echo $this->header;
 ?>
     <script type="text/javascript" src="style/jquery.js"></script>
-    <script type="text/javascript" src="style/jquery-ui.js"></script>
+<!--    <script type="text/javascript" src="style/jquery-ui.js"></script> -->
+    <script type="text/javascript" src="style/jquery.tablesorter.min.js"></script>
     <link type="text/css" rel="stylesheet" media="handheld, screen" href="style/jquery-ui.css" />
     <!-- modern design -->
     <link type="text/css" rel="stylesheet" href="style/modern.css" />
     <script type="text/javascript">/*<![CDATA[*/
+      // add parser through the tablesorter addParser method 
+      $.tablesorter.addParser({ 
+          // set a unique id 
+          id: 'datumDE', 
+          is: function(s) { // return false so this parser is not auto detected 
+              return false; 
+          }, 
+          format: function(s) { 
+              // format your data for normalization 
+              return s.substring(6) + s.substring(3, 5) + s.substring(0, 2);
+          }, 
+          // set type, either numeric or text 
+          type: 'text' 
+      });
+
       Array.prototype.unique = function() {
         var o = {};
         var tmp = [];

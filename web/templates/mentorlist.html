@@ -65,8 +65,21 @@ if (!$this->data['all'])
 if (!empty($this->data["mentors"]))
 {
 ?>
-<table id="lm-list" cellpadding=2>
+<script type="text/javascript" id="js">
+      // start the tablesorter
+      $(document).ready(function() {
+        $(".tablesorter").tablesorter({
+            headers: {
+                1: { sorter:'datumDE' },
+                2: { sorter:'datumDE' }
+            }
+        });
+      });
+</script>
+<table id="lm-list" cellpadding=2 class="tablesorter">
+<thead>
   <tr><th>Benutzername</th><th>Eintritt</th><th>Austritt</th><th>Auszeichnung</th><th>Abgeschlossene Mentees</th><th>Zurzeit aktive Mentees</th></tr>
+</thead><tbody>
 <?php
 $awards = array(0 => '', 1 => 'Bronze', 2 => 'Silber', 3 => 'Gold', 4 => 'Platin', 5 => 'Smaragd');
 foreach ($this->data["mentors"] as $mentor)
@@ -76,7 +89,7 @@ foreach ($this->data["mentors"] as $mentor)
     <td><a href="index.php?action=viewmentor&amp;id=<?= $mentor["mentor_user_id"] ?>"<?php if ($mentor['mentor_out']) {?> style='color: grey;'<?php } ?> ><?= $mentor["mentor_user_name"] ?></a></td>
     <td><?= fd($mentor['mentor_in']) ?></td>
     <td><?= fd($mentor['mentor_out']) ?></td>
-    <td><span class="award-<?= $mentor['mentor_award_level'] ?>"><?= $awards[$mentor['mentor_award_level']] ?></span>
+    <td><span style="display: none;"><?= $mentor['mentor_award_level'] ?></span><span class="award-<?= $mentor['mentor_award_level'] ?>"><?= $awards[$mentor['mentor_award_level']] ?></span>
         <?php if (($mentor['mentor_award_level'] == 0 && $mentor['mm_finished_mentee_count'] > 10) ||
                   ($mentor['mentor_award_level'] == 1 && $mentor['mm_finished_mentee_count'] > 25) ||
                   ($mentor['mentor_award_level'] == 2 && $mentor['mm_finished_mentee_count'] > 50) ||
@@ -91,7 +104,7 @@ foreach ($this->data["mentors"] as $mentor)
 <?php
   }
  ?>
-</table>
+</tbody></table>
 <?php
 }
 ?>

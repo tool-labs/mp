@@ -49,37 +49,6 @@ padding:0.5em 2.5%;
 float:right;
 margin-left:5px;
 }
-h2#filehistory {
-clear:both;
-}
-table.filehistory th, table.filehistory td {
-vertical-align:top;
-}
-table.filehistory th {
-text-align:left;
-}
-table.filehistory td.mw-imagepage-filesize, table.filehistory th.mw-imagepage-filesize {
-white-space:nowrap;
-}
-table.filehistory td.filehistory-selected {
-font-weight:bold;
-}
-li span.deleted, span.history-deleted {
-color:#888888;
-font-style:italic;
-text-decoration:line-through;
-}
-.not-patrolled {
-background-color:#FFFFAA;
-}
-.unpatrolled {
-color:red;
-font-weight:bold;
-}
-div.patrollink {
-font-size:75%;
-text-align:right;
-}
 body.ltr td.mw-label {
 text-align:right;
 }
@@ -1492,4 +1461,23 @@ td.mm-list-cell { }
   position: fixed;
   z-index: 100;
   top: 0;
+}
+/* table sorter stuff */
+th.header { 
+    background-image: url(../style/bg.gif); 
+    cursor: pointer; 
+    font-weight: bold; 
+    background-repeat: no-repeat; 
+    background-position: center left; 
+    padding-left: 20px; 
+    border-right: 1px solid #dad9c7; 
+    margin-left: -1px; 
+}
+th.headerSortUp { 
+    background-image: url(../style/asc.gif); 
+    background-color: #3399FF; 
+}
+th.headerSortDown { 
+    background-image: url(../style/desc.gif); 
+    background-color: #3399FF; 
 }
