@@ -62,7 +62,7 @@ $m = $this->data['mentor'];
     </tr>
     <tr>
       <th><label for="mentor_has_barnstar">Orden of Mentoring</label></th>
-      <td><input type="checkbox" name="mentor_has_barnstar" id="mentor_has_barnstar" <? if ($m['mentor_has_barnstar'] == 1) { ?>checked="checked" <? } ?>/></td>
+      <td><input type="checkbox" name="mentor_has_barnstar" id="mentor_has_barnstar" <?php if ($m['mentor_has_barnstar'] == 1) { ?>checked="checked" <?php } ?>/></td>
     </tr>
     <tr>
       <th><label for="mentor_award_level">Auszeichnung</label></th>
@@ -74,16 +74,9 @@ $m = $this->data['mentor'];
                           3 => 'Gold',
                           4 => 'Platin',
                           5 => 'Smaragd');
-          for ($i = 0; $i < count($awards); $i++)
-          {
-            ?>
-            <option value="<?= $i ?>"<?
-              if ($m['mentor_award_level'] == $i)
-              { ?> selected="selected"<? } ?>><?= $awards[$i] 
-              ?></option>
-            <?php
-          }
-          ?>
+          for ($i = 0; $i < count($awards); $i++) {
+            ?><option value="<?= $i ?>"<?php if ($m['mentor_award_level'] == $i) { ?> selected="selected"<?php } ?> ><?= $awards[$i] ?></option>
+    <?php } ?>
           </select></td>
     </tr>
     <tr>
@@ -95,5 +88,5 @@ $m = $this->data['mentor'];
     </tr>
   </table>
 <p>Ein Mentor zählt genau dann als <em>ehemalig</em>, wenn ein Austrittsdatum eingetragen wurde.</p>
-<p>Der Orden und die Auszeichnungen sollten <a href="http://de.wikipedia.org/wiki/Wikipedia:Mentorenprogramm/Auszeichnungen">in der Wikipedia</a> natürlich auch eingetragen sein.</p>
+<p>Der Orden und die Auszeichnungen sollten <a href="//de.wikipedia.org/wiki/Wikipedia:Mentorenprogramm/Auszeichnungen">in der Wikipedia</a> natürlich auch eingetragen sein.</p>
 </form>
