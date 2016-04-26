@@ -1273,7 +1273,7 @@ content:"» ";
 }
 div#searchTargetHide {
 background:none repeat scroll 0 0 gainsboro;
-border:1px solid black;
+8order:1px solid black;
 float:right;
 padding:2px;
 }
@@ -1445,17 +1445,23 @@ table#view-table { float: left; margin-bottom: 0px; width: 30em; }
 table#view-top-table { background-color: transparent; border: 0px; }
 table#view-top-table td.vtttd { border: 0px; vertical-align: top; }
 h2#view-mentees-all { clear: both; }
+span.award-5 { 
+  background: url("//upload.wikimedia.org/wikipedia/commons/thumb/7/71/Emerald_Logo.svg/16px-Emerald_Logo.svg.png") no-repeat scroll left center transparent; 
+}
+span.award-4 { 
+  background: url("//upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Pewter_medal_icon.svg/16px-Pewter_medal_icon.svg.png") no-repeat scroll left center transparent; 
+}
 span.award-3 { 
-  background: url("http://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Gold_medal_blank.svg/10px-Gold_medal_blank.svg.png") no-repeat scroll left center transparent; 
+  background: url("//upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Gold_medal_blank.svg/16px-Gold_medal_blank.svg.png") no-repeat scroll left center transparent; 
 }
 span.award-2 {
-  background: url("http://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Silver_medal_blank.svg/10px-Silver_medal_blank.svg.png") no-repeat scroll left center transparent;
+  background: url("//upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Silver_medal_blank.svg/16px-Silver_medal_blank.svg.png") no-repeat scroll left center transparent;
 }
 span.award-1 {
-  background: url("http://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Bronze_medal_blank.svg/10px-Bronze_medal_blank.svg.png") no-repeat scroll left center transparent;
+  background: url("//upload.wikimedia.org/wikipedia/commons/thumb/3/34/Bronze_medal_blank.svg/16px-Bronze_medal_blank.svg.png") no-repeat scroll left center transparent;
 }
-span.award-1, span.award-2, span.award-3, span.award-4 {
-  padding-left: 13px; 
+span.award-1, span.award-2, span.award-3, span.award-4, span.award-5 {
+  padding-left: 18px; 
 }
 .highlight-okay {
   color: green;
