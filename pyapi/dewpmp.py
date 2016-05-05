@@ -147,8 +147,11 @@ class Database:
     def add_mentee(self, mentor_name, mentee_name, mentoring_type=0, timestamp=None):
         """
            if mentee is already in:
-                  'stops' the old mentoring, if not already done
-                  'starts' a new mentoring with given mentor
+                  if old m_m relation was stopped less than 24 hours ago:
+                    re-open it
+                  else:
+                    'stops' the old mentoring, if not already done
+                    'starts' a new mentoring with given mentor
            else:
                   'starts' a new mentoring with given mentor
                   
@@ -184,7 +187,8 @@ class Database:
                self.add_mentee_user(mentee_name, mentee_user_id)
 
         # is there an 'old mentoring' item? then close it
-        self.stop_all_current_mentoring(mentee_user_id)
+        work_done = self.reopen_mm_relation_or_stop(mentee_user_id)
+        if work_done: return
 
         # add a new mentoring item
         with self.conn as curs:
@@ -266,20 +270,38 @@ class Database:
             ;''', (new_mentee_name, mentee_id,))
         return True
 
-    def stop_all_current_mentoring(self, mentee_id, timestamp = None):
+    def stop_all_current_mentoring(self, mentee_id):
+        """
+              'stops' the old mentoring, if not already done
+        """
         with self.conn as curs:
-            if (timestamp == None):
                curs.execute('''
                UPDATE `mentee_mentor`
                    SET `mm_stop` = CURRENT_TIMESTAMP
-                   WHERE `mm_stop` is NULL AND `mm_mentee_id` = ?
+                   WHERE `mm_stop` IS NULL AND `mm_mentee_id` = ?
                ;''', (mentee_id,))
-            else:
+
+    def reopen_mm_relation_or_stop(self, mentee_id):
+        """
+           if old m_m relation was stopped less than 24 hours ago:
+              re-open it
+           else:
+              'stops' the old mentoring, if not already done
+        """
+        with self.conn as curs:
+            curs.execute('''SELECT COUNT(*) FROM `mentee_mentor` WHERE `mm_mentee_id` = ? AND mm_stop >= DATE_SUB(NOW(), INTERVAL 1 DAY);''', (mentee_id,))
+            row = curs.fetchone()
+            # is there an old m_m relation that was stopped less than 24 hours ago?
+            if row != None and row[0] != None and int(row[0]) > 0:
                curs.execute('''
                UPDATE `mentee_mentor`
-                   SET `mm_stop` = ?
-                   WHERE `mm_stop` is NULL AND `mm_mentee_id` = ?
-               ;''', (timestamp, mentee_id,))
+                   SET `mm_stop` = NULL
+                   WHERE `mm_stop` IS NOT NULL AND mm_stop >= DATE_SUB(NOW(), INTERVAL 1 DAY) AND `mm_mentee_id` = ?
+               ;''', (mentee_id,))
+               return True
+            else: # stop the last relation
+               stop_all_current_mentoring(mentee_id)
+               return False
 
     def get_overall_mentee_number(self):
         """
