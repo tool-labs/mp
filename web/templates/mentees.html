@@ -7,9 +7,15 @@
 </dl>
 
 <h2>Menteeübersicht</h2>
-
-<table>
+<script type="text/javascript" id="js">
+      // start the tablesorter
+      $(document).ready(function() {
+        $(".tablesorter").tablesorter();
+      });
+</script>
+<table class="tablesorter"><thead>
   <tr><th>Mentee</th><th>Mentor</th><th>Letzter Edit vor [Tage]</th><th>Mentee seit [Tage]</tr>
+</thead><tbody>
 <?php
 foreach ($this->data['mentees'] as $m)
 {
@@ -53,4 +59,4 @@ foreach ($this->data['mentees'] as $m)
 <?php
 }
 ?>
-</table>
+</tbody></table>
