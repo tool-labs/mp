@@ -300,7 +300,7 @@ class Database:
                ;''', (mentee_id,))
                return True
             else: # stop the last relation
-               stop_all_current_mentoring(mentee_id)
+               self.stop_all_current_mentoring(mentee_id)
                return False
 
     def get_overall_mentee_number(self):
