@@ -54,13 +54,25 @@
     ?></ul></td></tr>
 
    <?php
+    if ($m['mentor_has_barnstar'] != 0)
+    {
+   ?>
+    <tr id="view-award"><th>Orden of Mentoring</th><td><span class="award-barnstar">bekommen</span></td></tr>
+   <?php
+    }
+   ?>
+
+   <?php
     if ($m['mentor_award_level'] != 0)
     {
       $awards = array(1 => 'Bronze',
                       2 => 'Silber',
                       3 => 'Gold',
                       4 => 'Platin',
-                      5 => 'Smaragd');
+                      5 => 'Smaragd',
+                      6 => 'Rubin',
+                      7 => 'Diamand',
+                      8 => 'Unobtainium');
    ?>
     <tr id="view-award"><th>Auszeichnung</th><td><span class="award-<?= $m['mentor_award_level'] ?>"><?= $awards[$m['mentor_award_level']] ?></span></td></tr>
    <?php

@@ -218,6 +218,18 @@ table#view-table { float: left; margin-bottom: 0px; width: 30em; }
 table#view-top-table { background-color: transparent; border: 0px; }
 table#view-top-table td.vtttd { border: 0px; vertical-align: top; }
 h2#view-mentees-all { clear: both; }
+span.award-barnstar { 
+  background: url("//upload.wikimedia.org/wikipedia/commons/thumb/8/82/MP-Barnstar-III.svg/16px-MP-Barnstar-III.svg.png") no-repeat scroll left center transparent; 
+}
+span.award-8 { 
+  background: url("//upload.wikimedia.org/wikipedia/commons/e/e5/6X6_Anim_5PX.gif") no-repeat scroll left center transparent; 
+}
+span.award-7 { 
+  background: url("//upload.wikimedia.org/wikipedia/commons/thumb/5/52/Linecons_diamond.svg/16px-Linecons_diamond.svg.png") no-repeat scroll left center transparent; 
+}
+span.award-6 { 
+  background: url("//upload.wikimedia.org/wikipedia/commons/thumb/9/91/Crystal_Clear_app_ksokoban.svg/16px-Crystal_Clear_app_ksokoban.svg.png") no-repeat scroll left center transparent; 
+}
 span.award-5 { 
   background: url("//upload.wikimedia.org/wikipedia/commons/thumb/7/71/Emerald_Logo.svg/16px-Emerald_Logo.svg.png") no-repeat scroll left center transparent; 
 }
@@ -233,7 +245,7 @@ span.award-2 {
 span.award-1 {
   background: url("//upload.wikimedia.org/wikipedia/commons/thumb/3/34/Bronze_medal_blank.svg/16px-Bronze_medal_blank.svg.png") no-repeat scroll left center transparent;
 }
-span.award-1, span.award-2, span.award-3, span.award-4, span.award-5 {
+span.award-1, span.award-2, span.award-3, span.award-4, span.award-5, span.award-6, span.award-7, span.award-8, span.award-barnstar {
   padding-left: 18px; 
 }
 .highlight-okay {

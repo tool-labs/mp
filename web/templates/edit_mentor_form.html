@@ -73,7 +73,10 @@ $m = $this->data['mentor'];
                           2 => 'Silber',
                           3 => 'Gold',
                           4 => 'Platin',
-                          5 => 'Smaragd');
+                          5 => 'Smaragd',
+                          6 => 'Rubin',
+                          7 => 'Diamand',
+                          8 => 'Unobtainium');
           for ($i = 0; $i < count($awards); $i++) {
             ?><option value="<?= $i ?>"<?php if ($m['mentor_award_level'] == $i) { ?> selected="selected"<?php } ?> ><?= $awards[$i] ?></option>
     <?php } ?>
@@ -88,5 +91,16 @@ $m = $this->data['mentor'];
     </tr>
   </table>
 <p>Ein Mentor zählt genau dann als <em>ehemalig</em>, wenn ein Austrittsdatum eingetragen wurde.</p>
-<p>Der Orden und die Auszeichnungen sollten <a href="//de.wikipedia.org/wiki/Wikipedia:Mentorenprogramm/Auszeichnungen">in der Wikipedia</a> natürlich auch eingetragen sein.</p>
+<p>Der Orden und die Auszeichnungen sollten <a href="//de.wikipedia.org/wiki/Wikipedia:Mentorenprogramm/Auszeichnungen">in der Wikipedia</a> natürlich auch eingetragen sein. Grenzen:
+<ul>
+<li>ab 10 Betreuungen: Bronze</li>
+<li>ab 25 Betreuungen: Silber</li>
+<li>ab 50 Betreuungen: Gold</li>
+<li>ab 100 Betreuungen: Platin</li>
+<li>ab 250 Betreuungen: Smaragd</li>
+<li>ab 500 Betreuungen: Rubin</li>
+<li>ab 750 Betreuungen: Diamand</li>
+<li>ab 1000 Betreuungen: Unobtainium</li>
+</ul>
+</p>
 </form>
