@@ -27,17 +27,22 @@ foreach ($this->data['mentees'] as $m)
   $diffLimit = $dLimit->diff($in);
   $too_long = (bool) $diffLimit->invert;
 
-  $recentEdit = DateTime::createFromFormat("YmdHis", $m['recent_edit']);
-  $recentEditDiff = $recentEdit->diff($now);
-  $recentEditLimit = $now->modify('-60 days');
+$class = "mentee-okay";
+$recentEditLimit = $now->modify('-60 days');
 
-  $class = "mentee-okay";
-  if ($too_long)
-  {
+// if the mentee has ever done one edit or not
+if ($m['recent_edit'] != '') {
+  $recentEdit = DateTime::createFromFormat("YmdHis", trim($m['recent_edit']));
+  $recentEditDiff = $recentEdit->diff($now);
+} else {
+  $recentEditDiff = -1;
+  $recentEdit = $now;
+}
+
+  if ($too_long) {
     $class = "mentee-problem";
   }
-  if ($recentEdit < $recentEditLimit)
-  {
+  if ($recentEdit < $recentEditLimit) {
     $class = "mentee-critical";
   }
 ?>
@@ -47,7 +52,7 @@ foreach ($this->data['mentees'] as $m)
   } else {
 ?><td class="highlight-problem"><?php
   }
-?><?= $recentEditDiff->format('%a') ?></td>
+?><?= $recentEditDiff !== -1 ? $recentEditDiff->format('%a') : "-" ?></td>
 <?php
   if (!$too_long) {
 ?><td class="highlight-okay"><?php
