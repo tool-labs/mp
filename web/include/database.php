@@ -260,6 +260,29 @@ class Database
   }
 
   /**
+   * Returns a list of all mentor_mentee where the time slot between start and 'stop' is less than 24h.
+   */
+  public function get_all_mentor_mentees_with_short_mentoring()
+  {
+    $LIMIT = '24:00:00'; // hh:mm:ss
+    try
+    {
+      $stmt = $this->db->prepare("SELECT mm_start, mm_stop, mentee_user_id, mentee_user_name, mentor_user_id, mentor_user_name, TIMEDIFF(mm_stop, mm_start) AS mm_length ".
+	"FROM mentee_mentor " .
+	"JOIN mentee ON mentee_mentor.mm_mentee_id = mentee.mentee_user_id " .
+	"JOIN mentor ON mentee_mentor.mm_mentor_id = mentor.mentor_user_id " .
+	"WHERE TIMEDIFF(mm_stop, mm_start) < '". $LIMIT ."' " .
+	"ORDER BY TIMEDIFF(mm_stop, mm_start) ASC");
+      $stmt->execute();
+      return $stmt->fetchAll();
+    }
+    catch (PDOException $e)
+    {
+      $this->handleError($e->getMessage());
+    }
+  }
+
+  /**
    * Returns a list of mentors in lexical order.
    * @param $offset the list’s offset
    * @param $count the list’s length
