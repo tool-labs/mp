@@ -44,8 +44,11 @@ class Access
     $this->logged_in = false;
     $this->user      = "";
 
-    # check session
-    session_start();
+    # don't hide errors
+    error_reporting(E_ALL);
+    ini_set("display_errors", "1");
+    ini_set("session.cookie_lifetime","36000"); // 10 hours
+    
     if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] && isset($_SESSION['user']))
     {
       $this->logged_in = true;
