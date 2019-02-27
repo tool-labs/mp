@@ -38,7 +38,7 @@ require_once('pages/stat.php');
 require_once('pages/viewmentor.php');
 require_once('pages/viewm.php');
 // external code
-require_once('libchart/classes/libchart.php');
+require_once('libchart/libchart/classes/libchart.php');
 
 /**
  * Format a date stamp.

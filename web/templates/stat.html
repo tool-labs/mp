@@ -42,7 +42,7 @@ for($i = 0; ; ++$i) {
        $year = $stats[$i]['s_year'];
 
        // we need a new image
-       $chart = new LineChart(800, 250);
+       $chart = new LineChart(1000, 250);
        $dataSetStart = new XYDataSet();
        $dataSetEnd   = new XYDataSet();
        $chart->setTitle($year);
