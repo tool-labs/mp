@@ -46,8 +46,10 @@ class Access
 
     # don't hide errors
     error_reporting(E_ALL);
-    ini_set("display_errors", "1");
-    ini_set("session.cookie_lifetime","36000"); // 10 hours
+    ini_set("display_errors", "1");// This sends a persistent cookie that lasts a day.
+	session_start([
+		'cookie_lifetime' => 86400,
+	]);
     
     if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] && isset($_SESSION['user']))
     {
@@ -112,6 +114,7 @@ class Access
     {
       return false;
     }
+    
     $_SESSION['logged_in'] = true;
     $_SESSION['user']      = $user;
     $this->logged_in       = true;
