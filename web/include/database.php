@@ -1349,8 +1349,9 @@ print($mentorName . '--> ' . $coMentorName . '\n ');
   {
     try
     {
-      $stmt = $this->db_dewikip->prepare('SELECT rev_timestamp, rev_user_text, rev_comment FROM dewiki_p.revision_userindex ' .
-           'JOIN dewiki_p.page ON rev_page=page_id AND page_namespace = 2 AND page_title = :user_name ' . 
+      $stmt = $this->db_dewikip->prepare('SELECT rev_timestamp, rev_user_text, comment_text FROM dewiki_p.revision_userindex ' .
+           'JOIN dewiki_p.page ON rev_page=page_id AND page_namespace = 2 AND page_title = :user_name ' .
+           'JOIN dewiki_p.comment ON comment_id = rev_comment_id ' .
            'ORDER BY rev_timestamp DESC LIMIT 50');
       # white space -> _
       $stmt->execute(array(':user_name' => str_replace(' ', '_', $user_name)));

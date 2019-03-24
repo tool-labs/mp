@@ -142,7 +142,7 @@
           <span class="javascript-only"><a onclick="set_stop(<?= $edit['rev_timestamp'] ?>, true)" style="cursor: pointer;">Ende</a></span></td>
       <td><?= fdt($edit['rev_timestamp']) ?></td>
       <td <?= array_key_exists('mentor_user_name', $mmentors[0]) ? highlightByUser($edit['rev_user_text'], $mmentors[0]['mentor_user_name']) : '' ?>><?= htmlspecialchars($edit['rev_user_text']) ?></td>
-      <td <?= highlightByComment($edit['rev_comment']) ?>><?= htmlspecialchars($edit['rev_comment']) ?></td>
+      <td <?= highlightByComment($edit['comment_text']) ?>><?= htmlspecialchars($edit['comment_text']) ?></td>
     </tr><?php
  }
 ?></table>
