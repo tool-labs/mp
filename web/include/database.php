@@ -1329,7 +1329,8 @@ print($mentorName . '--> ' . $coMentorName . '\n ');
   {
     try
     {
-      $stmt = $this->db_dewikip->prepare('SELECT COUNT(*) AS edit_count FROM dewiki_p.revision_userindex WHERE rev_user = :id');
+      $stmt = $this->db_dewikip->prepare('SELECT COUNT(*) AS edit_count FROM dewiki_p.revision_userindex ' .
+          'JOIN actor ON actor_id = rev_actor WHERE actor_user = :id');
       $stmt->execute(array(':id' => $user_id));
       $line = $stmt->fetch();
       return $line['edit_count'];
@@ -1349,9 +1350,10 @@ print($mentorName . '--> ' . $coMentorName . '\n ');
   {
     try
     {
-      $stmt = $this->db_dewikip->prepare('SELECT rev_timestamp, rev_user_text, comment_text FROM dewiki_p.revision_userindex ' .
+      $stmt = $this->db_dewikip->prepare('SELECT rev_timestamp, actor_name, comment_text FROM dewiki_p.revision_userindex ' .
            'JOIN dewiki_p.page ON rev_page=page_id AND page_namespace = 2 AND page_title = :user_name ' .
            'JOIN dewiki_p.comment ON comment_id = rev_comment_id ' .
+           'JOIN dewiki_p.actor ON rev_actor = actor_id ' .
            'ORDER BY rev_timestamp DESC LIMIT 50');
       # white space -> _
       $stmt->execute(array(':user_name' => str_replace(' ', '_', $user_name)));
