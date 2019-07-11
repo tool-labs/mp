@@ -1375,7 +1375,9 @@ print($mentorName . '--> ' . $coMentorName . '\n ');
     try
     {
       $stmt = $this->db_dewikip->prepare('SELECT COUNT(1) AS active FROM (' . 
-          'SELECT rev_id FROM dewiki_p.revision_userindex WHERE rev_user = :id AND rev_timestamp between :start and :end LIMIT 1' .
+          'SELECT rev_id FROM dewiki_p.revision_userindex ' .
+          'JOIN actor ON actor_id = rev_actor ' .
+          'WHERE actor_user = :id AND rev_timestamp between :start and :end LIMIT 1' .
           ') i');
       $now   = time();
       $start = date(self::timestamp_format, strtotime($delay, $now));
@@ -1416,7 +1418,9 @@ print($mentorName . '--> ' . $coMentorName . '\n ');
   {
     try
     {
-      $sql   = 'SELECT rev_timestamp AS last_edit FROM dewiki_p.revision_userindex WHERE rev_user = :user ORDER BY rev_timestamp DESC LIMIT 1;';
+      $sql   = 'SELECT rev_timestamp AS last_edit FROM dewiki_p.revision_userindex ' .
+      'JOIN actor ON actor_id = rev_actor ' .
+      'WHERE actor_user = :user ORDER BY rev_timestamp DESC LIMIT 1;';
       $stmt  = $this->db_dewikip->prepare($sql);
       $stmt->execute(array(':user' => $user_id));
       $row = $stmt->fetch();
@@ -1438,7 +1442,9 @@ print($mentorName . '--> ' . $coMentorName . '\n ');
       $now   = time();
       $start = date(self::timestamp_format, strtotime($delay, $now));
       $end   = date(self::timestamp_format, strtotime('1 second', $now));
-      $sql   = 'SELECT COUNT(1) AS has_edit FROM (SELECT rev_id FROM dewiki_p.revision_userindex WHERE rev_user = :user AND rev_timestamp BETWEEN :start AND :end LIMIT 1) i;';
+      $sql   = 'SELECT COUNT(1) AS has_edit FROM (SELECT rev_id FROM dewiki_p.revision_userindex ' .
+      'JOIN actor ON actor_id = rev_actor ' .
+      'WHERE actor_user = :user AND rev_timestamp BETWEEN :start AND :end LIMIT 1) i;';
       $stmt  = $this->db_dewikip->prepare($sql);
       $stmt->execute(array(':user' => $user_id, ':start' => $start, ':end' => $end));
       $row = $stmt->fetch();

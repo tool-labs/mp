@@ -416,8 +416,9 @@ class Database:
         """
         with self.conn_wp as curs:
             curs.execute('''
-              select COUNT(rev_id) from revision_userindex join page on (page_id = rev_page) where 
-              rev_user=%s and DATEDIFF(NOW(), rev_timestamp) < %s
+              select COUNT(rev_id) from revision_userindex join page on (page_id = rev_page) 
+              JOIN actor ON actor_id = rev_actor
+              where actor_name=%s and DATEDIFF(NOW(), rev_timestamp) < %s
             ;''',(user_id, latest_days,))
             row = curs.fetchone()
             if row != None and row[0] != None:
