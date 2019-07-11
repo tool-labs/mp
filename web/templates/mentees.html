@@ -33,10 +33,10 @@ $recentEditLimit = $now->modify('-60 days');
 // if the mentee has ever done one edit or not
 if ($m['recent_edit'] != '') {
   $recentEdit = DateTime::createFromFormat("YmdHis", trim($m['recent_edit']));
-  $recentEditDiff = $recentEdit->diff($now);
+  $recentEditDiff = $recentEdit->diff(new DateTime());
 } else {
   $recentEditDiff = -1;
-  $recentEdit = $now;
+  $recentEdit = new DateTime();
 }
 
   if ($too_long) {
