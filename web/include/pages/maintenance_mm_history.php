@@ -36,8 +36,8 @@ class MaintenanceMmHistoryPage implements Page
     }
     $sort_by = 'start';
     $rv = array();
-    $rv['title']   = 'Wartungsseite: Historisch Betreuungen';
-    $rv['heading'] = 'Wartungsseite: Historische Betreuungen';
+    $rv['title']   = 'Wartungsseite: Historische Betreuungen';
+    $rv['heading'] = $rv['title'];
     $rv['page']    = 'maintenance_mm_history';
     $rv['data'] = array();
     $rv['data']['end_time'] = $end_time;
