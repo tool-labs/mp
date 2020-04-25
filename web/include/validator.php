@@ -11,9 +11,9 @@
  */
 
 /**
- * Validate a time string. Format should be: YYYY-MM-DD. 
- * @param string $timestamp the timestamp to validate
- * @returns bool ‘true’ if the timestamp is valid
+ * Validate a date string. Format should be: YYYY-MM-DD. 
+ * @param string $date string to validate
+ * @returns bool ‘true’ if the date is valid
  */
 function validate_timestamp($timestamp)
 {
@@ -32,5 +32,16 @@ function validate_timestamp($timestamp)
       $m = false;
   }
   return (bool) $m;
+}
+
+/**
+ * Validate a time string. Format should be: YYYYMMDDHHmmSS. 
+ * @param string $timestamp the timestamp to validate
+ * @returns bool ‘true’ if the timestamp is valid
+ */
+function validate_timestamp_with_seconds($timestamp)
+{
+  $m = DateTime::createFromFormat('YmdHis', $timestamp);
+  return $m != null;
 }
 ?>

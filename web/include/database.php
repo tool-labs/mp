@@ -216,17 +216,17 @@ class Database
         "FROM mentee_mentor " .
         " JOIN mentee ON mm_mentee_id = mentee.mentee_user_id " .
         " JOIN mentor ON mm_mentor_id = mentor.mentor_user_id " .
-        (validate_timestamp($end_time) ? "WHERE mm_start <= :end_time " : "") .
+        (validate_datestamp($end_time) ? "WHERE mm_start <= :end_time " : "") .
         "UNION ALL " .
         "SELECT mm_stop AS event_time, mm_start, mm_stop, mm_mentee_id, mentee_user_name, mm_mentor_id, mentor_user_name " .
         "FROM mentee_mentor " .
         " JOIN mentee ON mm_mentee_id = mentee.mentee_user_id " .
         " JOIN mentor ON mm_mentor_id = mentor.mentor_user_id " .
-        (validate_timestamp($end_time) ? "WHERE mm_stop <= :end_time " : "") .
+        (validate_datestamp($end_time) ? "WHERE mm_stop <= :end_time " : "") .
         "ORDER BY event_time DESC LIMIT :limit";
       $stmt = $this->db->prepare($sql);
       $stmt->bindParam(":limit",  $limit,  PDO::PARAM_INT);
-      if (validate_timestamp($end_time)) {
+      if (validate_datestamp($end_time)) {
           $stmt->bindParam(":end_time",  $end_time);
       }
       $stmt->execute();
@@ -1650,6 +1650,173 @@ print($mentorName . '--> ' . $coMentorName . '\n ');
       $this->handleError($e->getMessage());
     }   
   }
+
+  /**
+   * Get the recent changes for the current Mentees only.
+   * $start_time    show only changes happened AFTER or at $start_time
+   * $end_time      show only changes happened BEFORE or at $end_time
+   * $limit         show only $limit number of results
+   */
+  public function get_recent_mentee_edits($start_time, $end_time, $limit)
+  {
+    try
+    {
+      $sql = "SELECT rc_timestamp, actor_id, actor_name, rc_namespace, rc_title, comment_text,
+                rc_minor, rc_new, rc_this_oldid, rc_last_oldid, rc_type, rc_source,
+                rc_old_len, rc_new_len, rc_params,
+                rc_log_type " .
+             "FROM mentees_recentchanges " .
+             "WHERE 1=1 " .
+             (validate_timestamp_with_seconds($start_time) ? "AND rc_timestamp >= :start_time " : "") .
+             (validate_timestamp_with_seconds($end_time) ? "AND rc_timestamp <= :end_time " : "") .
+             "ORDER BY rc_timestamp DESC " .
+             "LIMIT :limit;";
+      $stmt = $this->db->prepare($sql);
+      if (validate_timestamp_with_seconds($start_time)) {
+          $stmt->bindParam(":start_time", $start_time);
+      }
+      if (validate_timestamp_with_seconds($end_time)) {
+          $stmt->bindParam(":end_time", $end_time);
+      }
+      $stmt->bindParam(":limit", $limit, PDO::PARAM_INT);
+      $stmt->execute();
+      return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    catch (PDOException $e)
+    {
+      $this->handleError($e->getMessage());
+    }
+  }
+
+  private function fetch_latest_timestamp_form_mentees_rc()
+  {
+    try
+    {
+      $stmt = $this->db->prepare("SELECT MAX(rc_timestamp) FROM mentees_recentchanges;");
+      $stmt->execute();
+      return $stmt->fetchAll()[0][0];
+    }
+    catch (PDOException $e)
+    {
+      $this->handleError($e->getMessage());
+    }   
+  }
+
+  private function placeholders($text, $count=0, $separator=",")
+  {
+      $result = array();
+      for ($x=0; $x<$count; $x++) {
+          $result[] = $text;
+      }
+      return implode($separator, $result);
+  }
+
+  private function insert_new_data_in_mentees_rc($datafields, $results_from_dewikip)
+  {
+     $insert_values = array();
+     $row_values = array();
+     foreach($results_from_dewikip as $row) {
+         $escaped_row = array();
+         foreach ($row as $raw_value) {
+            $escaped_row[] = "'" . str_replace("'", "\'", $raw_value) . "'";
+         }
+         $row_values[] = '(' . implode(",", $escaped_row) . ')';
+     }
+     
+     $sql = "START TRANSACTION; INSERT INTO mentees_recentchanges (" . implode(",", $datafields ) . ") VALUES " .
+            implode(',', $row_values) . "; COMMIT;";
+     try {
+         $stmt = $this->db->prepare($sql);
+         $stmt->execute();
+     } catch (PDOException $e) {
+         $this->handleError($e->getMessage());
+     }
+  }
+
+  private function delete_old_data_in_mentees_rc($end_time)
+  {
+     try {
+         $stmt = $this->db->prepare("DELETE FROM mentees_recentchanges WHERE rc_timestamp < :end_time;");
+         $stmt->bindParam(":end_time", $end_time);
+         $stmt->execute();
+     } catch (PDOException $e) {
+         $this->handleError($e->getMessage());
+     }
+  }
+
+  /**
+   * Fetches the recent changes since last run and add them into the local table. The local
+   * table is much smaller and has an index on column rc_timestamp'.
+   */
+  public function update_mentees_recentchanges()
+  {
+    $COLUMNS = "rc_id, rc_timestamp, actor_id, actor_name, rc_namespace, rc_title, comment_text,"
+                . "rc_minor, rc_new, rc_this_oldid, rc_last_oldid, rc_type, rc_source,"
+                . "rc_old_len, rc_new_len, rc_params, rc_log_type ";
+    
+    try
+    {
+      // 1. what was the last timestamp we have in the local table?
+      $start_time = $this->fetch_latest_timestamp_form_mentees_rc();
+      echo("latest timestamp form mentees_recentchanges: " . $start_time . "\n");
+      
+      // 2. fetch new data from the replicated database
+      $source_sql = "SELECT ". $COLUMNS .
+             "FROM categorylinks " .
+             "JOIN page ON cl_from=page_id AND page_namespace=2 " .
+             "JOIN actor ON actor_name=REPLACE(page_title, '_', ' ') " .
+             "JOIN recentchanges_userindex ON rc_actor=actor_id " .
+             "JOIN comment_recentchanges ON rc_comment_id=comment_id " .
+             "WHERE cl_to = 'Benutzer:Mentee' " .
+             (validate_timestamp_with_seconds($start_time) ? "AND rc_timestamp > :start_time;" : ";");
+      $stmt = $this->db_dewikip->prepare($source_sql);
+      if (validate_timestamp_with_seconds($start_time)) {
+          $stmt->bindParam(":start_time", $start_time);
+      }
+      $stmt->execute();
+      $results_from_dewikip = $stmt->fetchAll(PDO::FETCH_ASSOC);
+      echo("found " . sizeof($results_from_dewikip) . " new entries in dewiki_p\n");
+      
+      // 3. put all this data into the local RC table
+      $this->insert_new_data_in_mentees_rc(preg_split('/,/i', $COLUMNS), $results_from_dewikip);
+      
+      // 4. delete old entries
+      $date_30_days_ago = date_format(new DateTime("- 30 days"), 'YmdHis');
+      $this->delete_old_data_in_mentees_rc($date_30_days_ago);
+    }
+    catch (PDOException $e)
+    {
+      $this->handleError($e->getMessage());
+    }
+  }
+
+   /*
+    * Create a string representing the executed query.
+    */
+   private function sql_debug($sql_string, array $params = null)
+   {
+       if (!empty($params)) {
+           $indexed = $params == array_values($params);
+           foreach($params as $k=>$v) {
+               if (is_object($v)) {
+                   if ($v instanceof \DateTime) $v = $v->format('Y-m-d H:i:s');
+                   else continue;
+               }
+               elseif (is_string($v)) $v="'$v'";
+               elseif ($v === null) $v='NULL';
+               elseif (is_array($v)) $v = implode(',', $v);
+   
+               if ($indexed) {
+                   $sql_string = preg_replace('/\?/', $v, $sql_string, 1);
+               }
+               else {
+                   if ($k[0] != ':') $k = ':'.$k; //add leading colon if it was left out
+                   $sql_string = str_replace($k,$v,$sql_string);
+               }
+           }
+       }
+       return $sql_string;
+   }
 
   /**
    * Prints an error message and quits the application.

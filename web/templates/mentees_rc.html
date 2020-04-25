@@ -1,0 +1,289 @@
+<script type='text/javascript'>
+/*<![CDATA[*/
+$(function() {
+  $("a.mentee-link").mouseenter(function() {
+   var id = $( this ).attr("menteeid");
+   $("a.mentee-link-id-" + id).css("background-color", "#CC9933" );
+  });
+  $("a.mentee-link").mouseleave(function() {
+   var id = $( this ).attr("menteeid");
+   $("a.mentee-link-id-" + id).css("background-color", "" );
+  });
+});
+/*]]>*/
+</script>
+<style>
+.difflink, .page_history_link, .mw-changeslist-title, .mw-userlink {
+}
+.minoredit, .newpage, .bold-text {
+	font-weight: bold;
+}
+.mw-plusminus-pos {
+	color: #006400;
+}
+.mw-plusminus-neg {
+	color: #8b0000;
+}
+.mw-plusminus-null {
+	color: gray;
+}
+.comment {
+	font-style: italic;
+}
+.auto-comment {
+	color: #72777d;
+}
+h4 {
+	margin-bottom: 0;
+}
+</style>
+<?php
+class RenderedPage {
+	protected $parent_obj;
+	public $last_timestamp = '';
+	public $search_summary_text;
+	public $execution_time;
+	public $query_limit;
+
+	function __construct($parent_obj) {
+		$this->parent_obj = $parent_obj;
+		if (sizeof($this->parent_obj['rc']) != 0) {
+			$last_timestamp = $this->parent_obj['rc'][ sizeof($this->parent_obj['rc']) -1 ]['rc_timestamp'];
+		}
+		// unused:
+		$this->search_summary_text = 'Suchbereich: '
+			. ($this->parent_obj['start_time'] ? $this->parent_obj['start_time'] : 'älteste')
+			. ' bis ' . ($this->parent_obj['end_time'] ? $this->parent_obj['end_time'] : 'jetzt')
+			. ', Maximale Ergebnisse: ' . $this->parent_obj['limit'];
+		$this->query_limit = $this->parent_obj['limit'];
+		$this->execution_time = $this->parent_obj['execution_time'];
+		$this->next_end_time = $this->parent_obj['next_end_time'];
+	}
+	
+	private static function createLineObject($line_entry_obj) {
+		if ($line_entry_obj['rc_log_type'] == '') {
+			return new PageEdit($line_entry_obj);
+		} elseif ($line_entry_obj['rc_log_type'] == 'move') {
+			return new PageMove($line_entry_obj);
+		} elseif ($line_entry_obj['rc_log_type'] == 'upload') {
+			return new UploadEvent($line_entry_obj);
+		} elseif ($line_entry_obj['rc_log_type'] == 'newusers') {
+			return new NewUserEvent($line_entry_obj);
+		}
+		return null;
+	}
+	
+	public function getEntries() {
+		$result = array();
+		$last_date_in_section = '';
+		foreach ($this->parent_obj['rc'] as $line) {
+			$result[] = self::createLineObject($line);
+		}
+		return $result;
+	}
+}
+
+abstract class BaseEntry {
+	protected static $ns_name = array(
+		0 => '', 1 => 'Diskussion:',
+		2 => 'Benutzer:', 3 => 'Benutzer Diskussion:',
+		4 => 'Wikipedia:', 5 => 'Wikipedia Diskussion:',
+		6 => 'Datei:', 7 => 'Datei Diskussion:',
+		8 => 'MediaWiki:', 9 => 'MediaWiki Diskussion:',
+		10 => 'Vorlage:', 11 => 'Vorlage Diskussion:',
+		12 => 'Hilfe:', 13 => 'Hilfe Diskussion:',
+		14 => 'Kategorie:', 15 => 'ategorie Diskussion:',
+		100 => 'Portal:', 101 => 'Portal Diskussion:',
+		828 => 'Modul:', 829 => 'Modul Diskussion:',
+		2300 => 'Gadget:', 2301 => 'Gadget Diskussion:',
+		2302 => 'Gadget-Definition:', 2303 => 'Gadget-Definition Diskussion:',
+		2600 => 'Thema:',
+		'−1' => 'Spezial:', '−2' => 'Medium:');
+	public $wikibase_clean = 'https://de.wikipedia.org/wiki/';
+	public $wikibase = 'https://de.wikipedia.org/w/index.php?';
+	
+	protected $line_entry_obj;
+	
+	public $search_summary_text;
+	public $timestamp;
+	public $date_str;
+	public $time_str;
+	public $clean_mentee_title;
+	
+	function __construct($line_entry_obj) {
+		$this->line_entry_obj = $line_entry_obj;
+		
+		$this->timestamp = DateTime::createFromFormat('YmdHis', $this->line_entry_obj['rc_timestamp']);
+		$this->timestamp->setTimeZone(new DateTimeZone('Europe/Berlin'));
+		$this->date_str = $this->timestamp->format('d F Y');
+		$this->time_str = $this->timestamp->format('H:i:s');
+		$this->actor_id = $this->line_entry_obj['actor_id'];
+		$this->actor_name = $this->line_entry_obj['actor_name'];
+		$this->clean_mentee_title = str_replace('_', ' ', $this->line_entry_obj['actor_name']);
+		
+		$this->initPageVariables();
+		$this->initComment();
+	}
+	
+	protected function initComment() {
+		$this->comment_with_format = htmlspecialchars($this->line_entry_obj['comment_text']);
+		// /* bla */ to Anchor link with comment "→‎bla"
+		$anchor_link = str_replace(' ', '_', preg_replace('%.*?\/\*\ *(.*?)\ *\*\/.*%i', '$1',
+			$this->comment_with_format));
+		// create a link
+		$this->comment_with_format = preg_replace('%\/\*\ *(.*?)\ *\*\/%i',
+			'<a class="auto-comment" href="' . $this->wikibase_clean . $this->page_title_with_ns . '#'
+			. $anchor_link . '">→‎$1</a>',
+			$this->comment_with_format);
+		// Convert [[bla|foo]] to a link
+		$this->comment_with_format = preg_replace('%\[\[\ *([^\|\]]+?)\ *\|([^\]]+?)\ *\]\]%i',
+			'<a class="" href="' . $this->wikibase_clean . '$1">$2</a>',
+			$this->comment_with_format);
+		// Convert [[bla]] to a link
+		$this->comment_with_format = preg_replace('%\[\[\ *([^\|\]]+?)\ *\]\]%i',
+			'<a class="" href="' . $this->wikibase_clean . '$1">$1</a>',
+			$this->comment_with_format);
+	}
+	
+	protected function initPageVariables() {
+		$this->difflink = $this->wikibase . 'diff=' . $this->line_entry_obj['rc_this_oldid']
+			. '&oldid=' . $this->line_entry_obj['rc_last_oldid'];
+		$this->page_title_with_ns = self::$ns_name[$this->line_entry_obj['rc_namespace']]
+			. $this->line_entry_obj['rc_title'];
+		$this->page_history_link = $this->wikibase . 'title=' . $this->page_title_with_ns . '&action=history';
+		$this->clean_page_title = str_replace('_', ' ', $this->page_title_with_ns);
+	}
+}
+class PageEdit extends BaseEntry {
+	public $new_length;
+	public $byte_diff;
+	public $byte_diff_sign;
+	public $byte_diff_class;
+	public $minor_edit;
+	public $new_page;
+
+	function __construct($line_entry_obj) {
+		parent::__construct($line_entry_obj);
+		
+		$this->new_length = $this->line_entry_obj['rc_new_len'];
+		$this->byte_diff = $this->line_entry_obj['rc_new_len'] - $this->line_entry_obj['rc_old_len'];
+		$this->byte_diff_sign = $this->byte_diff > 0 ? '+' : '';
+		$this->byte_diff_class = 'mw-plusminus-null';
+		if ($this->byte_diff > 0) {
+			$this->byte_diff_class = 'mw-plusminus-pos';
+		} elseif ($this->byte_diff < 0) {
+			$this->byte_diff_class = 'mw-plusminus-neg';
+		}
+		$this->byte_diff_class = abs($this->byte_diff) > 1000 ? $this->byte_diff_class
+			. ' bold-text' : $this->byte_diff_class;
+		$this->minor_edit = $this->line_entry_obj['rc_minor'];
+		$this->new_page = $this->line_entry_obj['rc_new'];
+	}
+}
+class PageMove extends BaseEntry {
+	public $moved_to_page;
+	
+	function __construct($line_entry_obj) {
+		parent::__construct($line_entry_obj);
+		
+		$ns_number = preg_replace('%.*?s\:1\:\"(\d)\".*%i', '$1', $this->line_entry_obj['rc_params']);
+		$this->moved_to_page = self::$ns_name[$ns_number]
+			. preg_replace('%.*?s\:7\:\"(.*?)\";.*%i', '$1', $this->line_entry_obj['rc_params']);
+	}
+}
+class UploadEvent extends BaseEntry {
+	function __construct($line_entry_obj) {
+		parent::__construct($line_entry_obj);
+	}
+}
+class NewUserEvent extends BaseEntry {
+	function __construct($line_entry_obj) {
+		parent::__construct($line_entry_obj);
+		$this->user_link = $this->wikibase_clean . $line_entry_obj['rc_title'];
+		$this->clean_user_title = str_replace('_', ' ', $line_entry_obj['rc_title']);
+	}
+}
+
+$page = new RenderedPage($this->data);
+?>
+<h2><?= sizeof($this->data['rc']) ?> Letzte Änderungen von Mentees</h2>
+<p><?= $page->search_summary_text ?></p>
+<?php
+
+$last_date_in_section = '';
+foreach ($page->getEntries() as $entry) {
+	if ($entry == null) {
+		continue;
+	}
+	
+	if ($last_date_in_section != $entry->date_str) {
+		if ($last_date_in_section != '') {
+			// its not the first section, so close the old tag
+			?></ul><?php
+		}
+		// new date
+		?><h4><?= $entry->date_str ?></h4><ul><?php
+		$last_date_in_section = $entry->date_str;
+	}
+?><li>
+	(<?php
+		if ($entry instanceof PageEdit) {
+			?><a class='difflink' href='<?= $entry->difflink ?>'>Unterschied</a> |
+			<a class='page_history_link' href='<?= $entry->page_history_link ?>'>Versionen</a><?php
+		} elseif ($entry instanceof PageMove) {
+			?><a class='page_history_link' href='<?= $entry->wikibase_clean ?>Spezial:Logbuch/move'>Verschiebungs-Logbuch</a><?php
+		} elseif ($entry instanceof DeleteEvent) {
+			?><a class='page_history_link' href='<?= $entry->wikibase_clean ?>Spezial:Logbuch/delete'>Lösch-Logbuch</a><?php
+		} elseif ($entry instanceof UploadEvent) {
+			?><a class='page_history_link' href='<?= $entry->wikibase_clean ?>Spezial:Logbuch/upload'>Upload-Logbuch</a><?php
+		} elseif ($entry instanceof NewUserEvent) {
+			?><a class='page_history_link' href='<?= $entry->wikibase_clean ?>Spezial:Logbuch/newusers'>Neuanmeldungs-Logbuch</a><?php
+		}
+	?>)
+	<?php
+	if ($entry instanceof PageEdit) {
+		if ($entry->minor_edit) { ?>
+			<abbr class="minoredit" title="Kleine Änderung">K</abbr><?php
+		}
+		if ($entry->new_page) { ?>
+			<abbr class="newpage" title="Neue Seite">N</abbr><?php
+		} ?>
+		<a class='mw-changeslist-title' href='<?= $entry->wikibase_clean . $entry->page_title_with_ns ?>'>
+			<?= $entry->clean_page_title ?></a>;<?php
+	} ?>
+	<?= $entry->time_str ?><?php
+	if ($entry instanceof PageEdit) { ?>
+		<span dir="ltr" class="<?= $entry->byte_diff_class ?>" title="<?= $entry->new_length ?>
+			Bytes nach der Änderung">(<?= $entry->byte_diff_sign . number_format($entry->byte_diff,
+			$decimals = 0,  $dec_point = ",", $thousands_sep = ".") ?>)</span>
+		<a class="mw-userlink mentee-link mentee-link-id-<?= $entry->actor_id ?>"
+			menteeid="<?= $entry->actor_id ?>" href="<?= $entry->wikibase_clean . 'Benutzer:' . $entry->actor_name ?>">
+			<?= $entry->clean_mentee_title ?></a>
+		(<span class='comment'><?= $entry->comment_with_format ?></span>)<?php
+	}
+	
+	if ($entry instanceof PageMove) { ?>
+		verschob die Seite <a class='mw-changeslist-title'
+		href='<?= $entry->wikibase_clean . $entry->page_title_with_ns ?>'><?= $entry->clean_page_title ?></a> nach 
+		<a class='mw-changeslist-title' href='<?= $entry->wikibase_clean . $entry->moved_to_page ?>'>
+		<?= $entry->moved_to_page ?></a>
+		(<span class='comment'><?= $entry->comment_with_format ?></span>)<?php
+	} elseif ($entry instanceof UploadEvent) { ?>
+		
+	<?php
+	} elseif ($entry instanceof NewUserEvent) { ?>
+		<span>Benutzerkonto <a class="mw-userlink mentee-link mentee-link-id-<?= $entry->actor_id ?>"
+		menteeid="<?= $entry->actor_id ?>" href="<?= $entry->wikibase_clean . 'Benutzer:' . $entry->actor_name ?>">
+		<?= $entry->clean_mentee_title ?></a> wurde erstellt</span><?php
+	} ?>
+</li><?php 
+} // foreach
+?>
+</ul>
+<?php
+if ($page->next_end_time != '') { ?>
+	<p><a href="index.php?action=mentees_rc&end_time=<?= $page->next_end_time ?>&limit=<?= $page->query_limit ?>">
+	<?= $page->query_limit ?> frühere Ergeinisse &gt;&gt;&gt;</a></p>
+<?php
+}
+?><p><em>In <?= round($page->execution_time, 1) ?> Sekunden ausgeführt</em>. Die Daten sind um bis zu 3 Minuten verzögert.</p>
