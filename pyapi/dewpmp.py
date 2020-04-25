@@ -49,7 +49,8 @@ class Database:
                                 'information. Used user_name: %s, host: %s' % (user_name, host))
 
         try:
-            self.conn = pymysql.connect(user=user_name, password=password, host=host, db=database)
+            self.conn = pymysql.connect(user=user_name, password=password, host=host, db=database,
+                           charset='utf8', use_unicode=True)
             self.conn_wp = pymysql.connect(user=user_name, password=password, host=wp_host, db=wp_database,
                            charset='utf8', use_unicode=True)
         except pymysql.DatabaseError as e:
@@ -418,7 +419,7 @@ class Database:
             curs.execute('''
               select COUNT(rev_id) from revision_userindex join page on (page_id = rev_page) 
               JOIN actor ON actor_id = rev_actor
-              where actor_name=%s and DATEDIFF(NOW(), rev_timestamp) < %s
+              where actor_user=%s and DATEDIFF(NOW(), rev_timestamp) < %s
             ;''',(user_id, latest_days,))
             row = curs.fetchone()
             if row != None and row[0] != None:
