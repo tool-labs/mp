@@ -6,7 +6,7 @@
  * (http://www.opensource.org/licenses/mit-license.php) and the
  * LGPL (http://www.gnu.org/licenses/lgpl.html).
  *
- * For more information, see http://tools.wmflabs.org/mp.
+ * For more information, see https://mp.toolforge.org
  */
 
 class MenteesRcPage implements Page
