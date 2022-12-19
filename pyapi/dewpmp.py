@@ -11,6 +11,7 @@ class DewpmpException(Exception):
 # https://pypi.org/project/PyMySQL/#installation
 import pymysql.cursors
 import string
+from contextlib import closing
 
 class Database:
     def __init__(self, user_name=None, password=None, host=None, wp_host=None,
@@ -49,17 +50,19 @@ class Database:
                                 'information. Used user_name: %s, host: %s' % (user_name, host))
 
         try:
-            self.conn = pymysql.connect(user=user_name, password=password, host=host, db=database,
-                           charset='utf8', use_unicode=True)
-            self.conn_wp = pymysql.connect(user=user_name, password=password, host=wp_host, db=wp_database,
-                           charset='utf8', use_unicode=True)
+            self.conn = pymysql.connections.Connection(user=user_name, password=password, host=host, db=database,
+                           charset='utf8', use_unicode=True, defer_connect=True)
+            self.conn_wp = pymysql.connections.Connection(user=user_name, password=password, host=wp_host, db=wp_database,
+                           charset='utf8', use_unicode=True, defer_connect=True)
+            self.conn.ping()  # reconnecting mysql, https://stackoverflow.com/a/61152360
+            self.conn_wp.ping()  # reconnecting mysql
         except pymysql.DatabaseError as e:
             raise DewpmpException('You specified wrong database ' +
                                   'connection data. Error message: ' + 
                                   unicode(e))
 
     def get_all_mentors(self):
-        with self.conn as curs:
+        with self.conn.cursor() as curs:
             curs.execute('''
             SELECT `mentor_user_id`, `mentor_user_name`,
                    `mentor_login_password`,
@@ -92,7 +95,7 @@ class Database:
         else:
            mentor_where_stm = u""
 
-        with self.conn as curs:
+        with self.conn.cursor() as curs:
             curs.execute('''
             SELECT `mm_type`, `mentor_user_id`, `mentor_user_name`,
                    `mentee_user_id`, `mentee_user_name`,                   
@@ -123,7 +126,7 @@ class Database:
         """
            returns a list of all mentors for given mentee
         """
-        with self.conn as curs:
+        with self.conn.cursor() as curs:
             curs.execute('''
             SELECT `mm_type`, `mentor_user_id`, `mentor_user_name`,
                    `mentee_user_id`, `mentee_user_name`,
@@ -171,7 +174,7 @@ class Database:
         self._touch_mentor(mentor_name, mentor_user_id)
 
         # find this user in our DB
-        with self.conn as curs:
+        with self.conn.cursor() as curs:
             curs.execute('''
             SELECT `mentee_user_id`, `mentee_user_name`
                 FROM `mentee`
@@ -193,7 +196,7 @@ class Database:
         if work_done: return
 
         # add a new mentoring item
-        with self.conn as curs:
+        with self.conn.cursor() as curs:
             if timestamp == None:
                curs.execute('''
                INSERT INTO `mentee_mentor`
@@ -213,7 +216,7 @@ class Database:
         """
           This is only for adding a mentee without any mentor
         """
-        with self.conn as curs:
+        with self.conn.cursor() as curs:
             if timestamp == None:
                curs.execute('''
                INSERT INTO `mentee` (`mentee_user_id`,
@@ -235,7 +238,7 @@ class Database:
            Check if we already know the 'mentor' as a mentor
            Add it or rename it in our database if necessary
         """
-        with self.conn as curs:
+        with self.conn.cursor() as curs:
             curs.execute('''
             SELECT `mentor_user_id`, `mentor_user_name`
                 FROM `mentor` WHERE `mentor_user_id` = %s
@@ -243,7 +246,7 @@ class Database:
             row = curs.fetchone()
             if row == None:
                # user is unknow, add it
-               with self.conn as curs:
+               with self.conn.cursor() as curs:
                   curs.execute('''
                   INSERT INTO `mentor` (
                      `mentor_user_id`, `mentor_user_name`, `mentor_login_password`,
@@ -255,7 +258,7 @@ class Database:
             elif (row[1] != mentor_name):
                # we know the id, but not the name
                # -> the user was renamed, update our datebase
-               with self.conn as curs:
+               with self.conn.cursor() as curs:
                   curs.execute('''
                   UPDATE `mentor`
                      SET `mentor_user_name` =  %s 
@@ -264,7 +267,7 @@ class Database:
  
 
     def rename_mentee(self, mentee_id, new_mentee_name):
-        with self.conn as curs:
+        with self.conn.cursor() as curs:
             curs.execute('''
             UPDATE `mentee`
                 SET `mentee_user_name` =  %s  
@@ -276,7 +279,7 @@ class Database:
         """
               'stops' the old mentoring, if not already done
         """
-        with self.conn as curs:
+        with self.conn.cursor() as curs:
                curs.execute('''
                UPDATE `mentee_mentor`
                    SET `mm_stop` = CURRENT_TIMESTAMP
@@ -290,7 +293,7 @@ class Database:
            else:
               'stops' the old mentoring, if not already done
         """
-        with self.conn as curs:
+        with self.conn.cursor() as curs:
             curs.execute('''SELECT COUNT(*) FROM `mentee_mentor` WHERE `mm_mentee_id` = %s AND mm_stop >= DATE_SUB(NOW(), INTERVAL 1 DAY);''', (mentee_id,))
             row = curs.fetchone()
             # is there an old m_m relation that was stopped less than 24 hours ago?
@@ -312,7 +315,7 @@ class Database:
         if self.conn == None:
             return False
 
-        with self.conn as curs:
+        with self.conn.cursor() as curs:
             curs.execute('''SELECT COUNT(`mentee_user_id`) FROM `mentee`;''')
             row = curs.fetchone()
             if row != None and row[0] != None:
@@ -327,33 +330,13 @@ class Database:
         if self.conn == None:
             return False
 
-        with self.conn as curs:
+        with self.conn.cursor() as curs:
             curs.execute('''SELECT COUNT( DISTINCT mentor_user_id ) FROM `mentor`
             JOIN mentee_mentor ON mentee_mentor.mm_mentor_id = mentor.mentor_user_id
             WHERE `mentor_out` IS NULL AND mm_stop IS NULL;''')
             row = curs.fetchone()
             if row != None and row[0] != None:
                 return int(row[0])
-            else:
-                return None
-
-    # XXX not used
-    def XXget_mentee_by_id(self, mentee_id):
-        with self.conn as curs:
-            curs.execute('''
-            SELECT `mentee_user_id`, `mentee_user_name`,
-                   `mentee_is_hidden`, `mentee_remark`,
-                   `mentee_lastupdate`
-                FROM `mentee`
-                WHERE `mentee_id` = %s
-            ;''', (mentee_id,))
-            if curs.rowcount > 0:
-                item = curs.fetchone()
-                return {'id':item[0],
-                        'user_id':item[1],
-                        'user_name':item[2],
-                        'remark':item[13],
-                        'lastupdate':item[14]}
             else:
                 return None
 
@@ -381,7 +364,7 @@ class Database:
         if self.conn_wp == None:
             return False
 
-        with self.conn_wp as curs:
+        with self.conn_wp.cursor() as curs:
             curs.execute('''
             SELECT `user_id` FROM `user`
                 WHERE `user_name` = CONVERT(CAST(%s AS BINARY) USING latin1)
@@ -396,7 +379,7 @@ class Database:
         """
         Returns all users in given category
         """
-        with self.conn_wp as curs:
+        with self.conn_wp.cursor() as curs:
             curs.execute('''
             SELECT CONVERT(CAST(`page_title` as BINARY) USING utf8)
                 FROM `page`
@@ -415,7 +398,7 @@ class Database:
         We look only throught the 'latest_days' days (today == 0).
         This method is used to identify inactive users.
         """
-        with self.conn_wp as curs:
+        with self.conn_wp.cursor() as curs:
             curs.execute('''
               select COUNT(rev_id) from revision_userindex join page on (page_id = rev_page) 
               JOIN actor ON actor_id = rev_actor
