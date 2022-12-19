@@ -204,6 +204,12 @@ class Database
     }
   }
 
+
+  private function validate_datestamp($timestamp)
+  {
+    return ((string) (int) $timestamp === $timestamp)  && ($timestamp <= PHP_INT_MAX) && ($timestamp >= ~PHP_INT_MAX);
+  }
+
   /**
    * Returns a list of all mentor_mentee where the mm_type is not set (=0).
    * $ent_time can be null, otherwise it should be YYYY-MM-DD HH-MM-SS
@@ -216,17 +222,17 @@ class Database
         "FROM mentee_mentor " .
         " JOIN mentee ON mm_mentee_id = mentee.mentee_user_id " .
         " JOIN mentor ON mm_mentor_id = mentor.mentor_user_id " .
-        (validate_datestamp($end_time) ? "WHERE mm_start <= :end_time " : "") .
+        ($this->validate_datestamp($end_time) ? "WHERE mm_start <= :end_time " : "") .
         "UNION ALL " .
         "SELECT mm_stop AS event_time, mm_start, mm_stop, mm_mentee_id, mentee_user_name, mm_mentor_id, mentor_user_name " .
         "FROM mentee_mentor " .
         " JOIN mentee ON mm_mentee_id = mentee.mentee_user_id " .
         " JOIN mentor ON mm_mentor_id = mentor.mentor_user_id " .
-        (validate_datestamp($end_time) ? "WHERE mm_stop <= :end_time " : "") .
+        ($this->validate_datestamp($end_time) ? "WHERE mm_stop <= :end_time " : "") .
         "ORDER BY event_time DESC LIMIT :limit";
       $stmt = $this->db->prepare($sql);
       $stmt->bindParam(":limit",  $limit,  PDO::PARAM_INT);
-      if (validate_datestamp($end_time)) {
+      if ($this->validate_datestamp($end_time)) {
           $stmt->bindParam(":end_time",  $end_time);
       }
       $stmt->execute();
