@@ -1724,7 +1724,9 @@ print($mentorName . '--> ' . $coMentorName . '\n ');
      foreach($results_from_dewikip as $row) {
          $escaped_row = array();
          foreach ($row as $raw_value) {
-            $escaped_row[] = "'" . str_replace("'", "\'", $raw_value) . "'";
+            if ($raw_value) {
+              $escaped_row[] = "'" . str_replace("'", "\'", $raw_value) . "'";
+            }
          }
          $row_values[] = '(' . implode(",", $escaped_row) . ')';
      }

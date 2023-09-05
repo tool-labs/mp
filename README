@@ -4,5 +4,5 @@
      - jinja2
   - MySQL
 
-* To do
-  - Check on error in confirmation.html and user.html
+* Bot source code
+  - https://github.com/euku/spbot/tree/spbot/scripts/userscripts

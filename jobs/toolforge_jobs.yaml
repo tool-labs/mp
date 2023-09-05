@@ -1,0 +1,36 @@
+# https://wikitech.wikimedia.org/wiki/Help:Toolforge/Jobs_framework
+---
+##############################################################################
+## Daily jobs
+- name: daily-log-cleanup
+  command: sh ~/mp/jobs/remove-old-logs.sh
+  image: bullseye
+  no-filelog: false
+  schedule: "0 0  *   *   *"
+  emails: onfailure
+  filelog-stdout: logs/remove-old-logs.out
+  filelog-stderr: logs/remove-old-logs.err
+- name: create-database-dump
+  command: sh ~/mp/jobs/create-database-dump.sh
+  image: mariadb
+  no-filelog: false
+  schedule: "0 0  *   *   *"
+  emails: onfailure
+  filelog-stdout: logs/create-database-dump.out
+  filelog-stderr: logs/create-database-dump.err
+- name: delete-old-database-dump
+  command: sh ~/mp/jobs/delete-old-database-dump.sh
+  image: bullseye
+  no-filelog: false
+  schedule: "0 0  *   *   *"
+  emails: onfailure
+  filelog-stdout: logs/delete-old-database-dump.out
+  filelog-stderr: logs/delete-old-database-dump.err
+- name: cronjob-update-mentees-rc
+  command: sh ~/mp/jobs/cronjob_update_mentees_rc.sh
+  image: php8.2
+  no-filelog: false
+  schedule: "*/3  *   *   *   *"
+  emails: onfailure
+  filelog-stdout: logs/cronjob_update_mentees_rc.out
+  filelog-stderr: logs/cronjob_update_mentees_rc.err
