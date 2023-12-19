@@ -1766,7 +1766,7 @@ print($mentorName . '--> ' . $coMentorName . '\n ');
     {
       // 1. what was the last timestamp we have in the local table?
       $start_time = $this->fetch_latest_timestamp_form_mentees_rc();
-      echo("latest timestamp form mentees_recentchanges: " . $start_time . "\n");
+      // echo("latest timestamp form mentees_recentchanges: " . $start_time . "\n");
       
       // 2. fetch new data from the replicated database
       $source_sql = "SELECT ". $COLUMNS .

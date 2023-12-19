@@ -11,5 +11,5 @@ require('../web/include/validator.php');
 
 $db = new Database();
 $db->update_mentees_recentchanges();
-echo("Run completed")
+//echo("Run completed")
 ?>
