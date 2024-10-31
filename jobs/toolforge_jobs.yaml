@@ -14,7 +14,7 @@
   command: sh ~/mp/jobs/create-database-dump.sh
   image: mariadb
   no-filelog: false
-  schedule: "0 0  *   *   *"
+  schedule: "0,10,20 0  *   *   *"
   emails: onfailure
   filelog-stdout: logs/create-database-dump.out
   filelog-stderr: logs/create-database-dump.err
