@@ -205,9 +205,11 @@ class Database
   }
 
 
-  private function validate_datestamp($timestamp)
+  function validate_datestamp($timestamp)
   {
-    return ((string) (int) $timestamp === $timestamp)  && ($timestamp <= PHP_INT_MAX) && ($timestamp >= ~PHP_INT_MAX);
+    $dateTime = DateTime::createFromFormat('Y-m-d H:i:s', $timestamp);
+    // Check if the creation was successful and the timestamp is valid
+    return $dateTime !== false && $dateTime->getTimestamp() !== false;
   }
 
   /**
