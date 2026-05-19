@@ -90,7 +90,7 @@ class Database:
         """
            returns a list of all current (='active') mentees for given mentor
         """
-        if mentor_user_name != None:
+        if mentor_user_name is not None:
            mentor_where_stm = u" AND `mentor_user_name` = '" + mentor_user_name + u"'"
         else:
            mentor_where_stm = u""
@@ -160,16 +160,16 @@ class Database:
            else:
                   'starts' a new mentoring with given mentor
                   
-           returns if the operation was sucessful
+           returns if the operation was successful
 
            mentoring_type: 0=not set, 1=normal, 2=wunschmentor
         """
         mentee_user_id = self.get_mw_user_id(mentee_name)
         mentor_user_id = self.get_mw_user_id(mentor_name)
-        if (mentee_user_id == None):
-            raise DewpmpException('Coud not find ' + mentee_name + ' in wp_DB')
-        if (mentor_user_id == None):
-            raise DewpmpException('Coud not find mentor: ' + mentor_name + ' in wp_DB')
+        if mentee_user_id is None:
+            raise DewpmpException('Could not find ' + mentee_name + ' in wp_DB')
+        if mentor_user_id is None:
+            raise DewpmpException('Could not find mentor: ' + mentor_name + ' in wp_DB')
 
         self._touch_mentor(mentor_name, mentor_user_id)
 
@@ -182,22 +182,22 @@ class Database:
             ;''',(mentee_user_id,))
 
             row = curs.fetchone()
-            if row != None:
-               if (row[1] != mentee_name):
+            if row is not None:
+               if row[1] != mentee_name:
                   # this user was renamed in WP, update this item in our DB
                   self.rename_mentee(mentee_user_id, mentee_name)
                   return True # nothing more to do               
             else:
-               # this user is unkown
+               # this user is unknown
                self.add_mentee_user(mentee_name, mentee_user_id)
 
         # is there an 'old mentoring' item? then close it
         work_done = self.reopen_mm_relation_or_stop(mentee_user_id)
-        if work_done: return
+        if work_done: return True
 
         # add a new mentoring item
         with self.conn.cursor() as curs:
-            if timestamp == None:
+            if timestamp is None:
                curs.execute('''
                INSERT INTO `mentee_mentor`
                   (`mm_mentee_id`, `mm_mentor_id`,
@@ -217,7 +217,7 @@ class Database:
           This is only for adding a mentee without any mentor
         """
         with self.conn.cursor() as curs:
-            if timestamp == None:
+            if timestamp is None:
                curs.execute('''
                INSERT INTO `mentee` (`mentee_user_id`,
                    `mentee_user_name` , `mentee_is_hidden`,
@@ -244,7 +244,7 @@ class Database:
                 FROM `mentor` WHERE `mentor_user_id` = %s
             ;''',(mentor_user_id,))
             row = curs.fetchone()
-            if row == None:
+            if row is None:
                # user is unknow, add it
                with self.conn.cursor() as curs:
                   curs.execute('''
@@ -255,7 +255,7 @@ class Database:
                      `mentor_remark`, `mentor_lastupdate`) 
                       VALUES (%s, %s, NULL , CURRENT_TIMESTAMP, NULL , 0, 0, NULL , CURRENT_TIMESTAMP)
                       ;''', (mentor_user_id, mentor_name))
-            elif (row[1] != mentor_name):
+            elif row[1] != mentor_name:
                # we know the id, but not the name
                # -> the user was renamed, update our datebase
                with self.conn.cursor() as curs:
@@ -297,7 +297,7 @@ class Database:
             curs.execute('''SELECT COUNT(*) FROM `mentee_mentor` WHERE `mm_mentee_id` = %s AND mm_stop >= DATE_SUB(NOW(), INTERVAL 1 DAY);''', (mentee_id,))
             row = curs.fetchone()
             # is there an old m_m relation that was stopped less than 24 hours ago?
-            if row != None and row[0] != None and int(row[0]) > 0:
+            if row is not None and row[0] is not None and int(row[0]) > 0:
                curs.execute('''
                UPDATE `mentee_mentor`
                    SET `mm_stop` = NULL
@@ -318,16 +318,15 @@ class Database:
         with self.conn.cursor() as curs:
             curs.execute('''SELECT COUNT(`mentee_user_id`) FROM `mentee`;''')
             row = curs.fetchone()
-            if row != None and row[0] != None:
+            if row is not None and row[0] is not None:
                 return int(row[0])
-            else:
-                return None
+        return None
     
     def get_active_mentor_number(self):
         """
         Returns the number of mentors that are active and have at least one mentee.
         """
-        if self.conn == None:
+        if self.conn is None:
             return False
 
         with self.conn.cursor() as curs:
@@ -335,10 +334,9 @@ class Database:
             JOIN mentee_mentor ON mentee_mentor.mm_mentor_id = mentor.mentor_user_id
             WHERE `mentor_out` IS NULL AND mm_stop IS NULL;''')
             row = curs.fetchone()
-            if row != None and row[0] != None:
+            if row is not None and row[0] is not None:
                 return int(row[0])
-            else:
-                return None
+        return None
 
 ###############
 # queries for the de_wikip database
@@ -361,7 +359,7 @@ class Database:
         Returns the MediaWiki user id for the user *user_name* or `None` if
         the user does not exist.
         """
-        if self.conn_wp == None:
+        if self.conn_wp is None:
             return False
 
         with self.conn_wp.cursor() as curs:
@@ -370,27 +368,27 @@ class Database:
                 WHERE `user_name` = CONVERT(CAST(%s AS BINARY) USING latin1)
             ;''',(user_name,))
             row = curs.fetchone()
-            if row != None and row[0] != None:
+            if row is not None and row[0] is not None:
                 return int(row[0])
-            else:
-                return None
+        return None
 
     def get_mw_cat_members(self, cat_name):
         """
         Returns all users in given category
         """
+        m_dict = []
         with self.conn_wp.cursor() as curs:
             curs.execute('''
-            SELECT CONVERT(CAST(`page_title` as BINARY) USING utf8)
-                FROM `page`
-                  JOIN `categorylinks` ON cl_to = %s AND `cl_from`=`page_id` AND `cl_type`="page"
-                WHERE `page_namespace`=2 ORDER BY `page_title`
-            ;''',(cat_name,))
+            SELECT CONVERT(CAST(`page_title` as BINARY) USING utf8) mentee_name
+            FROM `page`
+            JOIN `categorylinks` ON `cl_from`=`page_id` AND `cl_type`="page"
+            JOIN `linktarget` ON `cl_target_id`=`lt_id` AND `lt_namespace`=%s AND `lt_title`=%s
+            WHERE `page_namespace`=2
+            ORDER BY `page_title`;''',(14, cat_name,))
             m_list = curs.fetchall()
-            m_dict = []
             for item in m_list:
                 m_dict.append({'item': self._fixUTF8problem(item[0])})
-            return m_dict
+        return m_dict
 
     def get_mw_user_contribsum(self, user_id, latest_days):
         """
@@ -405,8 +403,7 @@ class Database:
               where actor_user=%s and DATEDIFF(NOW(), rev_timestamp) < %s
             ;''',(user_id, latest_days,))
             row = curs.fetchone()
-            if row != None and row[0] != None:
+            if row is not None and row[0] is not None:
                 return int(row[0])
-            else:
-                return None
+        return None
 
