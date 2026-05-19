@@ -194,7 +194,9 @@ class Database
                 "JOIN dewiki_p.user ON user_name=page_title " .
                 "WHERE page_namespace=2 AND page_title IN " .
 		"(" . $mentorsInDbList . ") AND page_id NOT IN " . 
-		"(SELECT cl_from FROM dewiki_p.categorylinks WHERE cl_to='" . $mentor_cat_name . "')");
+		"( SELECT cl_from FROM dewikip.categorylink ON cl_from=page_id AND cl_type='page' ".
+		"JOIN dewikip.linktarget ON `cl_target_id`=`lt_id` AND `lt_namespace`=14 AND `lt_title`='" . $mentor_cat_name . "' " .
+		"WHERE page_namespace=2 )" );
       $stmt->execute();
       return $stmt->fetchAll();
     }
@@ -1311,22 +1313,6 @@ print($mentorName . '--> ' . $coMentorName . '\n ');
     return array();
   }
 
-  /**
-   * Returns a list of all users in the category 'Benutzer:Mentee'.
-   */
-  public function get_all_wp_mentees()
-  {
-    try
-    {
-      $q = $this->db->query("SELECT page_title FROM dewiki_p.page JOIN dewiki_p.categorylinks ON cl_from = page_id WHERE cl_to = 'Benutzer:Mentee'");
-      return $q->fetchAll();
-    }
-    catch (PDOException $e)
-    {
-      $this->handleError($e->getMessage());
-    }
-    return array();
-  }
 
   /**
    * Get the edit count of a Wikipedia user.
@@ -1487,117 +1473,7 @@ print($mentorName . '--> ' . $coMentorName . '\n ');
     }
   }
 
-  /**
-   * Returns a list of mentors with different user names stored in mentor and
-   * dewiki_p.user.
-   */
-  public function get_renamed_mentors()
-  {
-    try
-    {
-      $sql = "SELECT mentor_user_id, mentor_user_id, mentor_user_name, user_name FROM mentor JOIN dewiki_p.user ON mentor_user_id = user_id WHERE mentor_user_name != user_name";
-      $stmt = $this->db_dewikip->prepare($sql);
-      $stmt->execute();
-      return $stmt->fetchAll();
-    }
-    catch (PDOException $e)
-    {
-      $this->handleError($e->getMessage());
-    }
-  }
-
-  /**
-   * Renames a mentor.
-   *  XXX veraltet?
-   */
-  public function rename_mentor($mentor_id, $new_name)
-  {
-    try
-    {
-      $sql = 'UPDATE mentor SET mentor_user_name = :name WHERE mentor_user_id = :id';
-      $stmt = $this->db->prepare($sql);
-      $stmt->execute(array(':name' => $new_name, ':id' => $mentor_id));
-    }
-    catch (PDOException $e)
-    {
-      $this->handleError($e->getMessage());
-    }
-  }
-
-  /**
-   * Return a list of mentors who are no longer in the mentor category.
-   */
-  public function get_archived_mentors($mentor_cat)
-  {
-    try // TODO JOIN per code duerchfueren
-    {
-      $sql = 'SELECT mentor_user_name, mentor_user_id FROM mentor WHERE mentor_out IS NULL AND NOT EXISTS (SELECT cl_from FROM dewiki_p.categorylinks JOIN dewiki_p.page ON page_id = cl_from WHERE page_title = REPLACE(mentor_user_name, \' \', \'_\') AND page_namespace = 2 AND cl_to = :cat);';
-      $stmt = $this->db->prepare($sql);
-      $stmt->execute(array(':cat' => $mentor_cat));
-      return $stmt->fetchAll();
-    }
-    catch (PDOException $e)
-    {
-      $this->handleError($e->getMessage());
-    }
-  }
   
-  /**
-   * Archives a mentor.
-   *  XXX veraltet?
-   */
-  public function archive_mentor($mentor_id)
-  {
-    try
-    {
-      $sql = 'UPDATE mentor SET mentor_out = CURRENT_DATE() WHERE mentor_user_id = :id';
-      $stmt = $this->db->prepare($sql);
-      $stmt->execute(array(':id' => $mentor_id));
-    }
-    catch (PDOException $e)
-    {
-      $this->handleError($e->getMessage());
-    }
-  }
-
-  /**
-   * Returns a list of mentors who are in the mentor category but not in the database.
-   */
-   public function get_new_mentors($mentor_cat)
-   {
-     try // TODO JOIN aufloesen
-     {
-       $sql = 'SELECT REPLACE(page_title, \'_\', \' \') AS mentor_name, user_id FROM dewiki_p.categorylinks JOIN (dewiki_p.page, dewiki_p.user) ON (page_id = cl_from AND REPLACE(user_name, \' \', \'_\') = page_title) WHERE cl_to = :cat AND page_namespace = 2 AND NOT EXISTS (SELECT mentor_user_id FROM mentor WHERE mentor_user_id = user_id AND mentor_out IS NULL);';
-       $stmt = $this->db_dewikip->prepare($sql);
-       $stmt->execute(array(':cat' => $mentor_cat));
-       return $stmt->fetchAll();
-     }
-     catch (PDOException $e)
-     {
-       $this->handleError($e->getMessage());
-     }
-   }
-
-  /**
-   * Adds a new mentor.
-   */
-  public function add_mentor($user_id, $user_name)
-  {
-    try
-    {
-      $sql = 'INSERT INTO mentor (mentor_user_id, mentor_user_name, mentor_user_name_normalized, mentor_login_name, mentor_in) VALUES (:id, :name, :name, :name, CURRENT_DATE());';
-      $stmt = $this->db->prepare($sql);
-      $stmt->execute(array(':name' => $user_name, ':id' => $user_id));
-      $sql = 'UPDATE mentor SET mentor_out = NULL WHERE mentor_user_id = :id';
-      $stmt = $this->db->prepare($sql);
-      $stmt->execute(array(':id' => $user_id));
-    }
-    catch (PDOException $e)
-    {
-      $this->handleError($e->getMessage());
-    }
-  }
-
   /**
    * Logs a message in the `logging` table.
    */
