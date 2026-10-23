@@ -56,4 +56,4 @@ On Toolforge everything is read from `~/replica.my.cnf`; environment variables o
 
 ## License
 
-MIT and LGPL, see `LICENSE`. Original PHP version by Robin Krahl (ireas), Merlissimo and others.
+LGPL, see `LICENSE`. Original PHP version by Robin Krahl (ireas), Merlissimo and others.
