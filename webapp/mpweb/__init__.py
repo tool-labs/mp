@@ -1,8 +1,10 @@
 """Mentorenprogramm (dewiki) web interface."""
+import gzip
 import logging
+import os
 import time
 
-from flask import Flask, g, render_template
+from flask import Flask, g, render_template, request
 
 from . import auth, helpers
 from .config import load_config
@@ -11,6 +13,10 @@ from .db import DatabaseError, close_connections, get_mp, get_wiki
 log = logging.getLogger(__name__)
 
 SIDEBAR_TTL = 300  # seconds
+STATIC_MAX_AGE = 365 * 24 * 3600  # static URLs carry a version parameter
+GZIP_MIN_SIZE = 500
+GZIP_TYPES = {"text/html", "text/css", "text/plain", "text/xml", "application/json",
+              "application/javascript", "text/javascript", "application/xml", "image/svg+xml"}
 
 
 def _sidebar_counts(app):
@@ -30,11 +36,54 @@ def _sidebar_counts(app):
     return data
 
 
+def compress(response):
+    """Gzip text responses.
+
+    The Toolforge front proxy does not compress, and transfers from the
+    webservice pod stall noticeably for every few KB, so fewer bytes matter.
+    """
+    if (response.status_code != 200 or "Content-Encoding" in response.headers
+            or response.mimetype not in GZIP_TYPES
+            or "gzip" not in request.headers.get("Accept-Encoding", "").lower()):
+        return response
+    response.direct_passthrough = False  # static files are streamed by default
+    data = response.get_data()
+    if len(data) < GZIP_MIN_SIZE:
+        return response
+    response.set_data(gzip.compress(data, compresslevel=6))
+    response.headers["Content-Encoding"] = "gzip"
+    response.vary.add("Accept-Encoding")
+    etag, _ = response.get_etag()
+    if etag:
+        response.set_etag(etag, weak=True)
+    return response
+
+
+def _static_version(app):
+    """URL default adding ``v=<mtime>`` to static URLs, so they can be cached long."""
+    versions = {}
+
+    def add_version(endpoint, values):
+        if endpoint != "static" or "filename" not in values:
+            return
+        name = values["filename"]
+        if name not in versions:
+            try:
+                versions[name] = int(os.stat(os.path.join(app.static_folder, name)).st_mtime)
+            except OSError:
+                versions[name] = 0
+        values.setdefault("v", versions[name])
+    return add_version
+
+
 def create_app(config=None):
     app = Flask(__name__)
+    app.config["SEND_FILE_MAX_AGE_DEFAULT"] = STATIC_MAX_AGE
     app.config.update(load_config())
     if config:
         app.config.update(config)
+    app.url_defaults(_static_version(app))
+    app.after_request(compress)
 
     from .views import api, legacy, main, maintenance, mentees, mentors, relations
     from .views import auth as auth_views

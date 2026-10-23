@@ -99,3 +99,29 @@ def test_sql_dumps(tmp_path):
     assert response.status_code == 200 and response.data.startswith(b"BZh")
     for name in ("wpmp-2026-10-20.sql.bz2", "other.txt", "..%2Fsecret"):
         assert client.get(f"/sql-dumps/{name}").status_code == 404
+
+
+def test_static_files_are_versioned_cached_and_gzipped(offline_client):
+    import gzip
+    import re
+    page = offline_client.get("/info").get_data(as_text=True)
+    url = re.search(r'href="(/static/style\.css\?v=\d+)"', page).group(1)
+    plain = offline_client.get(url)
+    assert "max-age=31536000" in plain.headers["Cache-Control"]
+    assert "Content-Encoding" not in plain.headers
+    zipped = offline_client.get(url, headers={"Accept-Encoding": "gzip, br"})
+    assert zipped.headers["Content-Encoding"] == "gzip"
+    assert "Accept-Encoding" in zipped.headers["Vary"]
+    assert gzip.decompress(zipped.data) == plain.data
+    assert int(zipped.headers["Content-Length"]) == len(zipped.data) < len(plain.data)
+
+
+def test_html_is_gzipped_but_small_and_binary_responses_are_not(offline_client):
+    import gzip
+    page = offline_client.get("/info", headers={"Accept-Encoding": "gzip"})
+    assert page.headers["Content-Encoding"] == "gzip"
+    assert "Mentorenprogramm" in gzip.decompress(page.data).decode()
+    small = offline_client.get("/index.php?action=about", headers={"Accept-Encoding": "gzip"})
+    assert "Content-Encoding" not in small.headers
+    png = offline_client.get("/static/favicon-256x256.png", headers={"Accept-Encoding": "gzip"})
+    assert png.status_code == 200 and "Content-Encoding" not in png.headers

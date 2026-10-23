@@ -266,16 +266,20 @@ class MPRepository(BaseRepository):
                     FROM mentee_mentor mm
                     JOIN mentee me ON me.mentee_user_id = mm.mm_mentee_id
                     JOIN mentor mo ON mo.mentor_user_id = mm.mm_mentor_id"""
+        # Each branch is limited on its own (index scan on mm_start/mm_stop),
+        # so only 2 * limit rows are sorted instead of every event.
         return self.all(f"""
             SELECT * FROM (
-              SELECT mm.mm_start AS event_time, 'start' AS event, {select}
-              WHERE mm.mm_start <= %s
+              (SELECT mm.mm_start AS event_time, 'start' AS event, {select}
+               WHERE mm.mm_start <= %s
+               ORDER BY mm.mm_start DESC, mm.mm_mentee_id LIMIT %s)
               UNION ALL
-              SELECT mm.mm_stop AS event_time, 'stop' AS event, {select}
-              WHERE mm.mm_stop IS NOT NULL AND mm.mm_stop <= %s
+              (SELECT mm.mm_stop AS event_time, 'stop' AS event, {select}
+               WHERE mm.mm_stop IS NOT NULL AND mm.mm_stop <= %s
+               ORDER BY mm.mm_stop DESC, mm.mm_mentee_id LIMIT %s)
             ) events
             ORDER BY event_time DESC, event DESC, mm_mentee_id
-            LIMIT %s""", (end_time, end_time, limit))
+            LIMIT %s""", (end_time, limit, end_time, limit, limit))
 
     def weekly_stats(self):
         """Return ``{year: {week: [starts, stops]}}`` using ISO weeks."""
