@@ -6,7 +6,6 @@
 - name: cronjob-update-mentees-rc
   command: sh ~/mp/jobs/run-python-job.sh update-rc
   image: python3.11
-  no-filelog: false
   schedule: "*/3  *   *   *   *"
   emails: onfailure
   filelog-stdout: logs/update-mentees-rc.out
@@ -14,7 +13,6 @@
 - name: refresh-comentors
   command: sh ~/mp/jobs/run-python-job.sh refresh-comentors
   image: python3.11
-  no-filelog: false
   schedule: "17,47  *   *   *   *"
   emails: onfailure
   filelog-stdout: logs/refresh-comentors.out
@@ -24,7 +22,6 @@
 - name: daily-log-cleanup
   command: sh ~/mp/jobs/remove-old-logs.sh
   image: bullseye
-  no-filelog: false
   schedule: "0 0  *   *   *"
   emails: onfailure
   filelog-stdout: logs/remove-old-logs.out
@@ -32,7 +29,6 @@
 - name: create-database-dump
   command: bash ~/mp/jobs/create-database-dump.sh
   image: mariadb
-  no-filelog: false
   schedule: "0,10,20 0  *   *   *"
   emails: onfailure
   filelog-stdout: logs/create-database-dump.out
@@ -40,7 +36,6 @@
 - name: delete-old-database-dump
   command: sh ~/mp/jobs/delete-old-database-dump.sh
   image: bullseye
-  no-filelog: false
   schedule: "0 0  *   *   *"
   emails: onfailure
   filelog-stdout: logs/delete-old-database-dump.out
