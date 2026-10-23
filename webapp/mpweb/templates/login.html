@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% from "macros.html" import csrf with context %}
+{% block heading %}Anmelden{% endblock %}
+{% block content %}
+<form method="post" class="form narrow">
+  {{ csrf() }}
+  <label>Wikipedia-Benutzername <input type="text" name="user" required autocomplete="username" autofocus></label>
+  <label>Passwort <input type="password" name="password" required autocomplete="current-password"></label>
+  <button type="submit">Anmelden</button>
+</form>
+<p class="muted">Zugänge gibt es nur für Mentoren, die Daten pflegen. Ein Konto erhältst du auf Anfrage bei den Betreuern dieses Tools.</p>
+{% endblock %}

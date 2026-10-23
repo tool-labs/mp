@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% from "macros.html" import mentor_link, mentee_link, relation_edit_link, type_legend with context %}
+{% block title %}Mentor {{ mentor.mentor_user_name }}{% endblock %}
+{% block heading %}Mentor <em>{{ mentor.mentor_user_name }}</em>{% endblock %}
+{% block content %}
+<p class="toolbar">
+  <a href="{{ user_url(mentor.mentor_user_name) }}">Benutzerseite</a>
+  <a href="{{ contribs_url(mentor.mentor_user_name) }}">Beiträge</a>
+  {% if is_editor %}<a class="button" href="{{ url_for('mentors.edit', mentor_id=mentor.mentor_user_id) }}">Mentor bearbeiten</a>{% endif %}
+</p>
+
+<div class="columns">
+<table class="facts">
+  <tr><th>Eintritt</th><td>{{ mentor.mentor_in | date }}</td></tr>
+  <tr><th>Austritt</th><td>{{ mentor.mentor_out | date }}
+    {% if mentor.mentor_out and has_active %}<p class="warn">Es gibt noch betreute Mentees!</p>
+    {% elif not mentor.mentor_out and not has_active %}<p class="muted">Zurzeit keine betreuten Mentees.</p>{% endif %}</td></tr>
+  {% if mentor.mentor_pause %}<tr><th>Status</th><td><span class="badge">Pause</span> (laut WP:Mentorenprogramm)</td></tr>{% endif %}
+  <tr><th>Betreuungen</th><td>{{ counts.mentorings }} Betreuungen (<a href="#mentees">Liste</a>)<br>{{ counts.mentees }} verschiedene Mentees</td></tr>
+  <tr><th>Co-Mentoren</th><td>{% for c in comentors %}{{ mentor_link(c.mentor_user_id, c.mentor_user_name) }}{{ ', ' if not loop.last }}{% else %}<em>keine</em>{% endfor %}</td></tr>
+  <tr><th>Ist Co-Mentor bei</th><td>{% for c in comentor_of %}{{ mentor_link(c.mentor_user_id, c.mentor_user_name) }}{{ ', ' if not loop.last }}{% else %}<em>niemandem</em>{% endfor %}</td></tr>
+  {% if mentor.mentor_has_barnstar %}<tr><th>Order of Mentoring</th><td><span class="award award-barnstar">verliehen</span></td></tr>{% endif %}
+  {% if mentor.mentor_award_level %}<tr><th>Auszeichnung</th><td><span class="award award-{{ mentor.mentor_award_level }}">{{ mentor.mentor_award_level | award }}</span></td></tr>{% endif %}
+  {% if mentor.mentor_remark %}<tr><th>Anmerkung</th><td>{{ mentor.mentor_remark }}</td></tr>{% endif %}
+  <tr><th>Letzte Aktualisierung</th><td>{{ mentor.mentor_lastupdate | datetime }}</td></tr>
+</table>
+<div class="note">
+  <strong>Erläuterung</strong>
+  {{ type_legend() }}
+  <p>Wurde ein Mentee mehrfach von diesem Mentor betreut, steht das in der Liste als „x-mal betreut“.
+     „Aktiv“ heißt: mindestens eine Bearbeitung in den letzten 30 Tagen.</p>
+</div>
+</div>
+
+<h2 id="mentees">Betreuungen</h2>
+{% if mentorings %}
+<div class="table-wrap">
+<table class="data sortable">
+  <thead><tr><th>Mentee</th><th>Typ</th><th>Aktivität</th><th data-type="date">Beginn</th><th data-type="date">Ende</th>{% if is_editor %}<th></th>{% endif %}</tr></thead>
+  <tbody>
+  {% for r in mentorings %}
+    <tr{% if r.mm_stop is none %} class="current"{% endif %}>
+      <td>{{ mentee_link(r.mentee_user_id, r.mentee_user_name) }}{% if r.times > 1 %} <span class="muted">({{ r.times }}-mal betreut)</span>{% endif %}</td>
+      <td>{{ r.mm_type | mm_type }}</td>
+      <td>{% if r.active is none %}?{% elif r.active %}aktiv{% else %}<span class="muted">inaktiv</span>{% endif %}</td>
+      <td>{{ r.mm_start | datetime }}</td>
+      <td>{{ r.mm_stop | datetime('läuft') }}</td>
+      {% if is_editor %}<td>{{ relation_edit_link(r.mentee_user_id, mentor.mentor_user_id, r.mm_start, '±') }}</td>{% endif %}
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<p><em>Keine.</em></p>
+{% endif %}
+{% endblock %}

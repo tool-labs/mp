@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% from "macros.html" import mentor_link, mentee_link with context %}
+{% block heading %}Momentan betreute Mentees{% endblock %}
+{% block content %}
+<p class="toolbar"><a href="{{ url_for('maintenance.history') }}">Zeitlicher Verlauf der Betreuungen</a>
+  <span class="muted">{{ mentees | length }} Mentees</span></p>
+<dl class="legend status-legend">
+  <dt class="status-critical">rot</dt><dd>Die letzte Bearbeitung liegt mehr als {{ critical_days }} Tage zurück.</dd>
+  <dt class="status-long">orange</dt><dd>Die Betreuung dauert schon länger als fünf Monate.</dd>
+  <dt class="status-ok">grün</dt><dd>Keines der beiden Kriterien trifft zu.</dd>
+</dl>
+<div class="table-wrap">
+<table class="data sortable">
+  <thead><tr><th>Mentee</th><th>Mentor</th><th>Typ</th><th data-type="num">Letzte Bearbeitung vor [Tagen]</th><th data-type="num">Mentee seit [Tagen]</th></tr></thead>
+  <tbody>
+  {% for m in mentees %}
+    <tr>
+      <td class="status-{{ m.status }}">{{ mentee_link(m.mentee_user_id, m.mentee_user_name) }}</td>
+      <td>{{ mentor_link(m.mentor_user_id, m.mentor_user_name) }}</td>
+      <td>{{ m.mm_type | mm_type }}</td>
+      <td class="num{% if m.status == 'critical' %} bad{% endif %}" data-sort="{{ m.last_edit_days if m.last_edit_days is not none else 99999 }}">{{ m.last_edit_days if m.last_edit_days is not none else '–' }}</td>
+      <td class="num{% if m.since_days > long_days %} bad{% endif %}">{{ m.since_days }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

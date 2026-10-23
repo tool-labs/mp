@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% from "macros.html" import mentor_link, relation_edit_link, type_legend with context %}
+{% block title %}Mentee {{ mentee.mentee_user_name }}{% endblock %}
+{% block heading %}Mentee <em>{{ mentee.mentee_user_name }}</em>{% endblock %}
+{% block content %}
+<p class="toolbar">
+  <a href="{{ user_url(mentee.mentee_user_name) }}">Benutzerseite</a>
+  <a href="{{ contribs_url(mentee.mentee_user_name) }}">Beiträge</a>
+  <a href="https://xtools.wmcloud.org/ec/de.wikipedia.org/{{ mentee.mentee_user_name | urlencode }}">Editcounter</a>
+  <a href="https://stimmberechtigung.toolforge.org/?user={{ mentee.mentee_user_name | urlencode }}">Stimmberechtigung</a>
+  {% if is_editor %}<a class="button" href="{{ url_for('mentees.edit', mentee_id=mentee.mentee_user_id) }}">Mentee bearbeiten</a>{% endif %}
+</p>
+<div class="columns">
+<table class="facts">
+  <tr><th>Eintritt</th><td>{{ mentee.mentee_in | date }}</td></tr>
+  <tr><th>Austritt</th><td>{{ mentee.mentee_out | date('noch in Betreuung' if mentee.active_count else '–') }}</td></tr>
+  <tr><th>{{ 'Mentor' if mentors | length == 1 else 'Mentoren' }}</th><td>
+    <ul class="plain">
+    {% for r in mentors %}
+      <li>{{ mentor_link(r.mentor_user_id, r.mentor_user_name) }} ({{ r.mm_type | mm_type }};
+          {{ r.mm_start | datetime }} – {{ r.mm_stop | datetime('jetzt') }})
+          {{ relation_edit_link(mentee.mentee_user_id, r.mentor_user_id, r.mm_start, '±') }}</li>
+    {% else %}<li><em>keine</em></li>{% endfor %}
+    </ul>
+    {% if is_editor %}<a href="{{ url_for('relations.create', mentee_id=mentee.mentee_user_id) }}">+ Neue Betreuung hinzufügen</a>{% endif %}
+  </td></tr>
+  <tr><th>Bearbeitungen</th><td>{{ edit_count | number if edit_count is not none else '?' }}</td></tr>
+  <tr><th>Aktivität</th><td>{% if active is none %}?{% elif active %}aktiv{% else %}inaktiv{% endif %}</td></tr>
+  <tr><th>Erstellte Artikel</th><td>{{ articles | length }}{% if articles %} (<a href="#articles">Liste</a>){% endif %}</td></tr>
+  {% if mentee.mentee_remark %}<tr><th>Anmerkung</th><td>{{ mentee.mentee_remark }}</td></tr>{% endif %}
+  <tr><th>Letzte Aktualisierung</th><td>{{ mentee.mentee_lastupdate | datetime }}</td></tr>
+</table>
+<div class="note">
+  <strong>Erläuterung</strong>
+  <p><em>Bearbeitungen</em> zählt alle Bearbeitungen des Benutzers. <em>Aktivität</em> gibt an, ob der Benutzer
+     in den letzten 30 Tagen bearbeitet hat.</p>
+  {{ type_legend() }}
+</div>
+</div>
+
+{% if articles %}
+<h2 id="articles">Artikel</h2>
+<table class="data">
+  <thead><tr><th>Artikel</th><th>Angelegt</th></tr></thead>
+  <tbody>{% for a in articles %}
+    <tr><td><a href="{{ wiki_url('Spezial:Permanenter Link/' ~ a.ma_rev_id) }}">{{ a.title }}</a></td><td>{{ a.ma_creation_date | date }}</td></tr>
+  {% endfor %}</tbody>
+</table>
+{% endif %}
+{% endblock %}

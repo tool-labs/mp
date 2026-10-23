@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block heading %}Wartungsseiten{% endblock %}
+{% block content %}
+<ul class="links">
+  <li><a href="{{ url_for('maintenance.former_mentors') }}">Ex-Mentoren, die nicht ausgetragen wurden</a></li>
+  <li><a href="{{ url_for('maintenance.unset_type') }}">Betreuungen ohne Aufnahmetyp (Wunschmentor/Normal)</a></li>
+  <li><a href="{{ url_for('maintenance.short') }}">Sehr kurze Betreuungen (unter 24 Stunden)</a></li>
+  <li><a href="{{ url_for('maintenance.history') }}">Betreuungen im zeitlichen Verlauf</a></li>
+</ul>
+{% endblock %}

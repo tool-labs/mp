@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% from "macros.html" import csrf with context %}
+{% set v = form or {} %}
+{% block title %}Mentor {{ mentor.mentor_user_name }} bearbeiten{% endblock %}
+{% block heading %}Mentor <em>{{ mentor.mentor_user_name }}</em> bearbeiten{% endblock %}
+{% block content %}
+<p><a href="{{ url_for('mentors.detail', mentor_id=mentor.mentor_user_id) }}">‹ Zurück zum Mentor</a></p>
+<form method="post" class="form">
+  {{ csrf() }}
+  <label>Benutzername <input type="text" name="user_name" required value="{{ v.user_name if form else mentor.mentor_user_name }}"></label>
+  <label>Eintritt <input type="date" name="date_in" value="{{ v.date_in if form else (mentor.mentor_in or '') }}"></label>
+  <label>Austritt <small>(leer = aktiver Mentor)</small>
+    <input type="date" name="date_out" value="{{ v.date_out if form else (mentor.mentor_out or '') }}"></label>
+  {% set barnstar = (v.barnstar == '1') if form else mentor.mentor_has_barnstar %}
+  <label class="check"><input type="checkbox" name="barnstar" value="1"{% if barnstar %} checked{% endif %}> Order of Mentoring</label>
+  {% set level = (v.award | int) if form else mentor.mentor_award_level %}
+  <label>Auszeichnung
+    <select name="award">
+      {% for name, threshold in awards %}
+        <option value="{{ loop.index0 }}"{% if loop.index0 == level %} selected{% endif %}>{{ name }}{% if threshold %} (ab {{ threshold }} Betreuungen){% endif %}</option>
+      {% endfor %}
+    </select></label>
+  <label>Anmerkung <textarea name="remark" rows="4" maxlength="255">{{ v.remark if form else (mentor.mentor_remark or '') }}</textarea></label>
+  <button type="submit">Speichern</button>
+</form>
+<p class="muted">Ein Mentor gilt genau dann als ehemalig, wenn ein Austrittsdatum eingetragen ist.
+Orden und Auszeichnungen sollten auch <a href="{{ wiki_url('Wikipedia:Mentorenprogramm/Auszeichnungen') }}">in der Wikipedia</a> eingetragen sein.</p>
+{% endblock %}

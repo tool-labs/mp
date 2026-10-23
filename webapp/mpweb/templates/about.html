@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block heading %}Über die Mentorendatenbank{% endblock %}
+{% block content %}
+<p>Die Mentorendatenbank ist eine Python-/Flask-Anwendung mit MariaDB auf
+<a href="https://toolforge.org/">Toolforge</a>. Der Quellcode ist
+<a href="https://github.com/tool-labs/mp">auf GitHub</a> einsehbar und steht unter der
+<a href="{{ wiki_url('MIT-Lizenz') }}">MIT-Lizenz</a> und der
+<a href="{{ wiki_url('GNU Lesser General Public License') }}">GNU LGPL</a>.</p>
+<p>Ursprüngliche Autoren der PHP-Version sind <a href="{{ user_url('ireas') }}">ireas</a> und
+<a href="{{ user_url('Merlissimo') }}">Merlissimo</a>; geistige Väter der Mentorendatenbank sind Ulli Purwin,
+Euku, FreedomWizard, Tilla und andere. Die Daten pflegt der Bot <a href="{{ user_url('SpBot') }}">SpBot</a>.</p>
+
+<h2>Daten</h2>
+<ul>
+  <li>Eine tägliche SQL-Sicherung (ohne Zugangsdaten) liegt unter <a href="/sql-dumps/">/sql-dumps/</a>.</li>
+  <li>Maschinenlesbar: <a href="{{ url_for('api.mentors') }}">/api/mentors</a> und
+      <a href="{{ url_for('api.mentees') }}">/api/mentees</a> (JSON).</li>
+  <li>Alle Zeitangaben der Betreuungen sind in UTC, die Änderungen von Mentees in deutscher Zeit.</li>
+</ul>
+
+<h2>Changelog</h2>
+<dl>
+  <dt>2026: Neue Version</dt>
+  <dd>Umstellung von PHP auf Python/Flask, neues Layout, sicherere Passwörter, korrigierte Wartungsseiten,
+      Statistik-Grafiken als SVG. Alte Links (<code>index.php?action=…</code>) werden weitergeleitet.</dd>
+  <dt>r79–80: Log</dt>
+  <dd>Veränderungen an der Datenbank werden geloggt (<a href="{{ url_for('main.log') }}">Protokoll</a>).</dd>
+  <dt>r74: Menteeübersicht</dt>
+  <dd>Die <a href="{{ url_for('mentees.index') }}">Menteeübersicht</a> („Neulingsbörse“).</dd>
+  <dt>r60–64: „Meißener Vorschläge I“</dt>
+  <dd>Links zu Editcounter und Stimmberechtigung; Anzeige der „realen Aktivität“ von Mentees.</dd>
+  <dt>r56: Co-Mentoren</dt>
+  <dd>Co-Mentoren werden angezeigt.</dd>
+</dl>
+{% endblock %}

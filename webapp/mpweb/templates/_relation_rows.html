@@ -1,0 +1,10 @@
+{% from "macros.html" import mentor_link, mentee_link, relation_edit_link with context %}
+{% for r in relations %}
+  <tr><td>{{ r.mm_start | datetime }}</td><td>{{ r.mm_stop | datetime }}</td>
+    <td>{{ mentee_link(r.mentee_user_id, r.mentee_user_name) }}</td>
+    <td>{{ mentor_link(r.mentor_user_id, r.mentor_user_name) }}</td>
+    {% if with_duration %}<td class="num">{{ r.duration }}</td>{% endif %}
+    {% if is_editor %}<td>{{ relation_edit_link(r.mentee_user_id, r.mentor_user_id, r.mm_start) }}</td>{% endif %}</tr>
+{% else %}
+  <tr><td colspan="6"><em>Keine – alles in Ordnung.</em></td></tr>
+{% endfor %}

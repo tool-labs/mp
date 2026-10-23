@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block heading %}Änderungsprotokoll{% endblock %}
+{% block content %}
+<p>Änderungen an der Datenbank über diese Oberfläche, neueste zuerst.</p>
+<div class="table-wrap">
+<table class="data">
+  <thead><tr><th>ID</th><th>Zeit (UTC)</th><th>Benutzer</th><th>Aktion</th><th>Betroffen</th><th>Kommentar</th></tr></thead>
+  <tbody>
+  {% for e in entries %}
+    <tr><td class="num">{{ e.log_id }}</td><td>{{ e.log_date | datetime }}</td><td>{{ e.log_user_name }}</td>
+        <td><code>{{ e.log_type }}</code></td><td class="num">{{ e.log_target or '' }}</td><td>{{ e.log_comment }}</td></tr>
+  {% else %}
+    <tr><td colspan="6"><em>Keine Einträge.</em></td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+<nav class="pager">
+  {% if page > 1 %}<a href="{{ url_for('main.log', seite=page - 1) }}">‹ Neuere</a>{% endif %}
+  {% if has_next %}<a href="{{ url_for('main.log', seite=page + 1) }}">Ältere ›</a>{% endif %}
+</nav>
+{% endblock %}

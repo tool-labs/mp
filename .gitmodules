@@ -1,3 +1,0 @@
-[submodule "web/include/libchart"]
-	path = web/include/libchart
-	url = https://github.com/euku/libchart

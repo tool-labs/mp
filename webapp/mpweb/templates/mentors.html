@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% from "macros.html" import mentor_link with context %}
+{% block heading %}{{ 'Alle Mentoren' if include_former else 'Aktive Mentoren' }}{% endblock %}
+{% block content %}
+<p class="toolbar">
+  {% if include_former %}
+    <a href="{{ url_for('mentors.index') }}">Nur aktive Mentoren anzeigen</a>
+  {% else %}
+    <a href="{{ url_for('mentors.index', ehemalige=1) }}">Auch ehemalige Mentoren anzeigen</a>
+  {% endif %}
+  <span class="muted">{{ mentors | length }} Mentoren · Spaltenköpfe zum Sortieren anklicken</span>
+</p>
+<div class="table-wrap">
+<table class="data sortable">
+  <thead><tr>
+    <th>Benutzername</th><th data-type="date">Eintritt</th><th data-type="date">Austritt</th>
+    <th data-type="num">Auszeichnung</th><th data-type="num">Abgeschlossene Mentees</th><th data-type="num">Aktive Mentees</th>
+  </tr></thead>
+  <tbody>
+  {% for m in mentors %}
+    <tr>
+      <td>{{ mentor_link(m.mentor_user_id, m.mentor_user_name, m.mentor_out) }}
+          {% if m.mentor_pause %}<span class="badge" title="Laut WP:Mentorenprogramm pausiert">Pause</span>{% endif %}</td>
+      <td>{{ m.mentor_in | date }}</td>
+      <td>{{ m.mentor_out | date }}</td>
+      <td data-sort="{{ m.mentor_award_level }}">
+        {% if m.mentor_award_level %}<span class="award award-{{ m.mentor_award_level }}">{{ m.mentor_award_level | award }}</span>{% endif %}
+        {% if m.award_due %}<abbr title="Hier ist wahrscheinlich schon die nächste Auszeichnung fällig">+++</abbr>{% endif %}
+        {% if m.mentor_has_barnstar %}<span class="award award-barnstar" title="Order of Mentoring">OoM</span>{% endif %}
+      </td>
+      <td class="num">{{ m.finished_count }}</td>
+      <td class="num">{{ m.active_count }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

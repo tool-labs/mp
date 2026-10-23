@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block heading %}Statistik{% endblock %}
+{% block content %}
+<p>Im Mentorenprogramm wurden bisher <strong>{{ total.mentees | number }}</strong> Benutzer von insgesamt
+<strong>{{ total.mentors | number }}</strong> Mentoren betreut. Momentan sind <strong>{{ db.mentees }}</strong> Mentees in Betreuung
+und <strong>{{ db.mentors }}</strong> Mentoren aktiv.</p>
+{% if wp.mentors is not none %}
+<p>{% if wp.mentors == db.mentors and wp.mentees == db.mentees %}Es gibt keine Abweichung{% else %}Es gibt eine
+<strong>Abweichung</strong>{% endif %} zu den Wikipedia-Kategorien ({{ wp.mentees }} Mentees, {{ wp.mentors }} Mentoren).</p>
+{% endif %}
+
+<h2>Betreuungsanfänge und -enden pro Kalenderwoche</h2>
+<p>Das müssen nicht zwangsläufig neue Mentees sein, es können auch Wiederaufnahmen sein.</p>
+{% for year, chart in charts %}
+  <figure class="chart-box">
+    {{ chart }}
+    <figcaption>{{ year.year }}: {{ year.starts | number }} Betreuungsanfänge und {{ year.stops | number }} Betreuungsenden.
+      <a href="{{ url_for('maintenance.history', end_time=year.year ~ '-12-31', limit=[year.starts + year.stops, 1] | max) }}">Details</a></figcaption>
+  </figure>
+{% endfor %}
+{% endblock %}

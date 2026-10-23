@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block heading %}Betreuung auswählen{% endblock %}
+{% block content %}
+<p>Auf diese Angaben passen mehrere Betreuungen:</p>
+<ul>
+{% for r in relations %}
+  <li><a href="{{ url_for('relations.edit', mentee_id=r.mm_mentee_id, mentor_id=r.mm_mentor_id, start=r.mm_start) }}">
+    Mentor {{ r.mentor_user_name }}, Mentee {{ r.mentee_user_name }} ({{ r.mm_start | date }} bis {{ r.mm_stop | date('jetzt') }})</a></li>
+{% endfor %}
+</ul>
+{% endblock %}
