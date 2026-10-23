@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% from "macros.html" import mentor_link, mentee_link, relation_edit_link with context %}
+{% block heading %}Betreuungen im zeitlichen Verlauf{% endblock %}
+{% block content %}
+<form method="get" class="toolbar">
+  <label>bis <input type="text" name="end_time" placeholder="JJJJ-MM-TT [hh:mm:ss]" value="{{ end_time.strftime('%Y-%m-%d %H:%M:%S') if end_time else '' }}"></label>
+  <label>Anzahl <input type="number" name="limit" min="1" max="5000" value="{{ limit }}"></label>
+  <button type="submit">Anzeigen</button>
+</form>
+<p>{{ events | length }} Ereignisse{% if events %} von {{ events[-1].event_time | datetime }} bis {{ end_time | datetime('jetzt') }}{% endif %}.
+Fahre mit der Maus über einen Mentor, um alle seine Einträge hervorzuheben.</p>
+<div class="table-wrap">
+<table class="data sticky-head" data-highlight="mentor">
+  <thead><tr><th>Ereignis</th><th>Beginn</th><th>Ende</th><th>Mentee</th><th>Mentor</th>{% if is_editor %}<th></th>{% endif %}</tr></thead>
+  <tbody>
+  {% for e in events %}
+    <tr>
+      <td>{{ 'Beginn' if e.event == 'start' else 'Ende' }}</td>
+      <td{% if e.event != 'start' %} class="dim"{% endif %}>{{ e.mm_start | datetime }}</td>
+      <td{% if e.event != 'stop' %} class="dim"{% endif %}>{{ e.mm_stop | datetime }}</td>
+      <td>{{ mentee_link(e.mm_mentee_id, e.mentee_user_name) }}</td>
+      <td data-mentor="{{ e.mm_mentor_id }}">{{ mentor_link(e.mm_mentor_id, e.mentor_user_name) }}</td>
+      {% if is_editor %}<td>{{ relation_edit_link(e.mm_mentee_id, e.mm_mentor_id, e.mm_start) }}</td>{% endif %}
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% if next_end %}
+<p><a href="{{ url_for('maintenance.history', end_time=next_end.strftime('%Y-%m-%d %H:%M:%S'), limit=limit) }}">{{ limit }} frühere Ereignisse ›</a></p>
+{% endif %}
+{% endblock %}

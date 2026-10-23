@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>{% block title %}{{ self.heading() | striptags }}{% endblock %} – Mentorenprogramm</title>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon-256x256.png') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="{{ url_for('main.index') }}">Mentoren&shy;programm</a>
+  <nav class="main-nav" aria-label="Hauptnavigation">
+    <a href="{{ url_for('mentors.index') }}">Mentoren</a>
+    <a href="{{ url_for('mentees.index') }}">Mentees</a>
+    <a href="{{ url_for('mentees.recent_changes') }}">Änderungen</a>
+    <a href="{{ url_for('maintenance.index') }}">Wartung</a>
+    <a href="{{ url_for('main.stats') }}">Statistik</a>
+  </nav>
+  <form class="quick-search" action="{{ url_for('main.search') }}" method="get" role="search">
+    <input type="search" name="q" placeholder="Benutzer suchen …" aria-label="Benutzer suchen"
+           data-suggest="all" list="quick-suggest" autocomplete="off">
+    <datalist id="quick-suggest"></datalist>
+  </form>
+  <div class="account">
+    {% if g.user %}
+      <span class="who">{{ g.user }}</span>
+      <a href="{{ url_for('auth.change_password') }}">Passwort</a>
+      <form action="{{ url_for('auth.logout') }}" method="post" class="inline">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="link">Abmelden</button>
+      </form>
+    {% else %}
+      <a href="{{ url_for('auth.login', next=request.full_path) }}">Anmelden</a>
+    {% endif %}
+  </div>
+</header>
+
+<div class="layout">
+  <main>
+    <h1>{% block heading %}{% endblock %}</h1>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <p class="flash {{ category }}" role="{{ 'alert' if category == 'error' else 'status' }}">{{ message }}</p>
+      {% endfor %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <aside class="sidebar">
+    {% set counts = sidebar() %}
+    <section class="card">
+      <h2>Übersicht</h2>
+      <table class="compact">
+        <thead><tr><th></th><th><abbr title="Daten dieser Datenbank">DB</abbr></th>
+          <th><abbr title="Mitglieder der Wikipedia-Kategorien">WP</abbr></th></tr></thead>
+        <tbody>
+          <tr><th scope="row"><abbr title="Momentan betreute Mentees">Mentees</abbr></th>
+            <td class="num">{{ counts.db.mentees if counts.db else '?' }}</td>
+            <td class="num">{{ counts.wp.mentees if counts.wp and counts.wp.mentees is not none else '?' }}</td></tr>
+          <tr><th scope="row"><abbr title="Momentan aktive Mentoren">Mentoren</abbr></th>
+            <td class="num">{{ counts.db.mentors if counts.db else '?' }}</td>
+            <td class="num">{{ counts.wp.mentors if counts.wp and counts.wp.mentors is not none else '?' }}</td></tr>
+        </tbody>
+      </table>
+    </section>
+    <section class="card">
+      <h2>Mehr</h2>
+      <ul class="plain">
+        <li><a href="{{ url_for('main.search') }}">Erweiterte Suche</a></li>
+        <li><a href="{{ url_for('main.log') }}">Änderungsprotokoll</a></li>
+        <li><a href="{{ url_for('main.about') }}">Über diese Datenbank</a></li>
+        <li><a href="{{ wiki_url('Wikipedia:Mentorenprogramm') }}">WP:Mentorenprogramm</a></li>
+      </ul>
+    </section>
+  </aside>
+</div>
+
+<footer class="site-footer">
+  Mentorenprogramm der deutschsprachigen Wikipedia auf
+  <a href="https://toolforge.org/">Toolforge</a> ·
+  <a href="https://github.com/tool-labs/mp">Quellcode</a> ·
+  <a href="{{ url_for('main.about') }}">Über</a>
+</footer>
+</body>
+</html>

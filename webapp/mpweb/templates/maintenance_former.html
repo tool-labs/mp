@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% from "macros.html" import mentor_link with context %}
+{% block heading %}Wartung: Ex-Mentoren{% endblock %}
+{% block content %}
+<p>Mentoren, die hier noch kein Austrittsdatum haben, deren Benutzerseite aber nicht mehr in der
+<a href="{{ wiki_url('Kategorie:' ~ category) }}">Kategorie:{{ category }}</a> steht.
+Das kann auch andere Gründe haben, etwa eine Umbenennung.</p>
+<table class="data">
+  <thead><tr><th>Mentor</th><th>Wikipedia</th></tr></thead>
+  <tbody>
+  {% for m in mentors %}
+    <tr><td>{{ mentor_link(m.mentor_user_id, m.mentor_user_name) }}</td><td><a href="{{ user_url(m.mentor_user_name) }}">Benutzerseite</a></td></tr>
+  {% else %}
+    <tr><td colspan="2"><em>Keine – alles in Ordnung.</em></td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

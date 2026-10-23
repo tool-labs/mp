@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block heading %}Wartung: Aufnahmetyp fehlt{% endblock %}
+{% block content %}
+<p>Betreuungen, bei denen noch nicht eingetragen ist, ob sie per Wunschmentor oder „normal“ zustande kamen ({{ relations | length }}).</p>
+<div class="table-wrap"><table class="data">
+  <thead><tr><th>Beginn</th><th>Ende</th><th>Mentee</th><th>Mentor</th>{% if is_editor %}<th></th>{% endif %}</tr></thead>
+  <tbody>{% set with_duration = false %}{% include "_relation_rows.html" %}</tbody>
+</table></div>
+{% endblock %}

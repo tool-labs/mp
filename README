@@ -1,8 +1,0 @@
-* Requirements
-  - Python:
-     - oursql
-     - jinja2
-  - MySQL
-
-* Bot source code
-  - https://github.com/euku/spbot/tree/spbot/scripts/userscripts

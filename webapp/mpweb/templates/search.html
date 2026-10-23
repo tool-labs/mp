@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% from "macros.html" import mentor_link, mentee_link with context %}
+{% block heading %}Suche{% endblock %}
+{% block content %}
+<p>Passt ein Benutzer genau auf den Suchbegriff, wird er direkt angezeigt. Ansonsten wird der Suchbegriff als
+<a href="{{ wiki_url('Regulärer Ausdruck') }}">regulärer Ausdruck</a> interpretiert (z. B. <code>^Ab</code> oder <code>bot$</code>).</p>
+<form method="get" class="form search-form">
+  <input type="hidden" name="s" value="1">
+  <label>Suchmuster <input type="search" name="q" value="{{ query }}" data-suggest-from="where" list="search-suggest" autocomplete="off" autofocus>
+    <datalist id="search-suggest"></datalist></label>
+  <label>Suche nach
+    <select name="where" id="where">{% for value, label in choices.items() %}
+      <option value="{{ value }}"{% if value == where %} selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select></label>
+  <fieldset><legend>Zeige</legend>
+    <label class="check"><input type="checkbox" name="active"{% if active %} checked{% endif %}> aktive (Mentees in Betreuung, Mentoren ohne Austritt)</label>
+    <label class="check"><input type="checkbox" name="inactive"{% if inactive %} checked{% endif %}> ehemalige</label>
+  </fieldset>
+  <button type="submit">Suchen</button>
+</form>
+
+{% macro result_table(rows, kind) %}
+  {% if not rows %}<p><em>Keine Treffer.</em></p>{% else %}
+  <p class="muted">{{ rows | length }} Treffer</p>
+  <table class="data sortable">
+    <thead><tr><th>Benutzername</th><th data-type="date">Eintritt</th><th data-type="date">Austritt</th></tr></thead>
+    <tbody>{% for r in rows %}
+      {% if kind == 'mentor' %}
+        <tr><td>{{ mentor_link(r.mentor_user_id, r.mentor_user_name, r.mentor_out) }}</td><td>{{ r.mentor_in | date }}</td><td>{{ r.mentor_out | date }}</td></tr>
+      {% else %}
+        <tr><td>{{ mentee_link(r.mentee_user_id, r.mentee_user_name) }}</td><td>{{ r.mentee_in | date }}</td><td>{{ r.mentee_out | date('in Betreuung' if r.active_count else '–') }}</td></tr>
+      {% endif %}
+    {% endfor %}</tbody>
+  </table>
+  {% endif %}
+{% endmacro %}
+
+{% if query %}
+  {% if mentors is not none %}<h2>Mentoren</h2>{{ result_table(mentors, 'mentor') }}{% endif %}
+  {% if mentees is not none %}<h2>Mentees</h2>{{ result_table(mentees, 'mentee') }}{% endif %}
+{% endif %}
+{% endblock %}

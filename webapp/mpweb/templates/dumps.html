@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block heading %}SQL-Sicherungen{% endblock %}
+{% block content %}
+<p>Tägliche Sicherungen der Datenbank (MariaDB-Dump, bzip2-komprimiert, ohne Zugangsdaten). Sie werden 31 Tage aufbewahrt.</p>
+<ul>
+{% for name, size in files %}
+  <li><a href="{{ url_for('main.dump_file', name=name) }}">{{ name }}</a> <span class="muted">({{ (size / 1024) | round | int | number }} KiB)</span></li>
+{% else %}
+  <li><em>Zurzeit keine Sicherungen vorhanden.</em></li>
+{% endfor %}
+</ul>
+{% endblock %}

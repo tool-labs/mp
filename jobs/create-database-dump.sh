@@ -1,18 +1,17 @@
 #!/bin/bash
+# Daily public SQL dump. Runs several times per night (see toolforge_jobs.yaml)
+# and does nothing if today's dump already exists and looks complete.
+# The table mentor_auth (password hashes) is never included.
+set -euo pipefail
 
-OUTPUT_DIR="/data/project/mp/public_html/sql-dumps"
-TODAY=`date +%F`
-OUTPUT_FILE="wpmp-$TODAY.sql.bz2"
+DB="s51391__mp"
+OUTPUT_DIR="$HOME/public_html/sql-dumps"
+OUTPUT_FILE="$OUTPUT_DIR/wpmp-$(date +%F).sql.bz2"
 
-# We will run this multiple time. If the dump already exists, skip.
-if [ ! -f "$OUTPUT_DIR/$OUTPUT_FILE" ]; then
-  # file already exists
-  DUMP_SIZE=$(du --bytes "$OUTPUT_DIR/$OUTPUT_FILE" | awk '{print $1}')
-  
-  if [ "$DUMP_SIZE" -gt 1024 ]; then
-    # file is big enough
-    exit 1
-  fi
+if [ -f "$OUTPUT_FILE" ] && [ "$(stat -c %s "$OUTPUT_FILE")" -gt 1024 ]; then
+  exit 0
 fi
 
-mariadb-dump --defaults-file=~/replica.my.cnf --host=tools.db.svc.wikimedia.cloud "s51391__mp" | bzip2 > "$OUTPUT_DIR/$OUTPUT_FILE"
+mariadb-dump --defaults-file="$HOME/replica.my.cnf" --host=tools.db.svc.wikimedia.cloud \
+  --ignore-table="$DB.mentor_auth" "$DB" | bzip2 > "$OUTPUT_FILE.tmp"
+mv "$OUTPUT_FILE.tmp" "$OUTPUT_FILE"

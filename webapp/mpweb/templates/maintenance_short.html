@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block heading %}Wartung: Sehr kurze Betreuungen{% endblock %}
+{% block content %}
+<p>Abgeschlossene Betreuungen, die kürzer als 24 Stunden gedauert haben – oft ein Hinweis auf Fehleinträge.</p>
+<div class="table-wrap"><table class="data">
+  <thead><tr><th>Beginn</th><th>Ende</th><th>Mentee</th><th>Mentor</th><th>Dauer [hh:mm:ss]</th>{% if is_editor %}<th></th>{% endif %}</tr></thead>
+  <tbody>{% set with_duration = true %}{% include "_relation_rows.html" %}</tbody>
+</table></div>
+{% endblock %}

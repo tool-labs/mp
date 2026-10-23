@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block heading %}Mentorendatenbank{% endblock %}
+{% block content %}
+<p class="lead">Die Datenbank des <a href="{{ wiki_url('Wikipedia:Mentorenprogramm') }}">Mentorenprogramms</a>
+der deutschsprachigen Wikipedia: Mentoren, ihre Mentees und die Geschichte aller Betreuungen seit 2007.</p>
+
+<div class="tiles">
+  <a class="tile" href="{{ url_for('mentors.index') }}"><strong>Mentoren</strong><span>Alle aktiven (und ehemaligen) Mentoren mit Auszeichnungen und Betreuungszahlen</span></a>
+  <a class="tile" href="{{ url_for('mentees.index') }}"><strong>Mentees</strong><span>Alle momentan betreuten Neulinge mit Ampelstatus</span></a>
+  <a class="tile" href="{{ url_for('mentees.recent_changes') }}"><strong>Änderungen von Mentees</strong><span>Die letzten Bearbeitungen aller betreuten Neulinge</span></a>
+  <a class="tile" href="{{ url_for('maintenance.index') }}"><strong>Wartung</strong><span>Ex-Mentoren, fehlende Aufnahmetypen, kurze Betreuungen, Verlauf</span></a>
+  <a class="tile" href="{{ url_for('main.stats') }}"><strong>Statistik</strong><span>Betreuungsanfänge und -enden pro Woche und Jahr</span></a>
+  <a class="tile" href="{{ url_for('main.search') }}"><strong>Suche</strong><span>Mentoren und Mentees nach Namen oder regulärem Ausdruck finden</span></a>
+  <a class="tile" href="{{ url_for('main.log') }}"><strong>Protokoll</strong><span>Die letzten Änderungen an dieser Datenbank</span></a>
+</div>
+
+<p class="muted">Neue Mentees und Betreuungsenden trägt <a href="{{ user_url('SpBot') }}">SpBot</a>
+automatisch aus der Kategorie „Benutzer:Mentee“ ein. Angemeldete Mentoren können Daten korrigieren.</p>
+{% endblock %}

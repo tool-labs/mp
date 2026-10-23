@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% from "macros.html" import csrf with context %}
+{% block title %}Mentee {{ mentee.mentee_user_name }} bearbeiten{% endblock %}
+{% block heading %}Mentee <em>{{ mentee.mentee_user_name }}</em> bearbeiten{% endblock %}
+{% block content %}
+<p><a href="{{ url_for('mentees.detail', mentee_id=mentee.mentee_user_id) }}">‹ Zurück zum Mentee</a></p>
+<form method="post" class="form">
+  {{ csrf() }}
+  <label>Benutzername <input type="text" name="user_name" required value="{{ form.user_name if form else mentee.mentee_user_name }}"></label>
+  <label>Anmerkung <textarea name="remark" rows="4" maxlength="255">{{ form.remark if form else (mentee.mentee_remark or '') }}</textarea></label>
+  <button type="submit">Speichern</button>
+</form>
+<p class="muted">Betreuungen (Mentor, Beginn, Ende) bearbeitest du auf der Mentee-Seite über „±“.</p>
+{% endblock %}

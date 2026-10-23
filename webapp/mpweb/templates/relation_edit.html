@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% from "macros.html" import csrf, mentee_link with context %}
+{% set v = form or {} %}
+{% macro dt(value) %}{{ value.strftime('%Y-%m-%d %H:%M:%S') if value else '' }}{% endmacro %}
+{% block heading %}{{ 'Neue Betreuung' if new else 'Betreuung bearbeiten' }}{% endblock %}
+{% block content %}
+<div class="columns">
+<form method="post" class="form" id="relation-form">
+  {{ csrf() }}
+  <p>Mentee: {{ mentee_link(rel.mm_mentee_id, rel.mentee_user_name) }}</p>
+  {% set selected = (v.mentor_id | int) if form else rel.mm_mentor_id %}
+  <label>Mentor
+    <select name="mentor_id" required>
+      {% if new %}<option value="">– bitte wählen –</option>{% endif %}
+      {% for m in mentors %}
+        <option value="{{ m.mentor_user_id }}"{% if m.mentor_user_id == selected %} selected{% endif %}{% if m.mentor_out %} class="former"{% endif %}>{{ m.mentor_user_name }}{% if m.mentor_out %} (ehemalig){% endif %}</option>
+      {% endfor %}
+    </select></label>
+  <label>Beginn <small>(UTC, JJJJ-MM-TT hh:mm:ss)</small>
+    <span class="with-buttons"><input type="text" name="start" id="start" required value="{{ v.start if form else dt(rel.mm_start) }}" pattern="\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(:\d{2})?">
+    <button type="button" class="small" data-now="start">jetzt</button></span></label>
+  <label>Ende <small>(leer = Betreuung läuft noch)</small>
+    <span class="with-buttons"><input type="text" name="stop" id="stop" value="{{ v.stop if form else dt(rel.mm_stop) }}" pattern="\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(:\d{2})?">
+    <button type="button" class="small" data-now="stop">jetzt</button>
+    <button type="button" class="small" data-clear="stop">läuft noch</button></span></label>
+  {% set mm_type = (v.mm_type | int) if form else rel.mm_type %}
+  <label>Aufnahmetyp
+    <select name="mm_type">{% for value, (short, label) in mm_types.items() %}
+      <option value="{{ value }}"{% if value == mm_type %} selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select></label>
+  <button type="submit">{{ 'Anlegen' if new else 'Speichern' }}</button>
+</form>
+<div class="note">
+  <strong>Hinweise</strong>
+  <ul>
+    <li>Lass das Ende leer, wenn die Betreuung noch andauert.</li>
+    <li>Wird der Mentee jetzt von einem anderen Mentor betreut, ändere nicht einfach den Mentor,
+        sondern beende diese Betreuung und lege eine neue an.</li>
+    <li>In der Versionsgeschichte unten kannst du Zeitpunkte als Beginn oder Ende übernehmen.</li>
+  </ul>
+</div>
+</div>
+
+{% if not new %}
+<form method="post" action="{{ url_for('relations.delete') }}" class="danger-zone"
+      data-confirm="Diese Betreuung wirklich löschen? Der Mentee selbst bleibt erhalten.">
+  {{ csrf() }}
+  <input type="hidden" name="mentee_id" value="{{ rel.mm_mentee_id }}">
+  <input type="hidden" name="mentor_id" value="{{ rel.mm_mentor_id }}">
+  <input type="hidden" name="start" value="{{ dt(rel.mm_start) }}">
+  <button type="submit" class="danger">Diese Betreuung löschen</button>
+</form>
+{% endif %}
+
+<h2>Versionsgeschichte der Benutzerseite
+  (<a href="{{ wiki_url('Benutzer:' ~ rel.mentee_user_name, action='history') }}">in der Wikipedia</a>)</h2>
+{% if history is none %}
+  <p class="muted">Die Versionsgeschichte konnte nicht geladen werden.</p>
+{% else %}
+{% if history | length >= 50 %}<p class="muted">Es werden nur die letzten 50 Versionen angezeigt.</p>{% endif %}
+<div class="table-wrap">
+<table class="data">
+  <thead><tr><th>Übernehmen als</th><th>Zeit (UTC)</th><th>Bearbeiter</th><th>Kommentar</th></tr></thead>
+  <tbody>
+  {% for e in history %}
+    <tr>
+      <td class="nowrap"><button type="button" class="small" data-set="start" data-value="{{ e.iso }}">Beginn</button>
+          <button type="button" class="small" data-set="stop" data-value="{{ e.iso }}">Ende</button></td>
+      <td class="nowrap">{{ e.rev_timestamp | datetime }}</td>
+      <td{% if e.highlight_user %} class="highlight"{% endif %}>{{ e.actor_name }}</td>
+      <td{% if e.highlight_comment %} class="highlight"{% endif %}>{{ e.comment_text }}</td>
+    </tr>
+  {% else %}
+    <tr><td colspan="4"><em>Keine Versionen gefunden.</em></td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,2 +1,9 @@
 *.pyc
+__pycache__/
 .idea/
+.venv/
+.pytest_cache/
+.coverage
+.ruff_cache/
+# local overrides of the old PHP version
+db_settings.ini

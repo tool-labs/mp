@@ -1,0 +1,23 @@
+{% macro mentor_link(id, name, former=false) -%}
+  <a href="{{ url_for('mentors.detail', mentor_id=id) }}"{% if former %} class="former"{% endif %}>{{ name }}</a>
+{%- endmacro %}
+
+{% macro mentee_link(id, name) -%}
+  <a href="{{ url_for('mentees.detail', mentee_id=id) }}">{{ name }}</a>
+{%- endmacro %}
+
+{% macro relation_edit_link(mentee_id, mentor_id, start=none, label='bearbeiten') -%}
+  {% if is_editor %}<a href="{{ url_for('relations.edit', mentee_id=mentee_id, mentor_id=mentor_id, start=start) }}">{{ label }}</a>{% endif %}
+{%- endmacro %}
+
+{% macro type_legend() -%}
+  <dl class="legend">
+    <dt>W</dt><dd>Der Mentee hatte sich diesen Mentor gewünscht.</dd>
+    <dt>N</dt><dd>Der Mentor hat den Mentee „normal“ (zufällig) übernommen.</dd>
+    <dt>?</dt><dd>Der Aufnahmetyp ist noch nicht gesetzt.</dd>
+  </dl>
+{%- endmacro %}
+
+{% macro csrf() -%}
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+{%- endmacro %}

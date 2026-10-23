@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block heading %}Letzte Änderungen von Mentees{% endblock %}
+{% block content %}
+<p class="toolbar">
+  <span>{{ count }} Änderungen{% if start %} ab {{ start | datetime }}{% endif %}{% if end %} bis {{ end | datetime }} (UTC){% endif %}</span>
+  {% for n in (50, 100, 250, 500) %}<a href="{{ url_for('mentees.recent_changes', limit=n) }}"{% if n == limit %} aria-current="true"{% endif %}>{{ n }}</a>{% endfor %}
+</p>
+{% for label, changes in groups %}
+  <h2 class="day">{{ label }}</h2>
+  <ul class="rc">
+  {% for c in changes %}
+    <li data-actor="{{ c.actor_id }}">
+      {% if c.kind == 'edit' %}
+        (<a href="{{ c.diff_url }}">Unterschied</a> | <a href="{{ c.history_url }}">Versionen</a>)
+        {% if c.minor %}<abbr class="flag" title="Kleine Änderung">K</abbr>{% endif %}
+        {% if c.new %}<abbr class="flag" title="Neue Seite">N</abbr>{% endif %}
+        <a href="{{ c.url }}">{{ c.title }}</a>; {{ c.timestamp.strftime('%H:%M:%S') }}
+        <span class="bytes {{ c.byte_class }}" title="{{ c.new_length | number }} Bytes nach der Änderung">({{ '+' if c.byte_diff > 0 }}{{ c.byte_diff | number }})</span>
+        <a class="actor" href="{{ user_url(c.actor_name) }}">{{ c.actor_name }}</a>
+        {% if c.comment %}<span class="comment">({{ c.comment }})</span>{% endif %}
+      {% else %}
+        (<a href="{{ c.log_url }}">{{ c.log_name }}</a>) {{ c.timestamp.strftime('%H:%M:%S') }}
+        <a class="actor" href="{{ user_url(c.actor_name) }}">{{ c.actor_name }}</a>
+        {% if c.kind == 'move' %}verschob die Seite <a href="{{ c.url }}">{{ c.title }}</a>{% if c.move_target %} nach <a href="{{ wiki_url(c.move_target) }}">{{ c.move_target }}</a>{% endif %}
+        {% elif c.kind == 'newusers' %}hat das Benutzerkonto angelegt
+        {% elif c.kind == 'upload' %}lud <a href="{{ c.url }}">{{ c.title }}</a> hoch
+        {% else %}<a href="{{ c.url }}">{{ c.title }}</a>{% endif %}
+        {% if c.comment %}<span class="comment">({{ c.comment }})</span>{% endif %}
+      {% endif %}
+    </li>
+  {% endfor %}
+  </ul>
+{% else %}
+  <p><em>Keine Änderungen gefunden.</em></p>
+{% endfor %}
+{% if next_end %}
+<p><a href="{{ url_for('mentees.recent_changes', end_time=next_end, limit=limit) }}">{{ limit }} frühere Änderungen ›</a></p>
+{% endif %}
+<p class="muted">Die Daten werden alle drei Minuten aktualisiert und 30 Tage lang aufbewahrt.</p>
+{% endblock %}
