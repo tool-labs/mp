@@ -1,8 +1,8 @@
 """Queries on the tool's own database (ToolsDB ``s51391__mp``).
 
-The tables ``mentor``, ``mentee`` and ``mentee_mentor`` are shared with the
-SpBot ``mp-helper.py`` bot (via ``pyapi/dewpmp.py``). Their columns must stay
-compatible, see ``sql/README.md``.
+``mentor``, ``mentee`` and ``mentee_mentor`` are written by the web interface
+and the job ``sync-mentees``; SpBot only reads them through API v1
+(``docs/api.md``), so the JSON there must stay compatible.
 """
 import contextlib
 import datetime as dt
@@ -386,7 +386,7 @@ class MPRepository(BaseRepository):
 
     @contextlib.contextmanager
     def transaction(self):
-        """Commit on success, roll back on error (a no-op on the MyISAM tables)."""
+        """Commit on success, roll back on error."""
         self.conn.begin()
         try:
             yield

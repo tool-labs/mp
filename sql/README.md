@@ -15,9 +15,9 @@ mariadb --defaults-file=~/replica.my.cnf -h tools.db.svc.wikimedia.cloud s51391_
 
 | Table | Written by | Notes |
 |-------|-----------|-------|
-| `mentor` | bot, web | one row per mentor (`mentor_user_id` = dewiki user id); `mentor_out IS NULL` = active |
-| `mentee` | bot, web | one row per mentee (dewiki user id) |
-| `mentee_mentor` | bot, web | one row per mentoring; `mm_stop IS NULL` = running; `mm_type` 0 = unset, 1 = normal, 2 = wish mentor |
+| `mentor` | web, job `sync-mentees` | one row per mentor (`mentor_user_id` = dewiki user id); `mentor_out IS NULL` = active |
+| `mentee` | web, job `sync-mentees` | one row per mentee (dewiki user id) |
+| `mentee_mentor` | web, job `sync-mentees` | one row per mentoring; `mm_stop IS NULL` = running; `mm_type` 0 = unset, 1 = normal, 2 = wish mentor |
 | `comentors` | job `refresh-comentors` | pairs from `{{Mentor}}` on WP:MP |
 | `mentor_auth` | web | login hashes (never in public dumps) |
 | `logging` | web | change log |
@@ -27,8 +27,5 @@ mariadb --defaults-file=~/replica.my.cnf -h tools.db.svc.wikimedia.cloud s51391_
 
 ## Compatibility with SpBot
 
-`pyapi/dewpmp.py` opens its connection with autocommit **off** and never commits.
-This only works because `mentor`, `mentee` and `mentee_mentor` are **MyISAM**.
-Do not convert these three tables to InnoDB (or rename/drop their columns) before the bot
-commits its transactions – see `docs/bot-todo.md`. `tests/test_integration.py::test_bot_api_still_works`
-runs the real `dewpmp.py` against the migrated schema.
+SpBot has no database access any more; it reads API v1 (`docs/api.md`). Changes to the tables only
+need to keep that JSON stable (`tests/test_integration.py::test_api_v1`).

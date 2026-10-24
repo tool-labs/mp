@@ -6,7 +6,6 @@ markers = ["db: needs a MariaDB server (set MP_TEST_DB_HOST)"]
 [tool.ruff]
 line-length = 120
 target-version = "py311"
-extend-exclude = ["pyapi"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B"]

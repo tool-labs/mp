@@ -38,49 +38,24 @@ def test_migration_moves_passwords_out_of_mentor(mp_db):
     auth_rows = query(mp_db, "SELECT * FROM mentor_auth")
     assert [r["ma_mentor_id"] for r in auth_rows] == [101]
     assert auth_rows[0]["ma_legacy_hash"] and auth_rows[0]["ma_password_hash"] is None
-    assert query(mp_db, "SELECT version FROM schema_migrations") == [{"version": 1}]
+    assert query(mp_db, "SELECT version FROM schema_migrations ORDER BY 1") == [{"version": 1}, {"version": 2}]
 
 
-def test_migration_keeps_bot_tables_myisam(mp_db):
-    engines = {r["TABLE_NAME"]: r["ENGINE"] for r in query(mp_db, """
-        SELECT TABLE_NAME, ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE()""")}
+def test_migration_converts_bot_tables_to_innodb(mp_db):
+    tables = {r["TABLE_NAME"]: r for r in query(mp_db, """
+        SELECT TABLE_NAME, ENGINE, TABLE_COLLATION FROM information_schema.TABLES
+        WHERE TABLE_SCHEMA = DATABASE()""")}
+    for table in ("mentor", "mentee", "mentee_mentor", "comentors", "logging", "mentor_auth"):
+        assert tables[table]["ENGINE"] == "InnoDB", table
     for table in ("mentor", "mentee", "mentee_mentor"):
-        assert engines[table] == "MyISAM", table
-    assert engines["comentors"] == engines["logging"] == engines["mentor_auth"] == "InnoDB"
+        assert tables[table]["TABLE_COLLATION"] == "utf8mb4_unicode_ci", table
 
 
-def test_bot_api_still_works(databases, tmp_path, monkeypatch):
-    """Run the unchanged pyapi/dewpmp.py (used by SpBot's mp-helper.py) on the migrated schema."""
-    import sys
-
-    from conftest import ROOT
-    s = databases["settings"]
-    if s["port"] != 3306:
-        pytest.skip("dewpmp.py only supports port 3306")
-    cnf = tmp_path / "replica.mp-db.cnf"
-    cnf.write_text(f"[client]\nuser={s['user']}\npassword={s['password']}\nhost={s['host']}\n"
-                   f"database={s['mp_db']}\nwp_host={s['host']}\n")
-    monkeypatch.syspath_prepend(str(ROOT / "pyapi"))
-    import mp_db_config
-    monkeypatch.setattr(mp_db_config, "db_conf_file", str(cnf))
-    import dewpmp
-
-    bot = dewpmp.Database(wp_database=s["wiki_db"])
-    assert {m["user_name"] for m in bot.get_all_mentors()} == {"Alice", "Bob", "Carol", "Dave"}
-    assert {m["mentee_user_name"] for m in bot.get_all_mentees()} == {"Neuling1", "Neuling2", "Alt Neuling"}
-    assert {m["item"] for m in bot.get_mw_cat_members("Benutzer:Mentee")} == \
-        {"Neuling1", "Neuling2", "Alt_Neuling", "Neu_Mentee"}
-    bot.add_mentee("Bob", "Neu Mentee", mentoring_type=1)
-    bot.stop_all_current_mentoring(204)
-    assert bot.get_overall_mentee_number() == 5
-    bot.conn.close()   # the bot never commits; MyISAM must keep the writes anyway
-
-    mp = databases["mp"]
-    rows = query(mp, "SELECT mm_mentor_id, mm_stop, mm_type FROM mentee_mentor WHERE mm_mentee_id = 300")
-    assert rows == [{"mm_mentor_id": 102, "mm_stop": None, "mm_type": 1}]
-    assert query(mp, "SELECT mm_stop IS NOT NULL AS stopped FROM mentee_mentor WHERE mm_mentee_id = 204") == \
-        [{"stopped": 1}]
-    del sys.modules["dewpmp"]
+def test_mentee_names_with_4_byte_characters(databases):
+    mp, _ = repos(databases)
+    assert mp.ensure_mentee(999, "Neuling 🙂") == "new"
+    assert query(databases["mp"], "SELECT mentee_user_name FROM mentee WHERE mentee_user_id = 999") == \
+        [{"mentee_user_name": "Neuling 🙂"}]
 
 
 # ------------------------------------------------------------------ public pages

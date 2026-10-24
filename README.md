@@ -19,7 +19,6 @@ writes the lists on the wiki from the read-only [API v1](docs/api.md).
 | `webapp/mpweb/sync.py` | mentee sync with `Kategorie:Benutzer:Mentee` (job `sync-mentees`) |
 | `sql/` | schema (`000_initial_schema.sql`) and migrations (`migrations/`) – see `sql/README.md` |
 | `jobs/` | Toolforge jobs (`toolforge_jobs.yaml`) and shell scripts |
-| `pyapi/` | old database API of SpBot – only until the bot runs on API v1, see `docs/deployment.md` |
 | `tests/` | pytest suite (unit tests + integration tests against MariaDB) |
 | `docs/` | deployment notes, API v1 (`api.md`) and the list of planned bot improvements |
 
