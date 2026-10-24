@@ -44,6 +44,14 @@ class WikiRepository(BaseRepository):
     def user_id(self, user_name):
         return self.scalar("SELECT user_id FROM user WHERE user_name = %s", (user_name,))
 
+    def user_ids(self, user_names):
+        """Return ``{user name: user id}`` for the existing users among *user_names*."""
+        result = {}
+        for chunk in _chunks(set(user_names)):
+            for row in self.all("SELECT user_id, user_name FROM user WHERE user_name IN %s", (chunk,)):
+                result[to_text(row["user_name"])] = int(row["user_id"])
+        return result
+
     def edit_count(self, user_id):
         return self.scalar("SELECT user_editcount FROM user WHERE user_id = %s", (user_id,))
 

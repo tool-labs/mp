@@ -17,6 +17,14 @@
   emails: onfailure
   filelog-stdout: logs/refresh-comentors.out
   filelog-stderr: logs/refresh-comentors.err
+# mentorings from Kategorie:Benutzer:Mentee; SpBot's mp-helper (:00/:20/:40) writes the wiki lists afterwards
+- name: sync-mentees
+  command: sh ~/mp/jobs/run-python-job.sh sync-mentees
+  image: python3.11
+  schedule: "15,35,55  *   *   *   *"
+  emails: onfailure
+  filelog-stdout: logs/sync-mentees.out
+  filelog-stderr: logs/sync-mentees.err
 ##############################################################################
 ## Daily jobs
 - name: daily-log-cleanup

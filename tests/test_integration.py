@@ -3,7 +3,7 @@ import datetime as dt
 
 import pytest
 from conftest import ALICE_PASSWORD, NOW, csrf_from
-from mpweb import auth, jobs
+from mpweb import auth, jobs, sync
 from mpweb.db import connect
 from mpweb.repository import MPRepository
 from mpweb.wiki import WikiRepository
@@ -355,3 +355,72 @@ def test_refresh_comentors(databases):
     assert jobs.refresh_comentors(mp, fetch=lambda: (8, "{{Mentor|Mentor=Bob}}")) is True
     assert query(conn, "SELECT COUNT(*) AS n FROM comentors") == [{"n": 0}]
     assert query(conn, "SELECT COUNT(*) AS n FROM mentor WHERE mentor_pause = 1") == [{"n": 0}]
+
+
+# ------------------------------------------------------------------ mentee sync job and API v1 (SpBot)
+
+def test_sync_mentees(databases):
+    mp, wiki = repos(databases)
+    with databases["wiki"].cursor() as cur:      # Alt Neuling (204) left the category
+        cur.execute("DELETE FROM categorylinks WHERE cl_from = 5204")
+    pages = {"Benutzer:Neu Mentee": {"text": "#WEITERLEITUNG [[en:User:Neu Mentee]]\n"
+                                             "{{WP:Mentorenprogramm/Hinweis Mentorat|Mentor=Dave}}",
+                                     "redirect": "en:User:Neu Mentee", "target_text": None}}
+    now = NOW.replace(microsecond=0)
+    result = sync.sync_mentees(mp, wiki, fetch=lambda titles: {t: pages.get(t) for t in titles}, now=now)
+    assert result.started == [("Neu Mentee", "Dave")] and result.stopped == [("Alt Neuling", "Bob")]
+    assert result.skipped == [] and result.reopened == []
+
+    conn = databases["mp"]
+    assert query(conn, "SELECT mm_mentor_id, mm_start, mm_stop, mm_type FROM mentee_mentor "
+                       "WHERE mm_mentee_id = 300") == [{"mm_mentor_id": 104, "mm_start": now, "mm_stop": None,
+                                                        "mm_type": 0}]
+    assert query(conn, "SELECT mm_stop FROM mentee_mentor WHERE mm_mentee_id = 204") == [{"mm_stop": now}]
+    assert query(conn, "SELECT mentee_user_name FROM mentee WHERE mentee_user_id = 300") == \
+        [{"mentee_user_name": "Neu Mentee"}]
+    assert {r["log_type"] for r in query(conn, "SELECT log_type FROM logging WHERE log_user_name = %s",
+                                         (sync.LOG_USER,))} == {"sync_start", "sync_stop"}
+
+    # Alt Neuling is back within 24 hours with the same mentor: the mentoring is re-opened
+    with databases["wiki"].cursor() as cur:
+        cur.execute("INSERT INTO categorylinks (cl_from, cl_target_id) VALUES (5204, 2)")
+    pages["Benutzer:Alt Neuling"] = {"text": "{{X|Mentor=Bob}}", "redirect": None, "target_text": None}
+    result = sync.sync_mentees(mp, wiki, fetch=lambda titles: {t: pages.get(t) for t in titles},
+                               now=now + dt.timedelta(hours=1))
+    assert result.reopened == [("Alt Neuling", "Bob")] and result.started == result.stopped == []
+    assert query(conn, "SELECT mm_stop FROM mentee_mentor WHERE mm_mentee_id = 204") == [{"mm_stop": None}]
+    assert sync.sync_mentees(mp, wiki, fetch=dict, now=now).summary().startswith("0 started, 0 reopened, 0 stopped")
+
+
+def test_sync_mentees_dry_run(databases):
+    mp, wiki = repos(databases)
+    result = sync.sync_mentees(mp, wiki, fetch=lambda titles: {}, dry_run=True)
+    assert result.skipped == [("Benutzer:Neu Mentee", "Benutzerseite nicht gefunden")]
+    assert query(databases["mp"], "SELECT COUNT(*) AS n FROM logging WHERE log_user_name = %s",
+                 (sync.LOG_USER,)) == [{"n": 0}]
+
+
+def test_api_v1(client, databases):
+    mentees = client.get("/api/v1/mentees").get_json()
+    assert [(m["mentee"], m["mentor"], m["status"]) for m in mentees] == [
+        ("Alt Neuling", "Bob", "critical"), ("Neuling1", "Alice", "ok"), ("Neuling2", "Alice", "ok")]
+    assert mentees[0]["start"] == "2025-01-01 08:00:00" and mentees[0]["last_edit"] == "2025-02-01 12:00:00"
+
+    archive = client.get("/api/v1/archive/2020/3").get_json()
+    assert archive["first_number"] == 2
+    assert [(m["mentee"], m["mentor"], m["stop"], m["type"]) for m in archive["mentorings"]] == [
+        ("Neuling2", "Bob", "2020-03-01 10:00:00", 1)]
+    assert client.get("/api/v1/archive/2014/2").get_json()["first_number"] == 1
+    assert client.get("/api/v1/archive/2021/1").get_json() == {"year": 2021, "month": 1, "first_number": 3,
+                                                               "mentorings": []}
+    assert client.get("/api/v1/archive/2020/13").status_code == 404
+    assert client.get("/api/v1/archive/1999/1").status_code == 404
+
+    assert client.get("/api/v1/counts").get_json() == {"mentees_total": 4, "active_mentors": 2,
+                                                       "active_mentees": 3}
+    assert client.get("/api/v1/sync-status").status_code == 404
+    with databases["mp"].cursor() as cur:
+        cur.execute("UPDATE mentee SET mentee_is_hidden = 1 WHERE mentee_user_id = 201")
+        cur.execute("INSERT INTO mp_meta (meta_key, meta_value) VALUES ('sync_report', '{\"skipped\": []}')")
+    assert "Neuling1" not in {m["mentee"] for m in client.get("/api/v1/mentees").get_json()}
+    assert client.get("/api/v1/sync-status").get_json() == {"skipped": []}

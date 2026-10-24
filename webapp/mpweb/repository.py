@@ -4,6 +4,7 @@ The tables ``mentor``, ``mentee`` and ``mentee_mentor`` are shared with the
 SpBot ``mp-helper.py`` bot (via ``pyapi/dewpmp.py``). Their columns must stay
 compatible, see ``sql/README.md``.
 """
+import contextlib
 import datetime as dt
 
 import pymysql
@@ -380,6 +381,121 @@ class MPRepository(BaseRepository):
         if ids:
             self.execute("UPDATE mentor SET mentor_pause = 1 WHERE mentor_pause = 0 "
                          "AND mentor_user_id IN %s", (ids,))
+
+    # ------------------------------------------------------------ mentee sync (job sync-mentees)
+
+    @contextlib.contextmanager
+    def transaction(self):
+        """Commit on success, roll back on error (a no-op on the MyISAM tables)."""
+        self.conn.begin()
+        try:
+            yield
+            self.conn.commit()
+        except BaseException:
+            self.conn.rollback()
+            raise
+
+    def acquire_lock(self, name, timeout=0):
+        return self.scalar("SELECT GET_LOCK(%s, %s)", (name, timeout)) == 1
+
+    def release_lock(self, name):
+        self.scalar("SELECT RELEASE_LOCK(%s)", (name,))
+
+    def sync_mentorings(self):
+        """Running mentorings of all mentees, hidden ones included."""
+        return self.all("""
+            SELECT me.mentee_user_id, me.mentee_user_name, mm.mm_start,
+                   mo.mentor_user_id, mo.mentor_user_name
+            FROM mentee_mentor mm
+            JOIN mentee me ON me.mentee_user_id = mm.mm_mentee_id
+            JOIN mentor mo ON mo.mentor_user_id = mm.mm_mentor_id
+            WHERE mm.mm_stop IS NULL ORDER BY me.mentee_user_name""")
+
+    def ensure_mentor(self, mentor_id, user_name, today):
+        """Add the mentor or update a changed name; returns ``"new"``, ``"renamed"`` or ``None``."""
+        row = self.one("SELECT mentor_user_name FROM mentor WHERE mentor_user_id = %s", (mentor_id,))
+        if row is None:
+            self.execute("""INSERT INTO mentor (mentor_user_id, mentor_user_name, mentor_in,
+                                                mentor_award_level, mentor_has_barnstar)
+                            VALUES (%s, %s, %s, 0, 0)""", (mentor_id, user_name, today))
+            return "new"
+        if row["mentor_user_name"] != user_name:
+            self.execute("UPDATE mentor SET mentor_user_name = %s WHERE mentor_user_id = %s",
+                         (user_name, mentor_id))
+            return "renamed"
+        return None
+
+    def ensure_mentee(self, mentee_id, user_name):
+        """Add the mentee or update a changed name; returns ``"new"``, ``"renamed"`` or ``None``."""
+        row = self.one("SELECT mentee_user_name FROM mentee WHERE mentee_user_id = %s", (mentee_id,))
+        if row is None:
+            self.execute("""INSERT INTO mentee (mentee_user_id, mentee_user_name, mentee_is_hidden)
+                            VALUES (%s, %s, 0)""", (mentee_id, user_name))
+            return "new"
+        if row["mentee_user_name"] != user_name:
+            self.rename_mentee(mentee_id, user_name)
+            return "renamed"
+        return None
+
+    def rename_mentee(self, mentee_id, user_name):
+        return self.execute("UPDATE mentee SET mentee_user_name = %s WHERE mentee_user_id = %s",
+                            (user_name, mentee_id))
+
+    def last_stopped_relation(self, mentee_id, since):
+        return self.one("""SELECT mm_mentor_id, mm_mentee_id, mm_start, mm_stop FROM mentee_mentor
+                           WHERE mm_mentee_id = %s AND mm_stop >= %s
+                           ORDER BY mm_stop DESC LIMIT 1""", (mentee_id, since))
+
+    def reopen_relation(self, mentor_id, mentee_id, start):
+        return self.execute("""UPDATE mentee_mentor SET mm_stop = NULL
+                               WHERE mm_mentor_id = %s AND mm_mentee_id = %s AND mm_start = %s""",
+                            (mentor_id, mentee_id, start))
+
+    def stop_mentorings(self, mentee_id, stop):
+        return self.execute("""UPDATE mentee_mentor SET mm_stop = %s
+                               WHERE mm_mentee_id = %s AND mm_stop IS NULL""", (stop, mentee_id))
+
+    # ------------------------------------------------------------ API for SpBot (wiki lists)
+
+    def visible_active_mentorings(self):
+        """Running mentorings of non-hidden mentees, as on the wiki list (ordered by mentee)."""
+        return self.all("""
+            SELECT me.mentee_user_id, me.mentee_user_name, mm.mm_start, mm.mm_type,
+                   mo.mentor_user_id, mo.mentor_user_name
+            FROM mentee_mentor mm
+            JOIN mentee me ON me.mentee_user_id = mm.mm_mentee_id
+            JOIN mentor mo ON mo.mentor_user_id = mm.mm_mentor_id
+            WHERE mm.mm_stop IS NULL AND me.mentee_is_hidden = 0
+            ORDER BY me.mentee_user_name""")
+
+    def finished_in_month(self, year, month):
+        """Finished mentorings (non-hidden mentees) of a month and the running number of the first one.
+
+        The numbering counts all finished mentorings ordered by ``mm_stop``, as
+        the bot's monthly archive pages always did.
+        """
+        first = dt.datetime(year, month, 1)
+        after = dt.datetime(year + month // 12, month % 12 + 1, 1)
+        rows = self.all("""
+            SELECT me.mentee_user_id, me.mentee_user_name, mm.mm_start, mm.mm_stop, mm.mm_type,
+                   mo.mentor_user_id, mo.mentor_user_name
+            FROM mentee_mentor mm
+            JOIN mentee me ON me.mentee_user_id = mm.mm_mentee_id
+            JOIN mentor mo ON mo.mentor_user_id = mm.mm_mentor_id
+            WHERE mm.mm_stop >= %s AND mm.mm_stop < %s AND me.mentee_is_hidden = 0
+            ORDER BY mm.mm_stop, mo.mentor_user_id, me.mentee_user_name""", (first, after))
+        before = self.scalar("""
+            SELECT COUNT(*) FROM mentee_mentor mm
+            JOIN mentee me ON me.mentee_user_id = mm.mm_mentee_id
+            JOIN mentor mo ON mo.mentor_user_id = mm.mm_mentor_id
+            WHERE mm.mm_stop IS NOT NULL AND mm.mm_stop < %s AND me.mentee_is_hidden = 0""", (first,))
+        return int(before or 0) + 1, rows
+
+    def active_mentor_number(self):
+        """Active mentors with at least one running mentoring."""
+        return self.scalar("""SELECT COUNT(DISTINCT mo.mentor_user_id) FROM mentor mo
+                              JOIN mentee_mentor mm ON mm.mm_mentor_id = mo.mentor_user_id
+                              WHERE mo.mentor_out IS NULL AND mm.mm_stop IS NULL""")
 
     def get_meta(self, key):
         return self.scalar("SELECT meta_value FROM mp_meta WHERE meta_key = %s", (key,))

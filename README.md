@@ -4,22 +4,24 @@ Web interface of the mentor programme ([WP:MP](https://de.wikipedia.org/wiki/Wik
 of the German Wikipedia: mentors, their mentees and the history of all mentorings since 2007.
 Runs on Toolforge as <https://mp.toolforge.org/>.
 
-New mentees and finished mentorings are written by the bot
-[SpBot](https://de.wikipedia.org/wiki/Benutzer:SpBot) (`mp-helper.py`, in the
-[spbot repository](https://github.com/euku/spbot/tree/spbot/scripts/userscripts)), which uses
-`pyapi/dewpmp.py` from this repository. Logged-in mentors can correct data in the web interface.
+New mentees and finished mentorings are recorded by the job `sync-mentees` from
+[Kategorie:Benutzer:Mentee](https://de.wikipedia.org/wiki/Kategorie:Benutzer:Mentee); logged-in mentors
+can correct data in the web interface. The bot [SpBot](https://de.wikipedia.org/wiki/Benutzer:SpBot)
+(`mp-helper.py`, in the [spbot repository](https://github.com/euku/spbot/tree/spbot/scripts/userscripts))
+writes the lists on the wiki from the read-only [API v1](docs/api.md).
 
 ## Layout
 
 | Path | Content |
 |------|---------|
 | `webapp/` | Flask app (`app.py` = WSGI entry point, package `mpweb`) |
-| `webapp/mpweb/jobs.py` | scheduled jobs: mentees' recent changes, co-mentors from WP:MP |
+| `webapp/mpweb/jobs.py` | scheduled jobs: mentees' recent changes, co-mentors from WP:MP, mentee sync |
+| `webapp/mpweb/sync.py` | mentee sync with `Kategorie:Benutzer:Mentee` (job `sync-mentees`) |
 | `sql/` | schema (`000_initial_schema.sql`) and migrations (`migrations/`) – see `sql/README.md` |
 | `jobs/` | Toolforge jobs (`toolforge_jobs.yaml`) and shell scripts |
-| `pyapi/` | database API used by SpBot – **do not change without checking the bot** |
+| `pyapi/` | old database API of SpBot – only until the bot runs on API v1, see `docs/deployment.md` |
 | `tests/` | pytest suite (unit tests + integration tests against MariaDB) |
-| `docs/` | deployment notes and the list of planned bot improvements |
+| `docs/` | deployment notes, API v1 (`api.md`) and the list of planned bot improvements |
 
 ## Development
 
