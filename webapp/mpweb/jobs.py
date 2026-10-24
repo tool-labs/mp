@@ -2,6 +2,7 @@
 
     python -m mpweb.jobs update-rc            # copy the mentees' recent changes
     python -m mpweb.jobs refresh-comentors    # co-mentors and pause flags from WP:MP
+    python -m mpweb.jobs sync-mentees [--dry-run] [--force]   # mentorings from Kategorie:Benutzer:Mentee
 """
 import argparse
 import datetime as dt
@@ -14,6 +15,7 @@ from .config import load_config
 from .db import connect_from_config
 from .helpers import utcnow
 from .repository import MPRepository
+from .sync import SyncAborted, sync_mentees
 from .wiki import WikiRepository, mw_timestamp
 
 log = logging.getLogger("mpweb.jobs")
@@ -60,8 +62,10 @@ def refresh_comentors(mp, fetch=fetch_main_page, force=False):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("command", choices=["update-rc", "refresh-comentors"])
-    parser.add_argument("--force", action="store_true", help="refresh even if unchanged")
+    parser.add_argument("command", choices=["update-rc", "refresh-comentors", "sync-mentees"])
+    parser.add_argument("--force", action="store_true",
+                        help="refresh even if unchanged / stop more mentorings than the safety limit")
+    parser.add_argument("--dry-run", action="store_true", help="sync-mentees: only report, change nothing")
     args = parser.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
@@ -71,8 +75,13 @@ def main(argv=None):
     try:
         if args.command == "update-rc":
             update_recent_changes(mp, wiki)
+        elif args.command == "sync-mentees":
+            sync_mentees(mp, wiki, dry_run=args.dry_run, force=args.force)
         else:
             refresh_comentors(mp, force=args.force)
+    except SyncAborted as exc:
+        log.error("sync-mentees aborted: %s", exc)
+        return 1
     finally:
         mp.close()
         wiki.close()
