@@ -29,7 +29,7 @@
 ## Daily jobs
 - name: daily-log-cleanup
   command: sh ~/mp/jobs/remove-old-logs.sh
-  image: bullseye
+  image: trixie
   schedule: "0 0  *   *   *"
   emails: onfailure
   filelog-stdout: logs/remove-old-logs.out
@@ -43,7 +43,7 @@
   filelog-stderr: logs/create-database-dump.err
 - name: delete-old-database-dump
   command: sh ~/mp/jobs/delete-old-database-dump.sh
-  image: bullseye
+  image: trixie
   schedule: "0 0  *   *   *"
   emails: onfailure
   filelog-stdout: logs/delete-old-database-dump.out
