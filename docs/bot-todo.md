@@ -4,10 +4,12 @@ Found during the Flask migration (2026-10). The bot was intentionally **not** ch
 
 ## 0. Replace the `pyapi` interface with an HTTP API (assessed 2026-10-24)
 
-**Status (2026-10-24): variant A implemented, not deployed yet.** mp: job `sync-mentees`
+**Status: variant A live since 2026-10-24 22:00 UTC, `pyapi` removed afterwards.** mp: job `sync-mentees`
 (`webapp/mpweb/sync.py`) and API v1 (`docs/api.md`); spbot: new `mp-helper.py` that only reads API v1.
 Its output was compared with the current wiki pages (list, archive 2026-09/10): byte-identical except
 for the status rule (orange now after 152 days as in the web app and the page text, before 365).
+The old bot crashed on every run on the redirected user page `Benutzer:LingoLink` (item 17); the
+wiki list had not been updated since 2026-10-07 until the first run of the new bot.
 Switch-over and clean-up steps: `docs/deployment.md`. Item status after the switch:
 
 | Item | Status |

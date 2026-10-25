@@ -1,3 +1,2 @@
 Flask>=3.0,<4
-# same version as the SpBot venv: pyapi/dewpmp.py (defer_connect + ping) breaks with PyMySQL 1.2
 PyMySQL==1.1.1
